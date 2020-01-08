@@ -10,8 +10,8 @@ namespace ced
 	struct SWindow {
 		WNDCLASSEX						Class				= {sizeof(WNDCLASSEX),};
 		const char						ClassName	[256]	= "ced_window";
-		::ced::SCoord<int32_t>			Position			= {10, 10};
-		::ced::SCoord<int32_t>			Size				= {320, 200};
+		::ced::SCoord2<int32_t>			Position			= {10, 10};
+		::ced::SCoord2<uint32_t>		Size				= {320, 200};
 		HWND							Handle				= 0;
 		bool							Resized				= true;
 	};

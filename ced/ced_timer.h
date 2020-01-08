@@ -10,9 +10,9 @@ namespace ced
 		::std::chrono::time_point<::std::chrono::system_clock>			TimePrevious			= {};
 		uint64_t														ElapsedMicroseconds		= 0;
 
-		uint64_t														Tick				()	{
+		uint64_t														Tick					()	{
 			TimeCurrent														= ::std::chrono::system_clock::now();
-			auto																diff				= TimeCurrent - TimePrevious;
+			auto																diff					= TimeCurrent - TimePrevious;
 			TimePrevious													= TimeCurrent;
 			return ElapsedMicroseconds = ::std::chrono::duration_cast<::std::chrono::microseconds>(diff).count();
 		}

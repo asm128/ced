@@ -35,5 +35,8 @@
     <ClInclude Include="ced_timer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ced_view.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -170,6 +170,7 @@
     <ClInclude Include="ced_draw.h" />
     <ClInclude Include="ced_math.h" />
     <ClInclude Include="ced_timer.h" />
+    <ClInclude Include="ced_view.h" />
     <ClInclude Include="ced_window.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
