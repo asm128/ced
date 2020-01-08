@@ -20,6 +20,13 @@ namespace ced
 		SCoord&							operator/=				(double scalar)						{ x = (int32_t)(x / scalar); y = (int32_t)(y / scalar); return *this; }
 		SCoord&							operator*=				(double scalar)			noexcept	{ x = (int32_t)(x * scalar); y = (int32_t)(y * scalar); return *this; }
 
+		// https://matthew-brett.github.io/teaching/rotation_2d.html
+		SCoord							Rotated					(double theta)						{
+			double								dsin					= ::std::sin(theta);
+			double								dcos					= ::std::cos(theta);
+			return {(int)(dcos * x - dsin * y), (int)(dsin * x + dcos * y)};
+		}
+
 		double							Length					()						const noexcept	{
 			int									lengthSquared			= x * x + y * y;
 			if(0 == lengthSquared)

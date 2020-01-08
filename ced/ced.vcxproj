@@ -165,10 +165,13 @@
   <ItemGroup>
     <ClCompile Include="ced_draw.cpp" />
     <ClCompile Include="ced_main.cpp" />
+    <ClCompile Include="ced_window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ced_draw.h" />
     <ClInclude Include="ced_math.h" />
+    <ClInclude Include="ced_timer.h" />
+    <ClInclude Include="ced_window.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
