@@ -11,11 +11,11 @@ namespace ced
 		uint8_t							b;
 		uint8_t							a;
 	};
-	int								setPixel			(::ced::SColor * pixels, ::ced::SCoord targetSize, ::ced::SCoord		position	, ::ced::SColor color);
-	int								drawRectangle		(::ced::SColor * pixels, ::ced::SCoord targetSize, ::ced::SRectangle	rectangle	, ::ced::SColor color);
-	int								drawCircle			(::ced::SColor * pixels, ::ced::SCoord targetSize, ::ced::SCircle		circle		, ::ced::SColor color);
-	int								drawLine			(::ced::SColor * pixels, ::ced::SCoord targetSize, ::ced::SLine			line		, ::ced::SColor color);
-	int								drawTriangle		(::ced::SColor * pixels, ::ced::SCoord targetSize, ::ced::STriangle		triangle	, ::ced::SColor color);
+	int								setPixel			(::ced::SColor * pixels, ::ced::SCoord<int32_t> targetSize, ::ced::SCoord		<int32_t>	position	, ::ced::SColor color);
+	int								drawRectangle		(::ced::SColor * pixels, ::ced::SCoord<int32_t> targetSize, ::ced::SRectangle	<int32_t>	rectangle	, ::ced::SColor color);
+	int								drawCircle			(::ced::SColor * pixels, ::ced::SCoord<int32_t> targetSize, ::ced::SCircle		<int32_t>	circle		, ::ced::SColor color);
+	int								drawLine			(::ced::SColor * pixels, ::ced::SCoord<int32_t> targetSize, ::ced::SLine		<int32_t>	line		, ::ced::SColor color);
+	int								drawTriangle		(::ced::SColor * pixels, ::ced::SCoord<int32_t> targetSize, ::ced::STriangle	<int32_t>	triangle	, ::ced::SColor color);
 } // namespace
 
 #endif // CED_DRAW_H_29837429837

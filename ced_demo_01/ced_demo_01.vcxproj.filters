@@ -15,25 +15,8 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ced_draw.cpp">
+    <ClCompile Include="ced_main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ced_window.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="ced_math.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ced_draw.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ced_window.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ced_timer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>

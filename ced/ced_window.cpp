@@ -9,8 +9,7 @@ LRESULT	WINAPI					wndProc				(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
-
-int										blitBuffer			(HDC hdc, const ::ced::SColor * pixels, ::ced::SCoord targetSize)	{
+int										blitBuffer			(HDC hdc, const ::ced::SColor * pixels, ::ced::SCoord<int32_t> targetSize)	{
 	BITMAPINFO									bitmapInfo			= {};
 	bitmapInfo.bmiHeader.biSize				= sizeof(BITMAPINFO);
 	bitmapInfo.bmiHeader.biWidth			= targetSize.x;
@@ -23,14 +22,18 @@ int										blitBuffer			(HDC hdc, const ::ced::SColor * pixels, ::ced::SCoord 
 	bitmapInfo.bmiHeader.biYPelsPerMeter	= 0xce4;
 
 	HDC											hdcCompatible		= CreateCompatibleDC(hdc);
-	void										* pvBits;
-	HBITMAP										dibSection			= CreateDIBSection(hdcCompatible, &bitmapInfo, DIB_RGB_COLORS, (void**)&pvBits, 0, 0);
-	SetDIBits(hdcCompatible, dibSection, 0, targetSize.y, pixels, &bitmapInfo, DIB_RGB_COLORS);
-	HBITMAP										oldBitmap			= (HBITMAP)SelectObject(hdcCompatible, dibSection);
-	BitBlt(hdc, 0, 0, targetSize.x, targetSize.y, hdcCompatible, 0, 0, SRCCOPY);
-	SelectObject(hdcCompatible, oldBitmap);
-	DeleteObject(dibSection);
-	DeleteDC	(hdcCompatible);
+	if(hdcCompatible) {
+		void										* pvBits;
+		HBITMAP										dibSection			= CreateDIBSection(hdcCompatible, &bitmapInfo, DIB_RGB_COLORS, (void**)&pvBits, 0, 0);
+		if(dibSection) {
+			SetDIBits(hdcCompatible, dibSection, 0, targetSize.y, pixels, &bitmapInfo, DIB_RGB_COLORS);
+			HBITMAP										oldBitmap			= (HBITMAP)SelectObject(hdcCompatible, dibSection);
+			BitBlt(hdc, 0, 0, targetSize.x, targetSize.y, hdcCompatible, 0, 0, SRCCOPY);
+			SelectObject(hdcCompatible, oldBitmap);
+			DeleteObject(dibSection);
+		}
+		DeleteDC	(hdcCompatible);
+	}
 	return 0;
 }
 

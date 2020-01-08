@@ -1,7 +1,7 @@
 #include "ced_draw.h"
 #include <algorithm>
 
-int								ced::setPixel			(::ced::SColor * pixels, ::ced::SCoord targetSize, ::ced::SCoord position, ::ced::SColor color)	{
+int								ced::setPixel			(::ced::SColor * pixels, ::ced::SCoord<int32_t> targetSize, ::ced::SCoord<int32_t> position, ::ced::SColor color)	{
 	if( (position.x >= 0 && position.x < targetSize.x)
 	 && (position.y >= 0 && position.y < targetSize.y)
 	)
@@ -9,17 +9,17 @@ int								ced::setPixel			(::ced::SColor * pixels, ::ced::SCoord targetSize, ::
 	return 0;
 }
 
-int								ced::drawRectangle		(::ced::SColor * pixels, ::ced::SCoord targetSize, ::ced::SRectangle rectangle, ::ced::SColor color)	{
+int								ced::drawRectangle		(::ced::SColor * pixels, ::ced::SCoord<int32_t> targetSize, ::ced::SRectangle<int32_t> rectangle, ::ced::SColor color)	{
 	for(int32_t y = 0; y < (int32_t)rectangle.Size.y; ++y)
 	for(int32_t x = 0; x < (int32_t)rectangle.Size.x; ++x)
 		::ced::setPixel(pixels, targetSize, {rectangle.Position.x + x, rectangle.Position.y + y}, color);
 	return 0;
 }
 
-int								ced::drawCircle			(::ced::SColor * pixels, ::ced::SCoord targetSize, ::ced::SCircle circle, ::ced::SColor color)	{
+int								ced::drawCircle			(::ced::SColor * pixels, ::ced::SCoord<int32_t> targetSize, ::ced::SCircle<int32_t> circle, ::ced::SColor color)	{
 	for(int32_t y = (int32_t)-circle.Radius; y < (int32_t)circle.Radius; ++y)
 	for(int32_t x = (int32_t)-circle.Radius; x < (int32_t)circle.Radius; ++x) {
-		::ced::SCoord						position			= {x, y};
+		::ced::SCoord<int32_t>						position			= {x, y};
 		if(position.Length() <= circle.Radius)
 			::ced::setPixel(pixels, targetSize, {circle.Position.x + x, circle.Position.y + y}, color);
 	}
@@ -27,7 +27,7 @@ int								ced::drawCircle			(::ced::SColor * pixels, ::ced::SCoord targetSize, 
 }
 
 // https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
-int								ced::drawLine       	(::ced::SColor * pixels, ::ced::SCoord targetSize, ::ced::SLine line, ::ced::SColor color)	{
+int								ced::drawLine       	(::ced::SColor * pixels, ::ced::SCoord<int32_t> targetSize, ::ced::SLine<int32_t> line, ::ced::SColor color)	{
 	int32_t								dx						= (int32_t)abs(line.B.x - line.A.x);
 	int32_t								sx						= (int32_t)line.A.x < line.B.x ? 1 : -1;
 	int32_t								dy						= (int32_t)-abs(line.B.y - line.A.y );
@@ -53,12 +53,12 @@ int								ced::drawLine       	(::ced::SColor * pixels, ::ced::SCoord targetSiz
 }
 
 //https://fgiesen.wordpress.com/2013/02/08/triangle-rasterization-in-practice/
-int												orient2d					(const ::ced::SCoord& a, const ::ced::SCoord& b, const ::ced::SCoord& c)		{ return (b.x-a.x)*(c.y-a.y) - (b.y-a.y)*(c.x-a.x); }
+int												orient2d					(const ::ced::SCoord<int32_t>& a, const ::ced::SCoord<int32_t>& b, const ::ced::SCoord<int32_t>& c)		{ return (b.x-a.x)*(c.y-a.y) - (b.y-a.y)*(c.x-a.x); }
 
 template <typename _tValue>	_tValue 			max3						(_tValue & a, _tValue & b, _tValue & c)			{ return ::std::max(::std::max(a, b), c); }
 template <typename _tValue>	_tValue 			min3						(_tValue & a, _tValue & b, _tValue & c)			{ return ::std::min(::std::min(a, b), c); }
 
-int						ced::drawTriangle			(::ced::SColor * pixels, ::ced::SCoord targetSize, ::ced::STriangle triangle, ::ced::SColor color){
+int						ced::drawTriangle			(::ced::SColor * pixels, ::ced::SCoord<int32_t> targetSize, ::ced::STriangle<int32_t> triangle, ::ced::SColor color){
 	// Compute triangle bounding box
 	int32_t						minX					= ::min3(triangle.A.x, triangle.B.x, triangle.C.x);
 	int32_t						minY					= ::min3(triangle.A.y, triangle.B.y, triangle.C.y);
@@ -72,7 +72,7 @@ int						ced::drawTriangle			(::ced::SColor * pixels, ::ced::SCoord targetSize, 
 	maxY					= ::std::min(maxY, targetSize.y	- 1);
 
 	// Rasterize
-	::ced::SCoord p;
+	::ced::SCoord<int32_t> p;
 	for (p.y = minY; p.y <= maxY; p.y++) {
 		for (p.x = minX; p.x <= maxX; p.x++) {
 			// Determine barycentric coordinates
