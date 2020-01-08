@@ -6,6 +6,10 @@
 
 namespace ced
 {
+
+	static constexpr const double		MATH_PI					= 3.141519;
+	static constexpr const double		MATH_2PI				= MATH_PI * 2;
+
 	template<typename _tValue>
 	struct SCoord2 {
 		_tValue							x;
