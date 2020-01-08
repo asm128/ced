@@ -169,6 +169,7 @@
   <ItemGroup>
     <ClInclude Include="ced_draw.h" />
     <ClInclude Include="ced_math.h" />
+    <ClInclude Include="ced_matrix.h" />
     <ClInclude Include="ced_timer.h" />
     <ClInclude Include="ced_view.h" />
     <ClInclude Include="ced_window.h" />
