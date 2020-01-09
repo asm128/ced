@@ -30,10 +30,10 @@ static constexpr const ::ced::STriangle3<int8_t>						geometryCube	[12]						=
 static constexpr const ::ced::SCoord3<int8_t>		geometryNormals	[6]		=
 	{ { 0, 0, 1} // Right
 	, {-1, 0, 0} // Back
-	, { 0, 1, 0} // Bottom
+	, { 0,-1, 0} // Bottom
 	, { 0, 0,-1} // Left
 	, { 1, 0, 0} // Front
-	, { 0,-1, 0} // Top
+	, { 0, 1, 0} // Top
 	};
 
 struct SApplication {
@@ -69,8 +69,7 @@ int												setupTriangles		(SApplication & app)	{
 		newTriangle.C									*= 64.0;
 
 		::ced::SCoord3<float>								& newNormal		= app.Normals[iTriangle / 2];
-		newNormal										= geometryNormals[iTriangle].Cast<float>();
-		newNormal.y *= -1;
+		newNormal										= geometryNormals[iTriangle / 2].Cast<float>();
 	}
 	return 0;
 }
@@ -103,9 +102,9 @@ int												update				(SApplication & app)	{
 	static ::ced::SCoord3<float>						cameraPosition		= {5, 3, 5};
 	::ced::SCoord3<float>								cameraUp			= {0, 1, 0};
 
-	static ::ced::SCoord3<float>						lightVector			= {5, 3, 0};
-	lightVector										= lightVector	.RotateY(lastFrameSeconds * 2);
-	cameraPosition									= cameraPosition.RotateY(lastFrameSeconds / 2);
+	static ::ced::SCoord3<float>						lightVector			= {5, -3, 0};
+	lightVector										= lightVector	.RotateY(-lastFrameSeconds / 2);
+	cameraPosition									= cameraPosition.RotateY(-lastFrameSeconds / 2);
 
 	lightVector.Normalize();
 

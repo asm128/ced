@@ -154,8 +154,8 @@ namespace ced
 		} // FoV
 							void				LookAt						(const TCoord3& vPosition, const TCoord3& vTarget, const TCoord3& vUp)							{
 			TCoord3										F							= TCoord3{vTarget - vPosition}.Normalize();
-			TCoord3										R							= F		.Cross(vUp	).Normalize();
-			TCoord3										U							= F		.Cross(R	).Normalize();
+			TCoord3										R							= vUp	.Cross(F).Normalize();
+			TCoord3										U							= F		.Cross(R).Normalize();
 
 			_11 = R.x;	_12 = U.x;	_13 = F.x;	_14 = (_tBase)0;
 			_21 = R.y;	_22 = U.y;	_23 = F.y;	_24 = (_tBase)0;
