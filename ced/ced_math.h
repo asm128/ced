@@ -68,6 +68,9 @@ namespace ced
 		SCoord3<_tValue>&										operator/=				(double scalar)										{ x = (_tValue)(x / scalar); y = (_tValue)(y / scalar); z = (_tValue)(z / scalar); return *this; }
 		SCoord3<_tValue>&										operator*=				(double scalar)						noexcept		{ x = (_tValue)(x * scalar); y = (_tValue)(y * scalar); z = (_tValue)(z * scalar); return *this; }
 
+		template<typename _tOther>
+										SCoord3<_tOther>		Cast					()									const			{ return {(_tOther)x, (_tOther)y, (_tOther)z}; }
+
 		inline							TCoord3&				Normalize				()																						{ const _tValue sqLen = LengthSquared(); return sqLen ? *this /= ::sqrt(sqLen) : *this;										}
 		constexpr						double					Dot						(const TCoord3& other)												const	noexcept	{ return x * other.x + y * other.y + z * other.z;																			}
 		constexpr						_tValue					LengthSquared			()																	const	noexcept	{ return x * x + y * y + z * z;																								}
@@ -294,6 +297,16 @@ namespace ced
 		SCoord3<_tValue>					A;
 		SCoord3<_tValue>					B;
 		SCoord3<_tValue>					C;
+
+		template<typename _tOther>
+		STriangle3<_tOther>					Cast					()								const	noexcept		{
+			return
+				{ A.Cast<_tOther>()
+				, B.Cast<_tOther>()
+				, C.Cast<_tOther>()
+				};
+		}
+
 	};
 } // namespace
 
