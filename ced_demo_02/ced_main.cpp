@@ -90,7 +90,6 @@ int												update				(SApplication & app)	{
 		app.Pixels										= (::ced::SColor*)malloc(sizeof(::ced::SColor) * window.Size.x * window.Size.y);
 		::setupTriangles(app);
 	}
-
 	::ced::view_grid<::ced::SColor>						targetPixels		= {app.Pixels, window.Size};
 	memset(targetPixels.begin(), 0, sizeof(::ced::SColor) * targetPixels.size());
 
@@ -132,7 +131,8 @@ int												update				(SApplication & app)	{
 		newTriangle.A									+= {halfScreen.x, halfScreen.y, };
 		newTriangle.B									+= {halfScreen.x, halfScreen.y, };
 		newTriangle.C									+= {halfScreen.x, halfScreen.y, };
-		::ced::drawTriangle(targetPixels, newTriangle, (app.Colors[1] * .1) + app.Colors[1] * lightFactor); //app.Colors[iTriangle % ::std::size(app.Colors)]);
+		uint32_t											colorIndex			= (uint32_t)(app.TotalTime * .2) % ::std::size(app.Colors);
+		::ced::drawTriangle(targetPixels, newTriangle, app.Colors[colorIndex] * .1 + app.Colors[colorIndex] * lightFactor); //app.Colors[iTriangle % ::std::size(app.Colors)]);
 	}
 	return app.Running ? 0 : 1;
 }
