@@ -27,10 +27,13 @@ int										blitBuffer				(HDC hdc, const ::ced::SColor * pixels, ::ced::SCoord
 		HBITMAP										dibSection				= CreateDIBSection(hdcCompatible, &bitmapInfo, DIB_RGB_COLORS, (void**)&pvBits, 0, 0);
 		if(dibSection) {
 			RGBQUAD										* reverseYpixels		= (RGBQUAD*)malloc(sizeof(RGBQUAD) * targetSize.x * targetSize.y);
-			for(uint32_t y = 0; y < targetSize.y; ++y)
-				memcpy(&reverseYpixels[(targetSize.y - 1 - y) * targetSize.x], &pixels[y * targetSize.x], sizeof(RGBQUAD) * targetSize.x);
-			SetDIBits(hdcCompatible, dibSection, 0, targetSize.y, reverseYpixels, &bitmapInfo, DIB_RGB_COLORS);
-			free(reverseYpixels);
+			if(reverseYpixels) {
+				for(uint32_t y = 0; y < targetSize.y; ++y)
+					memcpy(&reverseYpixels[(targetSize.y - 1 - y) * targetSize.x], &pixels[y * targetSize.x], sizeof(RGBQUAD) * targetSize.x);
+				SetDIBits(hdcCompatible, dibSection, 0, targetSize.y, reverseYpixels, &bitmapInfo, DIB_RGB_COLORS);
+				free(reverseYpixels);
+			}
+			//SetDIBits(hdcCompatible, dibSection, 0, targetSize.y, pixels, &bitmapInfo, DIB_RGB_COLORS);
 			HBITMAP										oldBitmap				= (HBITMAP)SelectObject(hdcCompatible, dibSection);
 			BitBlt(hdc, 0, 0, targetSize.x, targetSize.y, hdcCompatible, 0, 0, SRCCOPY);
 			SelectObject(hdcCompatible, oldBitmap);
