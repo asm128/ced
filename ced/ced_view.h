@@ -44,77 +44,40 @@ namespace ced
 	struct container : view<_tValue> {
 		using	view<_tValue>				::Data;
 		using	view<_tValue>				::Count;
-		using	view<_tValue>				::size;
 
-											~container			()									{ free(Data); }
+											~container			()									{
+			for(uint32_t iElement = 0; iElement < Count; ++iElement)
+				Data[iElement].~_tValue();
+			free(Data);
+		}
 		int32_t								resize				(uint32_t newSize)					{
-			if(newSize == Count)
-				return Count;
-			else if(newSize < Count)
-				return Count = newSize;
-			else { // if(newSize > Count)
-				_tValue									* newData			= (_tValue*)malloc(newSize * sizeof(_tValue));
-				memcpy(newData, Data, sizeof(_tValue) * Count);
-				_tValue									* oldData			= Data;
-				Data								= newData;
-				free(oldData);
-				return Count = newSize;
-			}
-		}
-		int32_t								push_back			(const _tValue & valueToAdd)					{
-			int32_t									newIndex			= size();
-			resize(size() + 1);
-			Data[newIndex]						= valueToAdd;
-			return newIndex;
-		}
-		int32_t								pop_back			(_tValue * valueRemoved = 0)					{
-			if(valueRemoved)
-				*valueRemoved						= Data[Count - 1];
-			resize(Count - 1);
-			return Count - 1;
-		}
-	};
-
-	template<typename _tValue>
-	struct container_obj : view<_tValue> {
-		using	view<_tValue>				::Data;
-		using	view<_tValue>				::Count;
-		using	view<_tValue>				::size;
-
-											~container_obj			()								{ resize(0); free(Data); }
-
-		int32_t								resize				(uint32_t newSize)					{
-			if(newSize == Count)
-				return Count;
-			else if(newSize < Count) {
-				for(uint32_t iElement = newSize; iElement < Count; ++iElement)
+			if(newSize < Count) {
+				for(uint32_t iElement = Count - 1; iElement < newSize; --iElement)
 					Data[iElement].~_tValue();
 				return Count = newSize;
 			}
 			else if(newSize > Count) {
 				_tValue									* newData			= (_tValue*)malloc(newSize * sizeof(_tValue));
-				for(uint32_t iElement = 0; iElement < Count; ++iElement)
+				for(uint32_t iElement = 0; iElement < Count; --iElement)
 					new (&newData[iElement]) _tValue(Data[iElement]);
-				for(uint32_t iElement = Count; iElement < newSize; ++iElement)
+				for(uint32_t iElement = Count; iElement < newSize; --iElement)
 					new (&newData[iElement]) _tValue();
+				memcpy(newData, Data, sizeof(_tValue) * Count);
 				_tValue									* oldData			= Data;
 				Data								= newData;
 				free(oldData);
-				return Count = newSize;
 			}
 			return Count = newSize;
 		}
-
-		int32_t								push_back			(const _tValue & valueToAdd)					{
-			int32_t									newIndex			= size();
-			resize(size() + 1);
-			new (&Data[newIndex]) _tValue(valueToAdd);
+		int32_t								push_back			(const _tValue & valueToPush)		{
+			uint32_t								newIndex			= Count - 1;
+			resize(Count + 1);
+			Data[newIndex]						= valueToPush;
 			return newIndex;
 		}
-
-		int32_t								pop_back			(_tValue * valueRemoved = 0)					{
-			if(valueRemoved)
-				*valueRemoved						= Data[Count - 1];
+		int32_t								pop_back			(_tValue * valueToPop = 0)		{
+			if(valueToPop)
+				*valueToPop							= Data[Count - 1];
 			resize(Count - 1);
 			return Count - 1;
 		}

@@ -110,10 +110,15 @@ int													update				(SApplication & app)	{
 	::ced::view_grid<::ced::SColor>							targetPixels		= {app.Pixels, window.Size};
 	memset(targetPixels.begin(), 0, sizeof(::ced::SColor) * targetPixels.size());
 
+	//------------------------------------------- Handle input
 	::ced::SCoord3<float>									cameraTarget		= {};
 	static ::ced::SCoord3<float>							cameraPosition		= {15, 2, 0};
 	::ced::SCoord3<float>									cameraUp			= {0, 1, 0};
 
+	if(GetAsyncKeyState('Q')) cameraPosition.y					-= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
+	if(GetAsyncKeyState('E')) cameraPosition.y					+= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
+
+	//------------------------------------------- Transform and Draw
 	static ::ced::SCoord3<float>							lightVector			= {15, 2, 0};
 	lightVector											= lightVector	.RotateY(lastFrameSeconds * 2);
 	cameraPosition										= cameraPosition.RotateY(lastFrameSeconds / 2);
