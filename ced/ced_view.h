@@ -1,5 +1,6 @@
 #include "ced_math.h"
 #include <memory.h>
+#include <algorithm>
 
 #ifndef CED_VIEW_H_982734982734
 #define CED_VIEW_H_982734982734
@@ -25,7 +26,7 @@ namespace ced
 	template<typename _tValue>
 	struct view_grid {
 		_tValue								* Data				= 0;
-		::ced::SCoord2<uint32_t>			Metrics				= 0;
+		::ced::SCoord2<uint32_t>			Metrics				= {};
 
 											view_grid			(_tValue * data, ::ced::SCoord2<uint32_t> metrics)	: Data(data), Metrics(metrics) { if(metrics.x && metrics.y && 0 == Data) throw(""); }
 		inline constexpr					view_grid			()									noexcept		= default;
@@ -44,30 +45,36 @@ namespace ced
 	struct container : view<_tValue> {
 		using	view<_tValue>				::Data;
 		using	view<_tValue>				::Count;
+		uint32_t							Size				= 0;
 
 											~container			()									{
 			for(uint32_t iElement = 0; iElement < Count; ++iElement)
 				Data[iElement].~_tValue();
 			free(Data);
 		}
-		int32_t								resize				(uint32_t newSize)					{
-			if(newSize < Count) {
-				for(uint32_t iElement = Count - 1; iElement < newSize; --iElement)
+		int32_t								resize				(uint32_t newCount)					{
+			if(newCount < Count) {
+				for(uint32_t iElement = Count - 1; iElement < newCount; --iElement)
 					Data[iElement].~_tValue();
-				return Count = newSize;
+				return Count = newCount;
 			}
-			else if(newSize > Count) {
+			else if(newCount > Size) {
+				uint32_t								newSize				= ::std::max(4U, newCount + (newCount / 4));
 				_tValue									* newData			= (_tValue*)malloc(newSize * sizeof(_tValue));
-				for(uint32_t iElement = 0; iElement < Count; --iElement)
+				for(uint32_t iElement = 0; iElement < Count; ++iElement)
 					new (&newData[iElement]) _tValue(Data[iElement]);
-				for(uint32_t iElement = Count; iElement < newSize; --iElement)
+				for(uint32_t iElement = Count; iElement < newCount; ++iElement)
 					new (&newData[iElement]) _tValue();
-				memcpy(newData, Data, sizeof(_tValue) * Count);
 				_tValue									* oldData			= Data;
+				Size								= newSize;
 				Data								= newData;
 				free(oldData);
 			}
-			return Count = newSize;
+			else if(newCount > Count) {
+				for(uint32_t iElement = Count; iElement < newCount; ++iElement)
+					new (&Data[iElement]) _tValue();
+			}
+			return Count = newCount;
 		}
 		int32_t								push_back			(const _tValue & valueToPush)		{
 			uint32_t								newIndex			= Count;

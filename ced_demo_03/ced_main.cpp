@@ -147,7 +147,7 @@ int													update				(SApplication & app)	{
 	if(GetAsyncKeyState('E')) cameraPosition.y					+= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
 
 	//------------------------------------------- Transform and Draw
-	static ::ced::SCoord3<float>							lightVector			= {15, 2, 0};
+	static ::ced::SCoord3<float>							lightVector			= {15, 12, 0};
 	lightVector											= lightVector	.RotateY(lastFrameSeconds * 2);
 	cameraPosition										= cameraPosition.RotateY(lastFrameSeconds / 2);
 
@@ -171,6 +171,7 @@ int													update				(SApplication & app)	{
 		matrixPosition	.SetTranslation	(app.Models[iModel].Position, true);
 
 		::ced::SMatrix4<float>									matrixTransform		= matrixScale * matrixPosition * matrixRotation;
+		::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
 		for(uint32_t iTriangle = 0; iTriangle < app.Geometry.Triangles.size(); ++iTriangle) {
 			::ced::STriangle3	<float>								triangle			= app.Geometry.Triangles	[iTriangle];
 			::ced::SCoord3		<float>								normal				= app.Geometry.Normals	[iTriangle / 2];
@@ -193,8 +194,15 @@ int													update				(SApplication & app)	{
 			newTriangle.A										+= {halfScreen.x, halfScreen.y, };
 			newTriangle.B										+= {halfScreen.x, halfScreen.y, };
 			newTriangle.C										+= {halfScreen.x, halfScreen.y, };
-			uint32_t												colorIndex			= (uint32_t)(app.TotalTime * .2) % ::std::size(app.Colors);
-			::ced::drawTriangle(targetPixels, newTriangle, app.Colors[colorIndex] * .1 + app.Colors[colorIndex] * lightFactor); //app.Colors[iTriangle % ::std::size(app.Colors)]);
+			uint32_t												colorIndex			= (uint32_t)iTriangle % ::std::size(app.Colors);
+			::ced::drawTriangle(targetPixels.metrics(), newTriangle, pixelCoords);
+			for(uint32_t iPixelCoord = 0; iPixelCoord < pixelCoords.size(); ++iPixelCoord) {
+				::ced::SCoord2<int32_t>									pixelCoord			= pixelCoords[iPixelCoord];
+				::ced::SColor											pixelColor			= app.Colors[colorIndex];
+				pixelColor.r										= (uint8_t)(pixelColor.r - (pixelCoord.x));
+				pixelColor.g										= (uint8_t)(pixelColor.r - (pixelCoord.y));
+				::ced::setPixel(targetPixels, pixelCoord, pixelColor * lightFactor);
+			}
 		}
 	}
 	return app.Running ? 0 : 1;

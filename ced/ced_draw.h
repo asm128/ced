@@ -31,6 +31,7 @@ namespace ced
 	int								drawCircle			(::ced::view_grid<::ced::SColor> pixels, ::ced::SCircle		<int32_t>	circle		, ::ced::SColor color);
 	int								drawLine			(::ced::view_grid<::ced::SColor> pixels, ::ced::SLine		<int32_t>	line		, ::ced::SColor color);
 	int								drawTriangle		(::ced::view_grid<::ced::SColor> pixels, ::ced::STriangle	<int32_t>	triangle	, ::ced::SColor color);
+	int								drawTriangle		(::ced::SCoord2<uint32_t> targetSize, ::ced::STriangle<int32_t> triangle, ::ced::container<::ced::SCoord2<int32_t>> & pixelCoords);
 } // namespace
 
 #endif // CED_DRAW_H_29837429837
