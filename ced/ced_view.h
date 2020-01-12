@@ -70,7 +70,7 @@ namespace ced
 			return Count = newSize;
 		}
 		int32_t								push_back			(const _tValue & valueToPush)		{
-			uint32_t								newIndex			= Count - 1;
+			uint32_t								newIndex			= Count;
 			resize(Count + 1);
 			Data[newIndex]						= valueToPush;
 			return newIndex;

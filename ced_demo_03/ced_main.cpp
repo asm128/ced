@@ -42,6 +42,11 @@ struct SModel3D {
 	::ced::SCoord3<float>								Position;
 };
 
+struct SGeometry {
+	::ced::container<::ced::STriangle3	<float>>		Triangles;
+	::ced::container<::ced::SCoord3		<float>>		Normals;
+};
+
 struct SApplication {
 	::ced::SWindow										Window				= {};
 	::ced::SColor										* Pixels			= 0;
@@ -51,8 +56,7 @@ struct SApplication {
 	::ced::SColor										Colors		[4]		= { {0xff}, {0, 0xFF}, {0, 0, 0xFF}, {0xFF, 0xC0, 0x40} };
 
 	::ced::container<::SModel3D>						Models;
-	::ced::container<::ced::STriangle3	<float>>		Triangles;
-	::ced::container<::ced::SCoord3		<float>>		Normals;
+	::SGeometry											Geometry;
 };
 
 int													cleanup				(SApplication & app)	{
@@ -61,20 +65,44 @@ int													cleanup				(SApplication & app)	{
 	return 0;
 }
 
-int													setupTriangles		(SApplication & app)	{
-	app.Triangles	.resize((uint32_t)::std::size(geometryCube));
-	app.Normals		.resize((uint32_t)::std::size(geometryNormals));
+int													geometryBuildCube	(SGeometry & geometry)	{
+	geometry.Triangles	.resize((uint32_t)::std::size(geometryCube));
+	geometry.Normals	.resize((uint32_t)::std::size(geometryNormals));
 
-	for(uint32_t iTriangle = 0; iTriangle < app.Triangles.size(); ++iTriangle) {
-		::ced::STriangle3<float>								& newTriangle		= app.Triangles[iTriangle];
+	for(uint32_t iTriangle = 0; iTriangle < geometry.Triangles.size(); ++iTriangle) {
+		::ced::STriangle3<float>								& newTriangle		= geometry.Triangles[iTriangle];
 		newTriangle											= geometryCube[iTriangle].Cast<float>();
 		newTriangle.A										-= {.5, .5, .5};
 		newTriangle.B										-= {.5, .5, .5};
 		newTriangle.C										-= {.5, .5, .5};
 
-		::ced::SCoord3<float>									& newNormal			= app.Normals[iTriangle / 2];
+		::ced::SCoord3<float>									& newNormal			= geometry.Normals[iTriangle / 2];
 		newNormal											= geometryNormals[iTriangle / 2].Cast<float>();
+	}
+	return 0;
+}
 
+int													geometryBuildGrid	(SGeometry & geometry, ::ced::SCoord2<uint32_t> gridSize, ::ced::SCoord2<float> gridCenter)	{
+	for(uint32_t z = 0; z < gridSize.y; ++z)
+	for(uint32_t x = 0; x < gridSize.x; ++x)  {
+		::ced::STriangle3<float>								triangleA			= {{1, 0, 0}, {0, 0, 1}, {1, 0, 1}};
+		::ced::STriangle3<float>								triangleB			= {{1, 0, 0}, {0, 0, 0}, {0, 0, 1}};
+		triangleA.A											+= {(float)x, 0, (float)z};
+		triangleA.B											+= {(float)x, 0, (float)z};
+		triangleA.C											+= {(float)x, 0, (float)z};
+		triangleB.A											+= {(float)x, 0, (float)z};
+		triangleB.B											+= {(float)x, 0, (float)z};
+		triangleB.C											+= {(float)x, 0, (float)z};
+
+		triangleA.A											-= {(float)gridCenter.x, 0, (float)gridCenter.y};
+		triangleA.B											-= {(float)gridCenter.x, 0, (float)gridCenter.y};
+		triangleA.C											-= {(float)gridCenter.x, 0, (float)gridCenter.y};
+		triangleB.A											-= {(float)gridCenter.x, 0, (float)gridCenter.y};
+		triangleB.B											-= {(float)gridCenter.x, 0, (float)gridCenter.y};
+		triangleB.C											-= {(float)gridCenter.x, 0, (float)gridCenter.y};
+		geometry.Triangles	.push_back(triangleA);
+		geometry.Triangles	.push_back(triangleB);
+		geometry.Normals	.push_back({0, 1, 0});
 	}
 	return 0;
 }
@@ -83,12 +111,13 @@ int													setup				(SApplication & app)	{
 	::ced::SWindow											& window			= app.Window;
 	::ced::windowSetup(window);
 	app.Pixels											= (::ced::SColor*)malloc(sizeof(::ced::SColor) * window.Size.x * window.Size.y);
-	::setupTriangles(app);
+	//::geometryBuildCube(app.Geometry);
+	::geometryBuildGrid(app.Geometry, {2U, 2U}, {1U, 1U});
 
 	app.Models.resize(6);
 	for(uint32_t iModel = 0; iModel < app.Models.size(); ++iModel) {
 		SModel3D												& model			= app.Models[iModel];
-		model.Scale											= {1, 2, 3};
+		model.Scale											= {1, 1, 1};
 		model.Rotation										= {0, 1, 0};
 		model.Position										= {4, 0.5};
 		model.Position.RotateY(::ced::MATH_2PI / app.Models.size() * iModel);
@@ -105,7 +134,6 @@ int													update				(SApplication & app)	{
 	if(window.Resized) {
 		free(app.Pixels);
 		app.Pixels											= (::ced::SColor*)malloc(sizeof(::ced::SColor) * window.Size.x * window.Size.y);
-		::setupTriangles(app);
 	}
 	::ced::view_grid<::ced::SColor>							targetPixels		= {app.Pixels, window.Size};
 	memset(targetPixels.begin(), 0, sizeof(::ced::SColor) * targetPixels.size());
@@ -143,9 +171,9 @@ int													update				(SApplication & app)	{
 		matrixPosition	.SetTranslation	(app.Models[iModel].Position, true);
 
 		::ced::SMatrix4<float>									matrixTransform		= matrixScale * matrixPosition * matrixRotation;
-		for(uint32_t iTriangle = 0; iTriangle < app.Triangles.size(); ++iTriangle) {
-			::ced::STriangle3	<float>								triangle			= app.Triangles	[iTriangle];
-			::ced::SCoord3		<float>								normal				= app.Normals	[iTriangle / 2];
+		for(uint32_t iTriangle = 0; iTriangle < app.Geometry.Triangles.size(); ++iTriangle) {
+			::ced::STriangle3	<float>								triangle			= app.Geometry.Triangles	[iTriangle];
+			::ced::SCoord3		<float>								normal				= app.Geometry.Normals	[iTriangle / 2];
 			triangle.A											= matrixTransform.Transform(triangle.A);
 			triangle.B											= matrixTransform.Transform(triangle.B);
 			triangle.C											= matrixTransform.Transform(triangle.C);
