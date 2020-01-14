@@ -275,6 +275,13 @@ namespace ced
 	};
 
 	template<typename _tValue>
+	struct STriangleWeights {
+		_tValue								A;
+		_tValue								B;
+		_tValue								C;
+	};
+
+	template<typename _tValue>
 	struct SRectangle3 {
 		SCoord3<_tValue>					Position	;
 		SCoord3<_tValue>					Size		;

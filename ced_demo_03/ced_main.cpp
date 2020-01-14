@@ -172,6 +172,7 @@ int													update				(SApplication & app)	{
 
 		::ced::SMatrix4<float>									matrixTransform		= matrixScale * matrixPosition * matrixRotation;
 		::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
+		::ced::container<::ced::STriangleWeights<double>>		pixelVertexWeights;
 		for(uint32_t iTriangle = 0; iTriangle < app.Geometry.Triangles.size(); ++iTriangle) {
 			::ced::STriangle3	<float>								triangle			= app.Geometry.Triangles	[iTriangle];
 			::ced::SCoord3		<float>								normal				= app.Geometry.Normals	[iTriangle / 2];
@@ -195,12 +196,13 @@ int													update				(SApplication & app)	{
 			newTriangle.B										+= {halfScreen.x, halfScreen.y, };
 			newTriangle.C										+= {halfScreen.x, halfScreen.y, };
 			uint32_t												colorIndex			= (uint32_t)iTriangle % ::std::size(app.Colors);
-			::ced::drawTriangle(targetPixels.metrics(), newTriangle, pixelCoords);
+			::ced::drawTriangle(targetPixels.metrics(), newTriangle, pixelCoords, pixelVertexWeights);
 			for(uint32_t iPixelCoord = 0; iPixelCoord < pixelCoords.size(); ++iPixelCoord) {
 				::ced::SCoord2<int32_t>									pixelCoord			= pixelCoords[iPixelCoord];
 				::ced::SColor											pixelColor			= app.Colors[colorIndex];
-				pixelColor.r										= (uint8_t)(pixelColor.r - (pixelCoord.x));
-				pixelColor.g										= (uint8_t)(pixelColor.r - (pixelCoord.y));
+				pixelColor.r										= (uint8_t)(0xFF * pixelVertexWeights[iPixelCoord].A);
+				pixelColor.g										= (uint8_t)(0xFF * pixelVertexWeights[iPixelCoord].B);
+				pixelColor.b										= (uint8_t)(0xFF * pixelVertexWeights[iPixelCoord].C);
 				::ced::setPixel(targetPixels, pixelCoord, pixelColor * lightFactor);
 			}
 		}

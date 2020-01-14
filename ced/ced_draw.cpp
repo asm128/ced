@@ -53,7 +53,7 @@ int								ced::drawLine       	(::ced::view_grid<::ced::SColor> pixels, ::ced::
 }
 
 //https://fgiesen.wordpress.com/2013/02/08/triangle-rasterization-in-practice/
-int										orient2d				(const ::ced::SCoord2<int32_t>& a, const ::ced::SCoord2<int32_t>& b, const ::ced::SCoord2<int32_t>& c)		{ return (b.x-a.x)*(c.y-a.y) - (b.y-a.y)*(c.x-a.x); }
+double									orient2d				(const ::ced::SLine<int32_t>& segment, const ::ced::SCoord2<int32_t>& point)		{ return (segment.B.x - segment.A.x)*(point.y - segment.A.y) - (segment.B.y - segment.A.y)*(point.x - segment.A.x); }
 
 template <typename _tValue>	_tValue 	max3					(_tValue & a, _tValue & b, _tValue & c)			{ return ::std::max(::std::max(a, b), c); }
 template <typename _tValue>	_tValue 	min3					(_tValue & a, _tValue & b, _tValue & c)			{ return ::std::min(::std::min(a, b), c); }
@@ -72,23 +72,24 @@ int								ced::drawTriangle		(::ced::view_grid<::ced::SColor> pixels, ::ced::ST
 	maxY							= ::std::min(maxY, (int32_t)pixels.metrics().y	- 1);
 
 	// Rasterize
-	::ced::SCoord2<int32_t> p;
+	::ced::SCoord2<int32_t>				p;
 	for (p.y = minY; p.y <= maxY; p.y++) {
 		for (p.x = minX; p.x <= maxX; p.x++) {
 			// Determine barycentric coordinates
-			int									w0						= ::orient2d(triangle.B, triangle.C, p);
-			int									w1						= ::orient2d(triangle.C, triangle.A, p);
-			int									w2						= ::orient2d(triangle.A, triangle.B, p);
+			double									w0						= ::orient2d({triangle.B, triangle.C}, p);
+			double									w1						= ::orient2d({triangle.C, triangle.A}, p);
+			double									w2						= ::orient2d({triangle.A, triangle.B}, p);
 			// If p is on or inside all edges, render pixel.
-			if (w0 >= 0 && w1 >= 0 && w2 >= 0)
-				::ced::setPixel(pixels, p, color);
+			if (w0 < 0 || w1 < 0 || w2 < 0)
+				continue;
+			::ced::setPixel(pixels, p, color);
 		}
 	}
 	return 0;
 }
 
 
-int								ced::drawTriangle		(::ced::SCoord2<uint32_t> targetSize, ::ced::STriangle<int32_t> triangle, ::ced::container<::ced::SCoord2<int32_t>> & pixelCoords)	{
+int								ced::drawTriangle		(::ced::SCoord2<uint32_t> targetSize, ::ced::STriangle<int32_t> triangle, ::ced::container<::ced::SCoord2<int32_t>> & pixelCoords, ::ced::container<::ced::STriangleWeights<double>> & proportions)	{
 	// Compute triangle bounding box
 	int32_t								minX					= ::min3(triangle.A.x, triangle.B.x, triangle.C.x);
 	int32_t								minY					= ::min3(triangle.A.y, triangle.B.y, triangle.C.y);
@@ -103,19 +104,22 @@ int								ced::drawTriangle		(::ced::SCoord2<uint32_t> targetSize, ::ced::STria
 
 	// Rasterize
 	::ced::SCoord2<int32_t> p;
-	for (p.y = minY; p.y <= maxY; p.y++)
-	for (p.x = minX; p.x <= maxX; p.x++) {
+	for (p.y = minY; p.y <= maxY; ++p.y)
+	for (p.x = minX; p.x <= maxX; ++p.x) {
 		// Determine barycentric coordinates
-		int									w0						= ::orient2d(triangle.B, triangle.C, p);
-		int									w1						= ::orient2d(triangle.C, triangle.A, p);
-		int									w2						= ::orient2d(triangle.A, triangle.B, p);
+		double								w0						= ::orient2d({triangle.B, triangle.C}, p);
+		double								w1						= ::orient2d({triangle.C, triangle.A}, p);
+		double								w2						= ::orient2d({triangle.A, triangle.B}, p);
 		// If p is on or inside all edges, render pixel.
-		if (w0 >= 0 && w1 >= 0 && w2 >= 0) {
-			if( p.x >= 0 && p.x < (int32_t)targetSize.x
-				&& p.y >= 0 && p.y < (int32_t)targetSize.y
-			)
-				pixelCoords.push_back(p);
-		}
+		if (w0 < 0 || w1 < 0 || w2 < 0)
+			continue;
+
+		double								proportionABC			= w0 + w1 + w2;
+		double								proportionA				= w0 / proportionABC;
+		double								proportionB				= w1 / proportionABC;
+		double								proportionC				= 1.0 - (proportionA + proportionB);
+		pixelCoords.push_back(p);
+		proportions.push_back({proportionA, proportionB, proportionC});
 	}
 	return 0;
 }
