@@ -13,6 +13,11 @@ struct SModel3D {
 	::ced::SCoord3<float>								Position;
 };
 
+struct SImage {
+	::ced::SCoord2<uint32_t>							Metrics		;
+	::ced::container<::ced::SColor>						Pixels		;
+};
+
 struct SApplication {
 	::ced::SWindow										Window				= {};
 	::ced::SColor										* Pixels			= 0;
@@ -21,16 +26,40 @@ struct SApplication {
 	double												TotalTime			= 0;
 	::ced::SColor										Colors		[4]		= { {0xff}, {0, 0xFF}, {0, 0, 0xFF}, {0xFF, 0xC0, 0x40} };
 
-	::ced::container<::SModel3D>						Models;
-	::ced::SGeometryTriangles							Geometry;
+	::SImage											Image				= {};
+	::ced::container<::SModel3D>						Models				= {};
+	::ced::SGeometryTriangles							Geometry			= {};
 };
+
+int													bmpFileLoad
+	( const char						* filename
+	, ::SImage							& imageLoaded
+	) {
+	HINSTANCE												hInstance			= GetModuleHandle(0);
+	HBITMAP													loadedBMP			= (HBITMAP)LoadImage(hInstance, filename, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+	HDC														hdc					= CreateCompatibleDC(0);
+	BITMAP													bitmap				= {};
+	GetObject(loadedBMP, sizeof(BITMAP), &bitmap);
+	HBITMAP													oldBMP				= (HBITMAP)SelectObject(hdc, loadedBMP);
+	imageLoaded.Pixels.resize(bitmap.bmHeight * bitmap.bmWidth);
+	imageLoaded.Metrics.x								= bitmap.bmWidth	;
+	imageLoaded.Metrics.y								= bitmap.bmHeight	;
+	for(uint32_t y = 0; y < imageLoaded.Metrics.y; ++y)
+	for(uint32_t x = 0; x < imageLoaded.Metrics.x; ++x) {
+		COLORREF												winColor			= GetPixel(hdc, x, y);
+		imageLoaded.Pixels[y * imageLoaded.Metrics.x + x]	= {GetRValue(winColor), GetGValue(winColor), GetBValue(winColor), 0xFF};
+	}
+	SelectObject(hdc, oldBMP);
+	DeleteDC(hdc);
+	DeleteObject(loadedBMP);
+	return 0;
+}
 
 int													cleanup				(SApplication & app)	{
 	free(app.Pixels);
 	::ced::windowCleanup(app.Window);
 	return 0;
 }
-
 
 int													setup				(SApplication & app)	{
 	::ced::SWindow											& window			= app.Window;
@@ -48,6 +77,8 @@ int													setup				(SApplication & app)	{
 		model.Position										= {4, 0.5};
 		model.Position.RotateY(::ced::MATH_2PI / app.Models.size() * iModel);
 	}
+
+	::bmpFileLoad("../ced_data/cp437_12x12.bmp", app.Image);
 	return 0;
 }
 
@@ -106,6 +137,11 @@ int													update				(SApplication & app)	{
 			::ced::SColor											triangleColor		= app.Colors[colorIndex];
 			::ced::drawTriangle(targetPixels, app.Geometry, iTriangle, matrixTransform, matrixView, lightVector, triangleColor, pixelCoords, pixelVertexWeights);
 		}
+	}
+	::ced::view_grid<const ::ced::SColor>					viewImage				= {app.Image.Pixels.begin(), app.Image.Metrics};
+	for(uint32_t y = 0; y < app.Image.Metrics.y; ++y)
+	for(uint32_t x = 0; x < app.Image.Metrics.x; ++x) {
+		targetPixels[y][x]									= viewImage[y][x];
 	}
 	return app.Running ? 0 : 1;
 }

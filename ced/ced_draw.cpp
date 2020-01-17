@@ -114,6 +114,8 @@ int								ced::drawTriangle		(::ced::SCoord2<uint32_t> targetSize, ::ced::STria
 			continue;
 
 		double								proportionABC			= w0 + w1 + w2;
+		if(proportionABC == 0)
+			continue;
 		double								proportionA				= w0 / proportionABC;
 		double								proportionB				= w1 / proportionABC;
 		double								proportionC				= 1.0 - (proportionA + proportionB);
