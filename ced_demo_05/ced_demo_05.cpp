@@ -62,23 +62,12 @@ int													cleanup				(SApplication & app)	{
 }
 
 int													setup				(SApplication & app)	{
+	::bmpFileLoad("../ced_data/cp437_12x12.bmp", app.Image);
+
 	::ced::SWindow											& window			= app.Window;
+	window.Size											= app.Image.Metrics;
 	::ced::windowSetup(window);
 	app.Pixels											= (::ced::SColor*)malloc(sizeof(::ced::SColor) * window.Size.x * window.Size.y);
-	//::ced::geometryBuildCube(app.Geometry);
-	//::ced::geometryBuildGrid(app.Geometry, {2U, 2U}, {1U, 1U});
-	::ced::geometryBuildSphere(app.Geometry, 16U, 16U, 1, {});
-	//::ced::geometryBuildFigure0(app.Geometry, 10U, 10U, 1, {});
-	app.Models.resize(6);
-	for(uint32_t iModel = 0; iModel < app.Models.size(); ++iModel) {
-		SModel3D												& model			= app.Models[iModel];
-		model.Scale											= {1, 1, 1};
-		//model.Rotation										= {0, 1, 0};
-		model.Position										= {4, 0.5};
-		model.Position.RotateY(::ced::MATH_2PI / app.Models.size() * iModel);
-	}
-
-	::bmpFileLoad("../ced_data/cp437_12x12.bmp", app.Image);
 	return 0;
 }
 
@@ -95,49 +84,6 @@ int													update				(SApplication & app)	{
 	::ced::view_grid<::ced::SColor>							targetPixels		= {app.Pixels, window.Size};
 	memset(targetPixels.begin(), 0, sizeof(::ced::SColor) * targetPixels.size());
 
-	//------------------------------------------- Handle input
-	::ced::SCoord3<float>									cameraTarget		= {};
-	static ::ced::SCoord3<float>							cameraPosition		= {15, 5, 0};
-	::ced::SCoord3<float>									cameraUp			= {0, 1, 0};
-
-	if(GetAsyncKeyState('Q')) cameraPosition.y					-= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
-	if(GetAsyncKeyState('E')) cameraPosition.y					+= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
-
-	//------------------------------------------- Transform and Draw
-	static ::ced::SCoord3<float>							lightVector			= {15, 12, 0};
-	lightVector											= lightVector	.RotateY(lastFrameSeconds * 2);
-	cameraPosition										= cameraPosition.RotateY(lastFrameSeconds / 2);
-
-	lightVector.Normalize();
-
-	::ced::SMatrix4<float>									matrixView			= {};
-	::ced::SMatrix4<float>									matrixProjection	= {};
-	::ced::SMatrix4<float>									matrixViewport		= {};
-	matrixView.LookAt(cameraPosition, cameraTarget, cameraUp);
-	matrixProjection.FieldOfView(::ced::MATH_PI * .25, targetPixels.metrics().x / (double)targetPixels.metrics().y, 0.01, 1000);
-	matrixViewport.Viewport(targetPixels.metrics(), 0.01, 1000);
-	matrixView											= matrixView * matrixProjection;
-	matrixView											= matrixView * matrixViewport.GetInverse();
-
-	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
-	::ced::container<::ced::STriangleWeights<double>>		pixelVertexWeights;
-	for(uint32_t iModel = 0; iModel < app.Models.size(); ++iModel) {
-		::ced::SMatrix4<float>									matrixScale		;
-		::ced::SMatrix4<float>									matrixRotation	;
-		::ced::SMatrix4<float>									matrixPosition	;
-		matrixScale		.Scale			(app.Models[iModel].Scale	, true);
-		matrixRotation	.Rotation		(app.Models[iModel].Rotation);
-		matrixPosition	.SetTranslation	(app.Models[iModel].Position, true);
-
-		::ced::SMatrix4<float>									matrixTransform		= matrixScale * matrixPosition * matrixRotation;
-		for(uint32_t iTriangle = 0; iTriangle < app.Geometry.Triangles.size(); ++iTriangle) {
-			pixelCoords			.clear();
-			pixelVertexWeights	.clear();
-			uint32_t												colorIndex			= (uint32_t)iModel % ::std::size(app.Colors);
-			::ced::SColor											triangleColor		= app.Colors[colorIndex];
-			::ced::drawTriangle(targetPixels, app.Geometry, iTriangle, matrixTransform, matrixView, lightVector, triangleColor, pixelCoords, pixelVertexWeights);
-		}
-	}
 	::ced::view_grid<const ::ced::SColor>					viewImage				= {app.Image.Pixels.begin(), app.Image.Metrics};
 	for(uint32_t y = 0; y < app.Image.Metrics.y; ++y)
 	for(uint32_t x = 0; x < app.Image.Metrics.x; ++x) {
