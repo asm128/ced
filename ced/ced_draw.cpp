@@ -88,7 +88,6 @@ int								ced::drawTriangle		(::ced::view_grid<::ced::SColor> pixels, ::ced::ST
 	return 0;
 }
 
-
 int								ced::drawTriangle		(::ced::SCoord2<uint32_t> targetSize, ::ced::STriangle<int32_t> triangle, ::ced::container<::ced::SCoord2<int32_t>> & pixelCoords, ::ced::container<::ced::STriangleWeights<double>> & proportions)	{
 	// Compute triangle bounding box
 	int32_t								minX					= ::min3(triangle.A.x, triangle.B.x, triangle.C.x);
@@ -99,8 +98,8 @@ int								ced::drawTriangle		(::ced::SCoord2<uint32_t> targetSize, ::ced::STria
 	// Clip against screen bounds
 	minX							= ::std::max(minX, 0);
 	minY							= ::std::max(minY, 0);
-	maxX							= ::std::min(maxX, (int32_t)targetSize.x	- 1);
-	maxY							= ::std::min(maxY, (int32_t)targetSize.y	- 1);
+	maxX							= ::std::min(maxX, (int32_t)targetSize.x - 1);
+	maxY							= ::std::min(maxY, (int32_t)targetSize.y - 1);
 
 	// Rasterize
 	::ced::SCoord2<int32_t> p;
@@ -123,7 +122,6 @@ int								ced::drawTriangle		(::ced::SCoord2<uint32_t> targetSize, ::ced::STria
 	}
 	return 0;
 }
-
 
 int													ced::drawQuadTriangle
 	( ::ced::view_grid<::ced::SColor>	targetPixels
@@ -188,7 +186,6 @@ int													ced::drawTriangle
 	triangle.A											= matrixView.Transform(triangle.A);
 	triangle.B											= matrixView.Transform(triangle.B);
 	triangle.C											= matrixView.Transform(triangle.C);
-
 
 	::ced::STriangle<int32_t>								newTriangle			=
 		{ {(int32_t)triangle.A.x, (int32_t)triangle.A.y}
