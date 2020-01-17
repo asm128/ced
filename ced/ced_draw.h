@@ -45,6 +45,17 @@ namespace ced
 		, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
 		, ::ced::container<::ced::STriangleWeights<double>>	& pixelVertexWeights
 		);
+	int								drawTriangle
+		( ::ced::view_grid<::ced::SColor>	targetPixels
+		, ::ced::SGeometryTriangles			& geometry
+		, int								iTriangle
+		, ::ced::SMatrix4<float>			& matrixTransform
+		, ::ced::SMatrix4<float>			& matrixView
+		, ::ced::SCoord3<float>				& lightVector
+		, ::ced::SColor						& color
+		, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
+		, ::ced::container<::ced::STriangleWeights<double>>	& pixelVertexWeights
+		);
 } // namespace
 
 #endif // CED_DRAW_H_29837429837

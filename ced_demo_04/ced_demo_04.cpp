@@ -22,7 +22,7 @@ struct SApplication {
 	::ced::SColor										Colors		[4]		= { {0xff}, {0, 0xFF}, {0, 0, 0xFF}, {0xFF, 0xC0, 0x40} };
 
 	::ced::container<::SModel3D>						Models;
-	::ced::SGeometryQuads									Geometry;
+	::ced::SGeometryTriangles							Geometry;
 };
 
 int													cleanup				(SApplication & app)	{
@@ -38,7 +38,7 @@ int													setup				(SApplication & app)	{
 	app.Pixels											= (::ced::SColor*)malloc(sizeof(::ced::SColor) * window.Size.x * window.Size.y);
 	//::ced::geometryBuildCube(app.Geometry);
 	//::ced::geometryBuildGrid(app.Geometry, {2U, 2U}, {1U, 1U});
-	::ced::geometryBuildSphere(app.Geometry, 10U, 10U, 1, {});
+	::ced::geometryBuildSphere(app.Geometry, 16U, 16U, 1, {});
 	//::ced::geometryBuildFigure0(app.Geometry, 10U, 10U, 1, {});
 	app.Models.resize(6);
 	for(uint32_t iModel = 0; iModel < app.Models.size(); ++iModel) {
@@ -104,7 +104,7 @@ int													update				(SApplication & app)	{
 			pixelVertexWeights	.clear();
 			uint32_t												colorIndex			= (uint32_t)iModel % ::std::size(app.Colors);
 			::ced::SColor											triangleColor		= app.Colors[colorIndex];
-			::ced::drawQuadTriangle(targetPixels, app.Geometry, iTriangle, matrixTransform, matrixView, lightVector, triangleColor, pixelCoords, pixelVertexWeights);
+			::ced::drawTriangle(targetPixels, app.Geometry, iTriangle, matrixTransform, matrixView, lightVector, triangleColor, pixelCoords, pixelVertexWeights);
 		}
 	}
 	return app.Running ? 0 : 1;
