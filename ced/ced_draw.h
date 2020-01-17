@@ -1,5 +1,7 @@
 #include "ced_math.h"
-#include "ced_view.h"
+#include "ced_matrix.h"
+#include "ced_geometry.h"
+
 #include <algorithm>
 
 #ifndef CED_DRAW_H_29837429837
@@ -32,6 +34,17 @@ namespace ced
 	int								drawLine			(::ced::view_grid<::ced::SColor> pixels, ::ced::SLine		<int32_t>	line		, ::ced::SColor color);
 	int								drawTriangle		(::ced::view_grid<::ced::SColor> pixels, ::ced::STriangle	<int32_t>	triangle	, ::ced::SColor color);
 	int								drawTriangle		(::ced::SCoord2<uint32_t> targetSize, ::ced::STriangle<int32_t> triangle, ::ced::container<::ced::SCoord2<int32_t>> & pixelCoords, ::ced::container<::ced::STriangleWeights<double>> & proportions);
+	int								drawQuadTriangle
+		( ::ced::view_grid<::ced::SColor>	targetPixels
+		, ::ced::SGeometryQuads				& geometry
+		, int								iTriangle
+		, ::ced::SMatrix4<float>			& matrixTransform
+		, ::ced::SMatrix4<float>			& matrixView
+		, ::ced::SCoord3<float>				& lightVector
+		, ::ced::SColor						& color
+		, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
+		, ::ced::container<::ced::STriangleWeights<double>>	& pixelVertexWeights
+		);
 } // namespace
 
 #endif // CED_DRAW_H_29837429837

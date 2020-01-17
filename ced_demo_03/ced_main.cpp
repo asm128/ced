@@ -42,7 +42,7 @@ struct SModel3D {
 	::ced::SCoord3<float>								Position;
 };
 
-struct SGeometry {
+struct SGeometryQuads {
 	::ced::container<::ced::STriangle3	<float>>		Triangles;
 	::ced::container<::ced::SCoord3		<float>>		Normals;
 };
@@ -56,7 +56,7 @@ struct SApplication {
 	::ced::SColor										Colors		[4]		= { {0xff}, {0, 0xFF}, {0, 0, 0xFF}, {0xFF, 0xC0, 0x40} };
 
 	::ced::container<::SModel3D>						Models;
-	::SGeometry											Geometry;
+	::SGeometryQuads											Geometry;
 };
 
 int													cleanup				(SApplication & app)	{
@@ -65,7 +65,7 @@ int													cleanup				(SApplication & app)	{
 	return 0;
 }
 
-int													geometryBuildCube	(SGeometry & geometry)	{
+int													geometryBuildCube	(SGeometryQuads & geometry)	{
 	geometry.Triangles	.resize((uint32_t)::std::size(geometryCube));
 	geometry.Normals	.resize((uint32_t)::std::size(geometryNormals));
 
@@ -82,7 +82,7 @@ int													geometryBuildCube	(SGeometry & geometry)	{
 	return 0;
 }
 
-int													geometryBuildGrid	(SGeometry & geometry, ::ced::SCoord2<uint32_t> gridSize, ::ced::SCoord2<float> gridCenter)	{
+int													geometryBuildGrid	(SGeometryQuads & geometry, ::ced::SCoord2<uint32_t> gridSize, ::ced::SCoord2<float> gridCenter)	{
 	for(uint32_t z = 0; z < gridSize.y; ++z)
 	for(uint32_t x = 0; x < gridSize.x; ++x)  {
 		::ced::STriangle3<float>								triangleA			= {{1, 0, 0}, {0, 0, 1}, {1, 0, 1}};
@@ -112,7 +112,7 @@ int													setup				(SApplication & app)	{
 	::ced::windowSetup(window);
 	app.Pixels											= (::ced::SColor*)malloc(sizeof(::ced::SColor) * window.Size.x * window.Size.y);
 	//::geometryBuildCube(app.Geometry);
-	::geometryBuildGrid(app.Geometry, {2U, 2U}, {1U, 1U});
+	::geometryBuildGrid(app.Geometry, {2U, 3U}, {1U, 1U});
 
 	app.Models.resize(6);
 	for(uint32_t iModel = 0; iModel < app.Models.size(); ++iModel) {
@@ -140,7 +140,7 @@ int													update				(SApplication & app)	{
 
 	//------------------------------------------- Handle input
 	::ced::SCoord3<float>									cameraTarget		= {};
-	static ::ced::SCoord3<float>							cameraPosition		= {15, 2, 0};
+	static ::ced::SCoord3<float>							cameraPosition		= {15, 5, 0};
 	::ced::SCoord3<float>									cameraUp			= {0, 1, 0};
 
 	if(GetAsyncKeyState('Q')) cameraPosition.y					-= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
@@ -174,6 +174,8 @@ int													update				(SApplication & app)	{
 		::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
 		::ced::container<::ced::STriangleWeights<double>>		pixelVertexWeights;
 		for(uint32_t iTriangle = 0; iTriangle < app.Geometry.Triangles.size(); ++iTriangle) {
+			pixelCoords			.clear();
+			pixelVertexWeights	.clear();
 			::ced::STriangle3	<float>								triangle			= app.Geometry.Triangles	[iTriangle];
 			::ced::SCoord3		<float>								normal				= app.Geometry.Normals	[iTriangle / 2];
 			triangle.A											= matrixTransform.Transform(triangle.A);

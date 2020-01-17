@@ -2,49 +2,15 @@
 #include "ced_timer.h"
 #include "ced_window.h"
 #include "ced_matrix.h"
+#include "ced_geometry.h"
 
 #include <cstdint>
 #include <algorithm>
-
-// Vertex coordinates for cube faces
-static constexpr const ::ced::STriangle3<int8_t>	geometryCube	[12]						=
-	{ {{1, 0, 0}, {0, 0, 0}, {0, 1, 0}}	// Right	- first
-	, {{1, 0, 0}, {0, 1, 0}, {1, 1, 0}}	// Right	- second
-
-	, {{0, 0, 1}, {0, 1, 0}, {0, 0, 0}}	// Back		- first
-	, {{0, 0, 1}, {0, 1, 1}, {0, 1, 0}}	// Back		- second
-
-	, {{1, 0, 0}, {0, 0, 1}, {0, 0, 0}}	// Bottom	- first
-	, {{1, 0, 0}, {1, 0, 1}, {0, 0, 1}}	// Bottom	- second
-
-	, {{1, 0, 1}, {0, 1, 1}, {0, 0, 1}}	// Left		- first
-	, {{1, 0, 1}, {1, 1, 1}, {0, 1, 1}}	// Left		- second
-
-	, {{1, 0, 1}, {1, 1, 0}, {1, 1, 1}}	// Front	- first
-	, {{1, 0, 1}, {1, 0, 0}, {1, 1, 0}}	// Front	- second
-
-	, {{1, 1, 0}, {0, 1, 1}, {1, 1, 1}}	// Top		- first
-	, {{1, 1, 0}, {0, 1, 0}, {0, 1, 1}}	// Top		- second
-	};
-
-static constexpr const ::ced::SCoord3<int8_t>		geometryNormals	[6]		=
-	{ { 0, 0, 1} // Right
-	, {-1, 0, 0} // Back
-	, { 0,-1, 0} // Bottom
-	, { 0, 0,-1} // Left
-	, { 1, 0, 0} // Front
-	, { 0, 1, 0} // Top
-	};
 
 struct SModel3D {
 	::ced::SCoord3<float>								Scale;
 	::ced::SCoord3<float>								Rotation;
 	::ced::SCoord3<float>								Position;
-};
-
-struct SGeometry {
-	::ced::container<::ced::STriangle3	<float>>		Triangles;
-	::ced::container<::ced::SCoord3		<float>>		Normals;
 };
 
 struct SApplication {
@@ -56,7 +22,7 @@ struct SApplication {
 	::ced::SColor										Colors		[4]		= { {0xff}, {0, 0xFF}, {0, 0, 0xFF}, {0xFF, 0xC0, 0x40} };
 
 	::ced::container<::SModel3D>						Models;
-	::SGeometry											Geometry;
+	::ced::SGeometryQuads									Geometry;
 };
 
 int													cleanup				(SApplication & app)	{
@@ -65,117 +31,15 @@ int													cleanup				(SApplication & app)	{
 	return 0;
 }
 
-int													geometryBuildCube	(SGeometry & geometry)	{
-	geometry.Triangles	.resize((uint32_t)::std::size(geometryCube));
-	geometry.Normals	.resize((uint32_t)::std::size(geometryNormals));
-
-	for(uint32_t iTriangle = 0; iTriangle < geometry.Triangles.size(); ++iTriangle) {
-		::ced::STriangle3<float>								& newTriangle		= geometry.Triangles[iTriangle];
-		newTriangle											= geometryCube[iTriangle].Cast<float>();
-		newTriangle.A										-= {.5, .5, .5};
-		newTriangle.B										-= {.5, .5, .5};
-		newTriangle.C										-= {.5, .5, .5};
-
-		::ced::SCoord3<float>									& newNormal			= geometry.Normals[iTriangle / 2];
-		newNormal											= geometryNormals[iTriangle / 2].Cast<float>();
-	}
-	return 0;
-}
-
-int													geometryBuildGrid	(SGeometry & geometry, ::ced::SCoord2<uint32_t> gridSize, ::ced::SCoord2<float> gridCenter)	{
-	for(uint32_t z = 0; z < gridSize.y; ++z)
-	for(uint32_t x = 0; x < gridSize.x; ++x)  {
-		::ced::SCoord3<double>									coords	[4]			=
-			{ {0, 0, 0}
-			, {0, 0, 1}
-			, {1, 0, 0}
-			, {1, 0, 1}
-			};
-		::ced::STriangle3<float>								triangleA			= {coords[0].Cast<float>(), coords[1].Cast<float>(), coords[2].Cast<float>()};
-		::ced::STriangle3<float>								triangleB			= {coords[1].Cast<float>(), coords[3].Cast<float>(), coords[2].Cast<float>()};
-		//::ced::STriangle3<float>								triangleA			= {{1, 0, 0}, {0, 0, 1}, {1, 0, 1}};
-		//::ced::STriangle3<float>								triangleB			= {{1, 0, 0}, {0, 0, 0}, {0, 0, 1}};
-		triangleA.A											+= {(float)x, 0, (float)z};
-		triangleA.B											+= {(float)x, 0, (float)z};
-		triangleA.C											+= {(float)x, 0, (float)z};
-		triangleB.A											+= {(float)x, 0, (float)z};
-		triangleB.B											+= {(float)x, 0, (float)z};
-		triangleB.C											+= {(float)x, 0, (float)z};
-
-		triangleA.A											-= {(float)gridCenter.x, 0, (float)gridCenter.y};
-		triangleA.B											-= {(float)gridCenter.x, 0, (float)gridCenter.y};
-		triangleA.C											-= {(float)gridCenter.x, 0, (float)gridCenter.y};
-		triangleB.A											-= {(float)gridCenter.x, 0, (float)gridCenter.y};
-		triangleB.B											-= {(float)gridCenter.x, 0, (float)gridCenter.y};
-		triangleB.C											-= {(float)gridCenter.x, 0, (float)gridCenter.y};
-		geometry.Triangles	.push_back(triangleA);
-		geometry.Triangles	.push_back(triangleB);
-		geometry.Normals	.push_back({0, 1, 0});
-	}
-	return 0;
-}
-
-//
-int													geometryBuildFigure0	(SGeometry & geometry, uint32_t stacks, uint32_t slices, float radius, ::ced::SCoord3<float> gridCenter)	{
-	(void)radius;
-	for(uint32_t z = 0; z < stacks; ++z)
-	for(uint32_t x = 0; x < slices; ++x)  {
-		::ced::SCoord3<double>									coords	[4]			=
-			{ {sin(::ced::MATH_PI * z		/ stacks	) * cos(::ced::MATH_2PI * x			/ slices), sin(::ced::MATH_PI * z		/ stacks) * sin(::ced::MATH_2PI * x			/ slices), cos(::ced::MATH_PI * x		/slices)}
-			, {sin(::ced::MATH_PI * z		/ stacks	) * cos(::ced::MATH_2PI * (x + 1)	/ slices), sin(::ced::MATH_PI * z		/ stacks) * sin(::ced::MATH_2PI * (x + 1)	/ slices), cos(::ced::MATH_PI * (x + 1) /slices)}
-			, {sin(::ced::MATH_PI * (z + 1)	/ stacks	) * cos(::ced::MATH_2PI * x			/ slices), sin(::ced::MATH_PI * (z + 1)	/ stacks) * sin(::ced::MATH_2PI * x			/ slices), cos(::ced::MATH_PI * x		/slices)}
-			, {sin(::ced::MATH_PI * (z + 1)	/ stacks	) * cos(::ced::MATH_2PI * (x + 1)	/ slices), sin(::ced::MATH_PI * (z + 1)	/ stacks) * sin(::ced::MATH_2PI * (x + 1)	/ slices), cos(::ced::MATH_PI * (x + 1)	/slices)}
-			};
-		::ced::STriangle3<float>								triangleA			= {coords[0].Cast<float>() * radius, coords[1].Cast<float>() * radius, coords[2].Cast<float>() * radius};
-		::ced::STriangle3<float>								triangleB			= {coords[1].Cast<float>() * radius, coords[3].Cast<float>() * radius, coords[2].Cast<float>() * radius};
-		triangleA.A											-= gridCenter;
-		triangleA.B											-= gridCenter;
-		triangleA.C											-= gridCenter;
-		triangleB.A											-= gridCenter;
-		triangleB.B											-= gridCenter;
-		triangleB.C											-= gridCenter;
-		geometry.Triangles	.push_back(triangleA);
-		geometry.Triangles	.push_back(triangleB);
-		geometry.Normals	.push_back({0, 1, 0});
-	}
-	return 0;
-}
-
-//
-int													geometryBuildSphere	(SGeometry & geometry, uint32_t stacks, uint32_t slices, float radius, ::ced::SCoord3<float> gridCenter)	{
-	(void)radius;
-	for(uint32_t z = 0; z < stacks; ++z)
-	for(uint32_t x = 0; x < slices; ++x)  {
-		::ced::SCoord3<double>									coords	[4]			=
-			{ {sin(::ced::MATH_PI * x		/slices) * cos(::ced::MATH_2PI * z			/ stacks), sin(::ced::MATH_PI * x		/ slices) * sin(::ced::MATH_2PI * z			/ stacks), cos(::ced::MATH_PI * x		/slices)}
-			, {sin(::ced::MATH_PI * (x + 1)	/slices) * cos(::ced::MATH_2PI * z			/ stacks), sin(::ced::MATH_PI * (x + 1)	/ slices) * sin(::ced::MATH_2PI * z			/ stacks), cos(::ced::MATH_PI * (x + 1) /slices)}
-			, {sin(::ced::MATH_PI * x		/slices) * cos(::ced::MATH_2PI * (z + 1)	/ stacks), sin(::ced::MATH_PI * x		/ slices) * sin(::ced::MATH_2PI * (z + 1)	/ stacks), cos(::ced::MATH_PI * x		/slices)}
-			, {sin(::ced::MATH_PI * (x + 1)	/slices) * cos(::ced::MATH_2PI * (z + 1)	/ stacks), sin(::ced::MATH_PI * (x + 1)	/ slices) * sin(::ced::MATH_2PI * (z + 1)	/ stacks), cos(::ced::MATH_PI * (x + 1)	/slices)}
-			};
-		::ced::STriangle3<float>								triangleA			= {coords[0].Cast<float>() * radius, coords[1].Cast<float>() * radius, coords[2].Cast<float>() * radius};
-		::ced::STriangle3<float>								triangleB			= {coords[1].Cast<float>() * radius, coords[3].Cast<float>() * radius, coords[2].Cast<float>() * radius};
-		triangleA.A											-= gridCenter;
-		triangleA.B											-= gridCenter;
-		triangleA.C											-= gridCenter;
-		triangleB.A											-= gridCenter;
-		triangleB.B											-= gridCenter;
-		triangleB.C											-= gridCenter;
-		geometry.Triangles	.push_back(triangleA);
-		geometry.Triangles	.push_back(triangleB);
-		geometry.Normals	.push_back({0, 1, 0});
-	}
-	return 0;
-}
-
 
 int													setup				(SApplication & app)	{
 	::ced::SWindow											& window			= app.Window;
 	::ced::windowSetup(window);
 	app.Pixels											= (::ced::SColor*)malloc(sizeof(::ced::SColor) * window.Size.x * window.Size.y);
-	//::geometryBuildCube(app.Geometry);
-	//::geometryBuildGrid(app.Geometry, {2U, 2U}, {1U, 1U});
-	::geometryBuildSphere(app.Geometry, 10U, 10U, 1, {1U, 1U});
-
+	//::ced::geometryBuildCube(app.Geometry);
+	//::ced::geometryBuildGrid(app.Geometry, {2U, 2U}, {1U, 1U});
+	::ced::geometryBuildSphere(app.Geometry, 10U, 10U, 1, {});
+	//::ced::geometryBuildFigure0(app.Geometry, 10U, 10U, 1, {});
 	app.Models.resize(6);
 	for(uint32_t iModel = 0; iModel < app.Models.size(); ++iModel) {
 		SModel3D												& model			= app.Models[iModel];
@@ -224,6 +88,8 @@ int													update				(SApplication & app)	{
 	matrixView											= matrixView * matrixProjection;
 	matrixView											= matrixView * matrixViewport.GetInverse();
 
+	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
+	::ced::container<::ced::STriangleWeights<double>>		pixelVertexWeights;
 	for(uint32_t iModel = 0; iModel < app.Models.size(); ++iModel) {
 		::ced::SMatrix4<float>									matrixScale		;
 		::ced::SMatrix4<float>									matrixRotation	;
@@ -233,40 +99,12 @@ int													update				(SApplication & app)	{
 		matrixPosition	.SetTranslation	(app.Models[iModel].Position, true);
 
 		::ced::SMatrix4<float>									matrixTransform		= matrixScale * matrixPosition * matrixRotation;
-		::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
-		::ced::container<::ced::STriangleWeights<double>>		pixelVertexWeights;
 		for(uint32_t iTriangle = 0; iTriangle < app.Geometry.Triangles.size(); ++iTriangle) {
-			::ced::STriangle3	<float>								triangle			= app.Geometry.Triangles	[iTriangle];
-			::ced::SCoord3		<float>								normal				= app.Geometry.Normals	[iTriangle / 2];
-			triangle.A											= matrixTransform.Transform(triangle.A);
-			triangle.B											= matrixTransform.Transform(triangle.B);
-			triangle.C											= matrixTransform.Transform(triangle.C);
-
-			triangle.A											= matrixView.Transform(triangle.A);
-			triangle.B											= matrixView.Transform(triangle.B);
-			triangle.C											= matrixView.Transform(triangle.C);
-
-			double													lightFactor			= normal.Dot(lightVector);
-
-			::ced::STriangle<int32_t>								newTriangle			=
-				{ {(int32_t)triangle.A.x, (int32_t)triangle.A.y}
-				, {(int32_t)triangle.B.x, (int32_t)triangle.B.y}
-				, {(int32_t)triangle.C.x, (int32_t)triangle.C.y}
-				};
-			::ced::SCoord2	<int32_t>								halfScreen			= window.Size.Cast<int32_t>() / 2;
-			newTriangle.A										+= {halfScreen.x, halfScreen.y, };
-			newTriangle.B										+= {halfScreen.x, halfScreen.y, };
-			newTriangle.C										+= {halfScreen.x, halfScreen.y, };
-			uint32_t												colorIndex			= (uint32_t)iTriangle % ::std::size(app.Colors);
-			::ced::drawTriangle(targetPixels.metrics(), newTriangle, pixelCoords, pixelVertexWeights);
-			for(uint32_t iPixelCoord = 0; iPixelCoord < pixelCoords.size(); ++iPixelCoord) {
-				::ced::SCoord2<int32_t>									pixelCoord			= pixelCoords[iPixelCoord];
-				::ced::SColor											pixelColor			= app.Colors[colorIndex];
-				pixelColor.r										= (uint8_t)(0xFF * pixelVertexWeights[iPixelCoord].A);
-				pixelColor.g										= (uint8_t)(0xFF * pixelVertexWeights[iPixelCoord].B);
-				pixelColor.b										= (uint8_t)(0xFF * pixelVertexWeights[iPixelCoord].C);
-				::ced::setPixel(targetPixels, pixelCoord, pixelColor * lightFactor);
-			}
+			pixelCoords			.clear();
+			pixelVertexWeights	.clear();
+			uint32_t												colorIndex			= (uint32_t)iModel % ::std::size(app.Colors);
+			::ced::SColor											triangleColor		= app.Colors[colorIndex];
+			::ced::drawQuadTriangle(targetPixels, app.Geometry, iTriangle, matrixTransform, matrixView, lightVector, triangleColor, pixelCoords, pixelVertexWeights);
 		}
 	}
 	return app.Running ? 0 : 1;

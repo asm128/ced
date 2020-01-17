@@ -47,11 +47,13 @@ namespace ced
 		using	view<_tValue>				::Count;
 		uint32_t							Size				= 0;
 
+
 											~container			()									{
 			for(uint32_t iElement = 0; iElement < Count; ++iElement)
 				Data[iElement].~_tValue();
 			free(Data);
 		}
+		int32_t								clear				()									{ return resize(0); }
 		int32_t								resize				(uint32_t newCount)					{
 			if(newCount < Count) {
 				for(uint32_t iElement = Count - 1; iElement < newCount; --iElement)
