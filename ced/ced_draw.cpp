@@ -132,7 +132,7 @@ int													ced::drawQuadTriangle
 	, ::ced::SMatrix4<float>			& matrixTransform
 	, ::ced::SMatrix4<float>			& matrixView
 	, ::ced::SCoord3<float>				& lightVector
-	, ::ced::SColor						& color
+	, ::ced::SColor						 color
 	, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
 	, ::ced::container<::ced::STriangleWeights<double>>	& pixelVertexWeights
 	) {
@@ -160,9 +160,9 @@ int													ced::drawQuadTriangle
 	::ced::drawTriangle(targetPixels.metrics(), newTriangle, pixelCoords, pixelVertexWeights);
 	for(uint32_t iPixelCoord = 0; iPixelCoord < pixelCoords.size(); ++iPixelCoord) {
 		::ced::SCoord2<int32_t>									pixelCoord			= pixelCoords[iPixelCoord];
-		//pixelColor.r										= (uint8_t)(0xFF * pixelVertexWeights[iPixelCoord].A);
-		//pixelColor.g										= (uint8_t)(0xFF * pixelVertexWeights[iPixelCoord].B);
-		//pixelColor.b										= (uint8_t)(0xFF * pixelVertexWeights[iPixelCoord].C);
+		//color.r										= (uint8_t)(0xFF * pixelVertexWeights[iPixelCoord].A);
+		//color.g										= (uint8_t)(0xFF * pixelVertexWeights[iPixelCoord].B);
+		//color.b										= (uint8_t)(0xFF * pixelVertexWeights[iPixelCoord].C);
 		::ced::setPixel(targetPixels, pixelCoord, color * lightFactor);
 	}
 	return 0;
@@ -175,7 +175,7 @@ int													ced::drawTriangle
 	, ::ced::SMatrix4<float>			& matrixTransform
 	, ::ced::SMatrix4<float>			& matrixView
 	, ::ced::SCoord3<float>				& lightVector
-	, ::ced::SColor						& color
+	, ::ced::SColor						 color
 	, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
 	, ::ced::container<::ced::STriangleWeights<double>>	& pixelVertexWeights
 	) {
@@ -206,7 +206,61 @@ int													ced::drawTriangle
 		normal												+= triangleNormals.B * vertexWeights.B;
 		normal												+= triangleNormals.C * vertexWeights.C;
 		double													lightFactor			= normal.Dot(lightVector);
+		//color.r										= (uint8_t)(0xFF * pixelVertexWeights[iPixelCoord].A);
+		//color.g										= (uint8_t)(0xFF * pixelVertexWeights[iPixelCoord].B);
+		//color.b										= (uint8_t)(0xFF * pixelVertexWeights[iPixelCoord].C);
 		::ced::setPixel(targetPixels, pixelCoord, color * lightFactor);
+	}
+	return 0;
+}
+
+int													ced::drawTriangle
+	( ::ced::view_grid<::ced::SColor>					targetPixels
+	, ::ced::SGeometryTriangles							& geometry
+	, int												iTriangle
+	, ::ced::SMatrix4<float>							& matrixTransform
+	, ::ced::SMatrix4<float>							& matrixView
+	, ::ced::SCoord3<float>								& lightVector
+	, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
+	, ::ced::container<::ced::STriangleWeights<double>>	& pixelVertexWeights
+	, ::ced::view_grid<::ced::SColor>					textureImage
+	) {
+	::ced::STriangle3		<float>								triangle			= geometry.Triangles		[iTriangle];
+	const ::ced::STriangle3	<float>								& triangleNormals	= geometry.Normals			[iTriangle];
+	const ::ced::STriangle	<float>								& triangleTexCoords	= geometry.TextureCoords	[iTriangle];
+	triangle.A											= matrixTransform.Transform(triangle.A);
+	triangle.B											= matrixTransform.Transform(triangle.B);
+	triangle.C											= matrixTransform.Transform(triangle.C);
+
+	triangle.A											= matrixView.Transform(triangle.A);
+	triangle.B											= matrixView.Transform(triangle.B);
+	triangle.C											= matrixView.Transform(triangle.C);
+
+	::ced::STriangle<int32_t>									newTriangle			=
+		{ {(int32_t)triangle.A.x, (int32_t)triangle.A.y}
+		, {(int32_t)triangle.B.x, (int32_t)triangle.B.y}
+		, {(int32_t)triangle.C.x, (int32_t)triangle.C.y}
+		};
+	::ced::SCoord2	<int32_t>									halfScreen			= targetPixels.metrics().Cast<int32_t>() / 2;
+	newTriangle.A											+= {halfScreen.x, halfScreen.y, };
+	newTriangle.B											+= {halfScreen.x, halfScreen.y, };
+	newTriangle.C											+= {halfScreen.x, halfScreen.y, };
+	::ced::drawTriangle(targetPixels.metrics(), newTriangle, pixelCoords, pixelVertexWeights);
+
+	::ced::SCoord2<float>										imageUnit			= {textureImage.metrics().x - 1.0f, textureImage.metrics().y - 1.0f};
+	for(uint32_t iPixelCoord = 0; iPixelCoord < pixelCoords.size(); ++iPixelCoord) {
+		::ced::SCoord2<int32_t>										pixelCoord				= pixelCoords		[iPixelCoord];
+		const ::ced::STriangleWeights<double>						& vertexWeights			= pixelVertexWeights[iPixelCoord];
+		::ced::SCoord3<float>										normal					= triangleNormals.A * vertexWeights.A;
+		normal													+= triangleNormals.B * vertexWeights.B;
+		normal													+= triangleNormals.C * vertexWeights.C;
+		double														lightFactor				= normal.Dot(lightVector);
+
+		::ced::SCoord2<float>										texCoord				= triangleTexCoords.A * vertexWeights.A;
+		texCoord												+= triangleTexCoords.B * vertexWeights.B;
+		texCoord												+= triangleTexCoords.C * vertexWeights.C;
+		::ced::SColor												texelColor				= textureImage[(uint32_t)(texCoord.y * imageUnit.y)][(uint32_t)(texCoord.x * imageUnit.x)];
+		::ced::setPixel(targetPixels, pixelCoord, texelColor * lightFactor);
 	}
 	return 0;
 }

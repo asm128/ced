@@ -7,12 +7,6 @@
 #include <cstdint>
 #include <algorithm>
 
-struct SModel3D {
-	::ced::SCoord3<float>								Scale;
-	::ced::SCoord3<float>								Rotation;
-	::ced::SCoord3<float>								Position;
-};
-
 struct SImage {
 	::ced::SCoord2<uint32_t>							Metrics		;
 	::ced::container<::ced::SColor>						Pixels		;
@@ -27,8 +21,6 @@ struct SApplication {
 	::ced::SColor										Colors		[4]		= { {0xff}, {0, 0xFF}, {0, 0, 0xFF}, {0xFF, 0xC0, 0x40} };
 
 	::SImage											Image				= {};
-	::ced::container<::SModel3D>						Models				= {};
-	::ced::SGeometryTriangles							Geometry			= {};
 };
 
 int													bmpFileLoad

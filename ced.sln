@@ -36,6 +36,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ced_demo_05", "ced_demo_05\
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ced_demo_06", "ced_demo_06\ced_demo_06.vcxproj", "{2C530367-B4CD-457B-97C7-D2EE5D848460}"
+	ProjectSection(ProjectDependencies) = postProject
+		{BB20B515-38FA-435D-BD67-0C9EE67AB7D9} = {BB20B515-38FA-435D-BD67-0C9EE67AB7D9}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

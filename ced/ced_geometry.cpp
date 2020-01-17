@@ -112,10 +112,10 @@ int													ced::geometryBuildSphere	(SGeometryQuads & geometry, uint32_t st
 	for(uint32_t z = 0; z < stacks; ++z)
 	for(uint32_t x = 0; x < slices; ++x)  {
 		::ced::SCoord3<double>									coords	[4]				=
-			{ {sin(::ced::MATH_PI * x		/slices) * cos(::ced::MATH_2PI * z			/ stacks), sin(::ced::MATH_PI * x		/ slices) * sin(::ced::MATH_2PI * z			/ stacks), cos(::ced::MATH_PI * x		/slices)}
-			, {sin(::ced::MATH_PI * (x + 1)	/slices) * cos(::ced::MATH_2PI * z			/ stacks), sin(::ced::MATH_PI * (x + 1)	/ slices) * sin(::ced::MATH_2PI * z			/ stacks), cos(::ced::MATH_PI * (x + 1) /slices)}
-			, {sin(::ced::MATH_PI * x		/slices) * cos(::ced::MATH_2PI * (z + 1)	/ stacks), sin(::ced::MATH_PI * x		/ slices) * sin(::ced::MATH_2PI * (z + 1)	/ stacks), cos(::ced::MATH_PI * x		/slices)}
-			, {sin(::ced::MATH_PI * (x + 1)	/slices) * cos(::ced::MATH_2PI * (z + 1)	/ stacks), sin(::ced::MATH_PI * (x + 1)	/ slices) * sin(::ced::MATH_2PI * (z + 1)	/ stacks), cos(::ced::MATH_PI * (x + 1)	/slices)}
+			{ {sin(::ced::MATH_PI * x		/slices) * cos(::ced::MATH_2PI * z			/ stacks), cos(::ced::MATH_PI * x		/slices), sin(::ced::MATH_PI * x		/ slices) * sin(::ced::MATH_2PI * z			/ stacks)}
+			, {sin(::ced::MATH_PI * (x + 1)	/slices) * cos(::ced::MATH_2PI * z			/ stacks), cos(::ced::MATH_PI * (x + 1) /slices), sin(::ced::MATH_PI * (x + 1)	/ slices) * sin(::ced::MATH_2PI * z			/ stacks)}
+			, {sin(::ced::MATH_PI * x		/slices) * cos(::ced::MATH_2PI * (z + 1)	/ stacks), cos(::ced::MATH_PI * x		/slices), sin(::ced::MATH_PI * x		/ slices) * sin(::ced::MATH_2PI * (z + 1)	/ stacks)}
+			, {sin(::ced::MATH_PI * (x + 1)	/slices) * cos(::ced::MATH_2PI * (z + 1)	/ stacks), cos(::ced::MATH_PI * (x + 1)	/slices), sin(::ced::MATH_PI * (x + 1)	/ slices) * sin(::ced::MATH_2PI * (z + 1)	/ stacks)}
 			};
 		{
 			::ced::STriangle3<float>								triangleA			= {coords[0].Cast<float>() * radius, coords[1].Cast<float>() * radius, coords[2].Cast<float>() * radius};
@@ -143,30 +143,48 @@ int													ced::geometryBuildSphere	(SGeometryQuads & geometry, uint32_t st
 }
 
 int													ced::geometryBuildSphere	(SGeometryTriangles & geometry, uint32_t stacks, uint32_t slices, float radius, ::ced::SCoord3<float> gridCenter)	{
-	(void)radius;
+	::ced::SCoord2<float>									texCoordUnits				= {1.0f / slices, 1.0f / stacks};
 	for(uint32_t z = 0; z < stacks; ++z)
 	for(uint32_t x = 0; x < slices; ++x)  {
-		::ced::SCoord3<double>									coords	[4]				=
-			{ {sin(::ced::MATH_PI * x		/slices) * cos(::ced::MATH_2PI * z			/ stacks), sin(::ced::MATH_PI * x		/ slices) * sin(::ced::MATH_2PI * z			/ stacks), cos(::ced::MATH_PI * x		/slices)}
-			, {sin(::ced::MATH_PI * (x + 1)	/slices) * cos(::ced::MATH_2PI * z			/ stacks), sin(::ced::MATH_PI * (x + 1)	/ slices) * sin(::ced::MATH_2PI * z			/ stacks), cos(::ced::MATH_PI * (x + 1) /slices)}
-			, {sin(::ced::MATH_PI * x		/slices) * cos(::ced::MATH_2PI * (z + 1)	/ stacks), sin(::ced::MATH_PI * x		/ slices) * sin(::ced::MATH_2PI * (z + 1)	/ stacks), cos(::ced::MATH_PI * x		/slices)}
-			, {sin(::ced::MATH_PI * (x + 1)	/slices) * cos(::ced::MATH_2PI * (z + 1)	/ stacks), sin(::ced::MATH_PI * (x + 1)	/ slices) * sin(::ced::MATH_2PI * (z + 1)	/ stacks), cos(::ced::MATH_PI * (x + 1)	/slices)}
+		{
+			::ced::SCoord2<float>									texcoords	[4]				=
+				{ {(z		) * texCoordUnits.y, (x		) * texCoordUnits.x}
+				, {(z		) * texCoordUnits.y, (x + 1	) * texCoordUnits.x}
+				, {(z + 1	) * texCoordUnits.y, (x		) * texCoordUnits.x}
+				, {(z + 1	) * texCoordUnits.y, (x + 1	) * texCoordUnits.x}
+				};
+			geometry.TextureCoords.push_back(
+				{ texcoords[0]
+				, texcoords[2]
+				, texcoords[1]
+				});
+			geometry.TextureCoords.push_back(
+				{ texcoords[1]
+				, texcoords[2]
+				, texcoords[3]
+				});
+		}
+		::ced::SCoord3<double>									coords		[4]				=
+			{ {sin(::ced::MATH_PI * x		/slices) * cos(::ced::MATH_2PI * z			/ stacks), cos(::ced::MATH_PI * x		/slices), sin(::ced::MATH_PI * x		/ slices) * sin(::ced::MATH_2PI * z			/ stacks)}
+			, {sin(::ced::MATH_PI * (x + 1)	/slices) * cos(::ced::MATH_2PI * z			/ stacks), cos(::ced::MATH_PI * (x + 1) /slices), sin(::ced::MATH_PI * (x + 1)	/ slices) * sin(::ced::MATH_2PI * z			/ stacks)}
+			, {sin(::ced::MATH_PI * x		/slices) * cos(::ced::MATH_2PI * (z + 1)	/ stacks), cos(::ced::MATH_PI * x		/slices), sin(::ced::MATH_PI * x		/ slices) * sin(::ced::MATH_2PI * (z + 1)	/ stacks)}
+			, {sin(::ced::MATH_PI * (x + 1)	/slices) * cos(::ced::MATH_2PI * (z + 1)	/ stacks), cos(::ced::MATH_PI * (x + 1)	/slices), sin(::ced::MATH_PI * (x + 1)	/ slices) * sin(::ced::MATH_2PI * (z + 1)	/ stacks)}
 			};
 		{
 			geometry.Normals.push_back(
 				{ coords[0].Normalize().Cast<float>()
-				, coords[1].Normalize().Cast<float>()
 				, coords[2].Normalize().Cast<float>()
+				, coords[1].Normalize().Cast<float>()
 				});
 			geometry.Normals.push_back(
 				{ coords[1].Normalize().Cast<float>()
-				, coords[3].Normalize().Cast<float>()
 				, coords[2].Normalize().Cast<float>()
+				, coords[3].Normalize().Cast<float>()
 				});
 		}
 		{
-			::ced::STriangle3<float>								triangleA			= {coords[0].Cast<float>() * radius, coords[1].Cast<float>() * radius, coords[2].Cast<float>() * radius};
-			::ced::STriangle3<float>								triangleB			= {coords[1].Cast<float>() * radius, coords[3].Cast<float>() * radius, coords[2].Cast<float>() * radius};
+			::ced::STriangle3<float>								triangleA			= {coords[0].Cast<float>() * radius, coords[2].Cast<float>() * radius, coords[1].Cast<float>() * radius};
+			::ced::STriangle3<float>								triangleB			= {coords[1].Cast<float>() * radius, coords[2].Cast<float>() * radius, coords[3].Cast<float>() * radius};
 			triangleA.A											-= gridCenter;
 			triangleA.B											-= gridCenter;
 			triangleA.C											-= gridCenter;

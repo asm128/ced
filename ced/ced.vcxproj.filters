@@ -24,6 +24,9 @@
     <ClCompile Include="ced_geometry.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ced_image.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ced_math.h">
@@ -45,6 +48,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ced_geometry.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ced_image.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ced_color.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

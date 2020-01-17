@@ -1,6 +1,6 @@
-#include "ced_math.h"
 #include "ced_matrix.h"
 #include "ced_geometry.h"
+#include "ced_color.h"
 
 #include <algorithm>
 
@@ -9,25 +9,7 @@
 
 namespace ced
 {
-	template<typename _tValue>
-	_tValue							clamp	(_tValue value, _tValue min, _tValue max)					{ return ::std::min(max, ::std::max(value, min)); };
 
-	struct SColor {
-		uint8_t							r;
-		uint8_t							g;
-		uint8_t							b;
-		uint8_t							a;
-
-		SColor							operator/			(double scalar)	const			{ return {(uint8_t)::ced::clamp(r / scalar, 0.0, 255.0), (uint8_t)::ced::clamp(g / scalar, 0.0, 255.0), (uint8_t)::ced::clamp(b / scalar, 0.0, 255.0), a}; }
-		SColor							operator*			(double scalar)	const noexcept	{ return {(uint8_t)::ced::clamp(r * scalar, 0.0, 255.0), (uint8_t)::ced::clamp(g * scalar, 0.0, 255.0), (uint8_t)::ced::clamp(b * scalar, 0.0, 255.0), a}; }
-		SColor&							operator/=			(double scalar)					{ r = (uint8_t)::ced::clamp(r / scalar, 0.0, 255.0); g = (uint8_t)::ced::clamp(g / scalar, 0.0, 255.0); b = (uint8_t)::ced::clamp(b / scalar, 0.0, 255.0); return *this; }
-		SColor&							operator*=			(double scalar)	noexcept		{ r = (uint8_t)::ced::clamp(r * scalar, 0.0, 255.0); g = (uint8_t)::ced::clamp(g * scalar, 0.0, 255.0); b = (uint8_t)::ced::clamp(b * scalar, 0.0, 255.0); return *this; }
-
-		SColor							operator+			(const SColor& other)	const			{ return {(uint8_t)::ced::clamp(r + other.r, 0, 255), (uint8_t)::ced::clamp(g + other.g, 0, 255),		(uint8_t)::ced::clamp(b + other.b, 0, 255), a}; }
-		SColor							operator-			(const SColor& other)	const noexcept	{ return {(uint8_t)::ced::clamp(r - other.r, 0, 255), (uint8_t)::ced::clamp(g - other.g, 0, 255),		(uint8_t)::ced::clamp(b - other.b, 0, 255), a}; }
-		SColor&							operator+=			(const SColor& other)					{ r = (uint8_t)::ced::clamp(r + other.r, 0, 255); g = (uint8_t)::ced::clamp(g + other.g, 0, 255); b =	(uint8_t)::ced::clamp(b + other.b, 0, 255); return *this; }
-		SColor&							operator-=			(const SColor& other)	noexcept		{ r = (uint8_t)::ced::clamp(r - other.r, 0, 255); g = (uint8_t)::ced::clamp(g - other.g, 0, 255); b =	(uint8_t)::ced::clamp(b - other.b, 0, 255); return *this; }
-	};
 	int								setPixel			(::ced::view_grid<::ced::SColor> pixels, ::ced::SCoord2		<int32_t>	position	, ::ced::SColor color);
 	int								drawRectangle		(::ced::view_grid<::ced::SColor> pixels, ::ced::SRectangle	<int32_t>	rectangle	, ::ced::SColor color);
 	int								drawCircle			(::ced::view_grid<::ced::SColor> pixels, ::ced::SCircle		<int32_t>	circle		, ::ced::SColor color);
@@ -41,7 +23,7 @@ namespace ced
 		, ::ced::SMatrix4<float>			& matrixTransform
 		, ::ced::SMatrix4<float>			& matrixView
 		, ::ced::SCoord3<float>				& lightVector
-		, ::ced::SColor						& color
+		, ::ced::SColor						 color
 		, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
 		, ::ced::container<::ced::STriangleWeights<double>>	& pixelVertexWeights
 		);
@@ -52,9 +34,21 @@ namespace ced
 		, ::ced::SMatrix4<float>			& matrixTransform
 		, ::ced::SMatrix4<float>			& matrixView
 		, ::ced::SCoord3<float>				& lightVector
-		, ::ced::SColor						& color
+		, ::ced::SColor						 color
 		, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
 		, ::ced::container<::ced::STriangleWeights<double>>	& pixelVertexWeights
+		);
+
+	int								drawTriangle
+		( ::ced::view_grid<::ced::SColor>					targetPixels
+		, ::ced::SGeometryTriangles							& geometry
+		, int												iTriangle
+		, ::ced::SMatrix4<float>							& matrixTransform
+		, ::ced::SMatrix4<float>							& matrixView
+		, ::ced::SCoord3<float>								& lightVector
+		, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
+		, ::ced::container<::ced::STriangleWeights<double>>	& pixelVertexWeights
+		, ::ced::view_grid<::ced::SColor>					textureImage
 		);
 } // namespace
 

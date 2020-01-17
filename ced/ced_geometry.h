@@ -13,6 +13,7 @@ namespace ced
 	struct SGeometryTriangles {
 		::ced::container<::ced::STriangle3<float>>			Triangles;
 		::ced::container<::ced::STriangle3<float>>			Normals;
+		::ced::container<::ced::STriangle<float>>			TextureCoords;
 	};
 
 	int													geometryBuildCube		(SGeometryQuads & geometry);
