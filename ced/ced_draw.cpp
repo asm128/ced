@@ -53,7 +53,7 @@ int								ced::drawLine       	(::ced::view_grid<::ced::SColor> pixels, ::ced::
 }
 
 //https://fgiesen.wordpress.com/2013/02/08/triangle-rasterization-in-practice/
-double									orient2d				(const ::ced::SLine<int32_t>& segment, const ::ced::SCoord2<int32_t>& point)		{ return (segment.B.x - segment.A.x)*(point.y - segment.A.y) - (segment.B.y - segment.A.y)*(point.x - segment.A.x); }
+double									orient2d				(const ::ced::SLine<int32_t>& segment, const ::ced::SCoord2<int32_t>& point)		{ return (segment.B.x - segment.A.x) * (point.y - segment.A.y) - (segment.B.y - segment.A.y) * (point.x - segment.A.x); }
 
 template <typename _tValue>	_tValue 	max3					(_tValue & a, _tValue & b, _tValue & c)			{ return ::std::max(::std::max(a, b), c); }
 template <typename _tValue>	_tValue 	min3					(_tValue & a, _tValue & b, _tValue & c)			{ return ::std::min(::std::min(a, b), c); }
