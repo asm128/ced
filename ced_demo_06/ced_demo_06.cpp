@@ -34,7 +34,6 @@ int													cleanup				(SApplication & app)	{
 	return 0;
 }
 
-
 int													setup				(SApplication & app)	{
 	::ced::SWindow											& window			= app.Window;
 	::ced::windowSetup(window);
@@ -43,7 +42,7 @@ int													setup				(SApplication & app)	{
 	app.DepthBuffer.resize(pixelCount);
 	//::ced::geometryBuildCube(app.Geometry);
 	//::ced::geometryBuildGrid(app.Geometry, {2U, 2U}, {1U, 1U});
-	::ced::geometryBuildSphere(app.Geometry, 16U, 16U, 1, {});
+	::ced::geometryBuildSphere(app.Geometry, 4U, 2U, 2, {});
 	//::ced::geometryBuildFigure0(app.Geometry, 10U, 10U, 1, {});
 	app.Models.resize(6);
 	for(uint32_t iModel = 0; iModel < app.Models.size(); ++iModel) {
@@ -55,8 +54,9 @@ int													setup				(SApplication & app)	{
 	}
 
 	::ced::bmpFileLoad("../ced_data/cp437_12x12.bmp", app.Image);
-
-	for(uint32_t y = 0; y < app.Image.Metrics.y; ++y)
+	app.Image.Metrics										= {256, 256};
+	app.Image.Pixels.resize(app.Image.Metrics.x * app.Image.Metrics.y);
+	for(uint32_t y = 0; y < app.Image.Metrics.y; ++y) // Generate noise color for planet texture
 	for(uint32_t x = 0; x < app.Image.Metrics.x; ++x) {
 		app.Image.Pixels[y * app.Image.Metrics.x + x] = {(uint8_t)rand(), (uint8_t)rand(), (uint8_t)rand(), 0xFF};
 	}

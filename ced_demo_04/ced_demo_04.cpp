@@ -32,7 +32,6 @@ int													cleanup				(SApplication & app)	{
 	return 0;
 }
 
-
 int													setup				(SApplication & app)	{
 	::ced::SWindow											& window			= app.Window;
 	::ced::windowSetup(window);
@@ -75,8 +74,8 @@ int													update				(SApplication & app)	{
 	static ::ced::SCoord3<float>							cameraPosition		= {15, 5, 0};
 	::ced::SCoord3<float>									cameraUp			= {0, 1, 0};
 
-	if(GetAsyncKeyState('Q')) cameraPosition.y					-= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
-	if(GetAsyncKeyState('E')) cameraPosition.y					+= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
+	if(GetAsyncKeyState('Q')) cameraPosition.y				-= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
+	if(GetAsyncKeyState('E')) cameraPosition.y				+= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
 
 	//------------------------------------------- Transform and Draw
 	static ::ced::SCoord3<float>							lightVector			= {15, 12, 0};
