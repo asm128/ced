@@ -56,7 +56,8 @@ struct SApplication {
 	::ced::SColor										Colors		[4]		= { {0xff}, {0, 0xFF}, {0, 0, 0xFF}, {0xFF, 0xC0, 0x40} };
 
 	::ced::container<::SModel3D>						Models;
-	::SGeometryQuads											Geometry;
+	::ced::container<uint32_t>							DepthBuffer;
+	::SGeometryQuads									Geometry;
 };
 
 int													cleanup				(SApplication & app)	{
@@ -110,9 +111,11 @@ int													geometryBuildGrid	(SGeometryQuads & geometry, ::ced::SCoord2<uin
 int													setup				(SApplication & app)	{
 	::ced::SWindow											& window			= app.Window;
 	::ced::windowSetup(window);
-	app.Pixels											= (::ced::SColor*)malloc(sizeof(::ced::SColor) * window.Size.x * window.Size.y);
+	const uint32_t											pixelCount			= window.Size.x * window.Size.y;
+	app.Pixels											= (::ced::SColor*)malloc(sizeof(::ced::SColor) * pixelCount);
+	app.DepthBuffer.resize(pixelCount);
 	//::geometryBuildCube(app.Geometry);
-	::geometryBuildGrid(app.Geometry, {2U, 3U}, {1U, 1U});
+	::geometryBuildGrid(app.Geometry, {16U, 3U}, {1U, 1U});
 
 	app.Models.resize(6);
 	for(uint32_t iModel = 0; iModel < app.Models.size(); ++iModel) {
@@ -133,10 +136,13 @@ int													update				(SApplication & app)	{
 		return 1;
 	if(window.Resized) {
 		free(app.Pixels);
-		app.Pixels											= (::ced::SColor*)malloc(sizeof(::ced::SColor) * window.Size.x * window.Size.y);
+		const uint32_t											pixelCount			= window.Size.x * window.Size.y;
+		app.Pixels											= (::ced::SColor*)malloc(sizeof(::ced::SColor) * pixelCount);
+		app.DepthBuffer.resize(pixelCount);
 	}
 	::ced::view_grid<::ced::SColor>							targetPixels		= {app.Pixels, window.Size};
 	memset(targetPixels.begin(), 0, sizeof(::ced::SColor) * targetPixels.size());
+	memset(app.DepthBuffer.begin(), 0, sizeof(::ced::SColor) * app.DepthBuffer.size());
 
 	//------------------------------------------- Handle input
 	::ced::SCoord3<float>									cameraTarget		= {};
@@ -148,8 +154,8 @@ int													update				(SApplication & app)	{
 
 	//------------------------------------------- Transform and Draw
 	static ::ced::SCoord3<float>							lightVector			= {15, 12, 0};
-	lightVector											= lightVector	.RotateY(lastFrameSeconds * 2);
-	cameraPosition										= cameraPosition.RotateY(lastFrameSeconds / 2);
+	lightVector											= lightVector	.RotateY(lastFrameSeconds * 4);
+	cameraPosition										= cameraPosition.RotateY(lastFrameSeconds);
 
 	lightVector.Normalize();
 
@@ -160,7 +166,9 @@ int													update				(SApplication & app)	{
 	matrixProjection.FieldOfView(::ced::MATH_PI * .25, targetPixels.metrics().x / (double)targetPixels.metrics().y, 0.01, 1000);
 	matrixViewport.Viewport(targetPixels.metrics(), 0.01, 1000);
 	matrixView											= matrixView * matrixProjection;
-	matrixView											= matrixView * matrixViewport.GetInverse();
+	matrixViewport										= matrixViewport.GetInverse();
+	matrixViewport._41									+= targetPixels.metrics().x / 2;
+	matrixViewport._42									+= targetPixels.metrics().y / 2;
 
 	for(uint32_t iModel = 0; iModel < app.Models.size(); ++iModel) {
 		::ced::SMatrix4<float>									matrixScale		;
@@ -186,19 +194,16 @@ int													update				(SApplication & app)	{
 			triangle.B											= matrixView.Transform(triangle.B);
 			triangle.C											= matrixView.Transform(triangle.C);
 
-			double													lightFactor			= normal.Dot(lightVector);
+			if(triangle.A.z < 0 || triangle.A.z >= 1) continue;
+			if(triangle.B.z < 0 || triangle.B.z >= 1) continue;
+			if(triangle.C.z < 0 || triangle.C.z >= 1) continue;
 
-			::ced::STriangle<int32_t>								newTriangle			=
-				{ {(int32_t)triangle.A.x, (int32_t)triangle.A.y}
-				, {(int32_t)triangle.B.x, (int32_t)triangle.B.y}
-				, {(int32_t)triangle.C.x, (int32_t)triangle.C.y}
-				};
-			::ced::SCoord2	<int32_t>								halfScreen			= window.Size.Cast<int32_t>() / 2;
-			newTriangle.A										+= {halfScreen.x, halfScreen.y, };
-			newTriangle.B										+= {halfScreen.x, halfScreen.y, };
-			newTriangle.C										+= {halfScreen.x, halfScreen.y, };
+			triangle.A											= matrixViewport.Transform(triangle.A);
+			triangle.B											= matrixViewport.Transform(triangle.B);
+			triangle.C											= matrixViewport.Transform(triangle.C);
+			double													lightFactor			= normal.Dot(lightVector);
 			uint32_t												colorIndex			= (uint32_t)iTriangle % ::std::size(app.Colors);
-			::ced::drawTriangle(targetPixels.metrics(), newTriangle, pixelCoords, pixelVertexWeights);
+			::ced::drawTriangle(targetPixels.metrics(), triangle, pixelCoords, pixelVertexWeights, app.DepthBuffer);
 			for(uint32_t iPixelCoord = 0; iPixelCoord < pixelCoords.size(); ++iPixelCoord) {
 				::ced::SCoord2<int32_t>									pixelCoord			= pixelCoords[iPixelCoord];
 				::ced::SColor											pixelColor			= app.Colors[colorIndex];

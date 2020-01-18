@@ -53,7 +53,9 @@ int								ced::drawLine       	(::ced::view_grid<::ced::SColor> pixels, ::ced::
 }
 
 //https://fgiesen.wordpress.com/2013/02/08/triangle-rasterization-in-practice/
-double									orient2d				(const ::ced::SLine<int32_t>& segment, const ::ced::SCoord2<int32_t>& point)		{ return (segment.B.x - segment.A.x) * (point.y - segment.A.y) - (segment.B.y - segment.A.y) * (point.x - segment.A.x); }
+double									orient2d				(const ::ced::SLine<int32_t>	& segment, const ::ced::SCoord2<int32_t>& point)		{ return (segment.B.x - segment.A.x) * (point.y - segment.A.y) - (segment.B.y - segment.A.y) * (point.x - segment.A.x); }
+double									orient2d				(const ::ced::SLine3<int32_t>	& segment, const ::ced::SCoord2<int32_t>& point)		{ return (segment.B.x - segment.A.x) * (point.y - segment.A.y) - (segment.B.y - segment.A.y) * (point.x - segment.A.x); }
+double									orient2d				(const ::ced::SLine3<float>		& segment, const ::ced::SCoord2<int32_t>& point)		{ return (segment.B.x - segment.A.x) * (point.y - segment.A.y) - (segment.B.y - segment.A.y) * (point.x - segment.A.x); }
 
 template <typename _tValue>	_tValue 	max3					(_tValue & a, _tValue & b, _tValue & c)			{ return ::std::max(::std::max(a, b), c); }
 template <typename _tValue>	_tValue 	min3					(_tValue & a, _tValue & b, _tValue & c)			{ return ::std::min(::std::min(a, b), c); }
@@ -88,12 +90,18 @@ int								ced::drawTriangle		(::ced::view_grid<::ced::SColor> pixels, ::ced::ST
 	return 0;
 }
 
-int								ced::drawTriangle		(::ced::SCoord2<uint32_t> targetSize, ::ced::STriangle<int32_t> triangle, ::ced::container<::ced::SCoord2<int32_t>> & pixelCoords, ::ced::container<::ced::STriangleWeights<double>> & proportions)	{
+int								ced::drawTriangle
+	( ::ced::SCoord2<uint32_t>							targetSize
+	, ::ced::STriangle3<float>							triangle
+	, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
+	, ::ced::container<::ced::STriangleWeights<double>> & proportions
+	, ::ced::container<uint32_t>						& depthBuffer
+	)	{
 	// Compute triangle bounding box
-	int32_t								minX					= ::min3(triangle.A.x, triangle.B.x, triangle.C.x);
-	int32_t								minY					= ::min3(triangle.A.y, triangle.B.y, triangle.C.y);
-	int32_t								maxX					= ::max3(triangle.A.x, triangle.B.x, triangle.C.x);
-	int32_t								maxY					= ::max3(triangle.A.y, triangle.B.y, triangle.C.y);
+	int32_t								minX					= (int32_t)::min3(triangle.A.x, triangle.B.x, triangle.C.x);
+	int32_t								minY					= (int32_t)::min3(triangle.A.y, triangle.B.y, triangle.C.y);
+	int32_t								maxX					= (int32_t)::max3(triangle.A.x, triangle.B.x, triangle.C.x);
+	int32_t								maxY					= (int32_t)::max3(triangle.A.y, triangle.B.y, triangle.C.y);
 
 	// Clip against screen bounds
 	minX							= ::std::max(minX, 0);
@@ -119,8 +127,22 @@ int								ced::drawTriangle		(::ced::SCoord2<uint32_t> targetSize, ::ced::STria
 		double								proportionA				= w0 / proportionABC;
 		double								proportionB				= w1 / proportionABC;
 		double								proportionC				= 1.0 - (proportionA + proportionB);
+
+		// Calculate interpolated depth
+		double								finalZ					= triangle.A.z * proportionA;
+		finalZ							+= triangle.B.z * proportionB;
+		finalZ							+= triangle.C.z * proportionC;
+		if(finalZ >= 1.0 || finalZ <= 0)
+			continue;
+
+		uint32_t							intZ					= uint32_t((0xFFFFFFFFU) * (1.0 - finalZ));
+		if(depthBuffer[p.y * targetSize.x + p.x] > intZ)
+			continue;
+
+		depthBuffer[p.y * targetSize.x + p.x] = intZ;
 		pixelCoords.push_back(p);
 		proportions.push_back({proportionA, proportionB, proportionC});
+
 	}
 	return 0;
 }
@@ -131,10 +153,12 @@ int													ced::drawQuadTriangle
 	, int								iTriangle
 	, ::ced::SMatrix4<float>			& matrixTransform
 	, ::ced::SMatrix4<float>			& matrixView
+	, ::ced::SMatrix4<float>			& matrixViewport
 	, ::ced::SCoord3<float>				& lightVector
 	, ::ced::SColor						 color
 	, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
 	, ::ced::container<::ced::STriangleWeights<double>>	& pixelVertexWeights
+	, ::ced::container<uint32_t>						& depthBuffer
 	) {
 	::ced::STriangle3	<float>								triangle			= geometry.Triangles	[iTriangle];
 	::ced::SCoord3		<float>								normal				= geometry.Normals		[iTriangle / 2];
@@ -145,19 +169,17 @@ int													ced::drawQuadTriangle
 	triangle.A											= matrixView.Transform(triangle.A);
 	triangle.B											= matrixView.Transform(triangle.B);
 	triangle.C											= matrixView.Transform(triangle.C);
+	if(triangle.A.z < 0 || triangle.A.z >= 1) return 0;
+	if(triangle.B.z < 0 || triangle.B.z >= 1) return 0;
+	if(triangle.C.z < 0 || triangle.C.z >= 1) return 0;
+
+	triangle.A											= matrixViewport.Transform(triangle.A);
+	triangle.B											= matrixViewport.Transform(triangle.B);
+	triangle.C											= matrixViewport.Transform(triangle.C);
 
 	double													lightFactor			= normal.Dot(lightVector);
 
-	::ced::STriangle<int32_t>								newTriangle			=
-		{ {(int32_t)triangle.A.x, (int32_t)triangle.A.y}
-		, {(int32_t)triangle.B.x, (int32_t)triangle.B.y}
-		, {(int32_t)triangle.C.x, (int32_t)triangle.C.y}
-		};
-	::ced::SCoord2	<int32_t>								halfScreen			= targetPixels.metrics().Cast<int32_t>() / 2;
-	newTriangle.A										+= {halfScreen.x, halfScreen.y, };
-	newTriangle.B										+= {halfScreen.x, halfScreen.y, };
-	newTriangle.C										+= {halfScreen.x, halfScreen.y, };
-	::ced::drawTriangle(targetPixels.metrics(), newTriangle, pixelCoords, pixelVertexWeights);
+	::ced::drawTriangle(targetPixels.metrics(), triangle, pixelCoords, pixelVertexWeights, depthBuffer);
 	for(uint32_t iPixelCoord = 0; iPixelCoord < pixelCoords.size(); ++iPixelCoord) {
 		::ced::SCoord2<int32_t>									pixelCoord			= pixelCoords[iPixelCoord];
 		//color.r										= (uint8_t)(0xFF * pixelVertexWeights[iPixelCoord].A);
@@ -174,10 +196,12 @@ int													ced::drawTriangle
 	, int								iTriangle
 	, ::ced::SMatrix4<float>			& matrixTransform
 	, ::ced::SMatrix4<float>			& matrixView
+	, ::ced::SMatrix4<float>			& matrixViewport
 	, ::ced::SCoord3<float>				& lightVector
 	, ::ced::SColor						 color
 	, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
 	, ::ced::container<::ced::STriangleWeights<double>>	& pixelVertexWeights
+	, ::ced::container<uint32_t>						& depthBuffer
 	) {
 	::ced::STriangle3		<float>								triangle			= geometry.Triangles	[iTriangle];
 	const ::ced::STriangle3	<float>								& triangleNormals	= geometry.Normals		[iTriangle];
@@ -188,17 +212,14 @@ int													ced::drawTriangle
 	triangle.A											= matrixView.Transform(triangle.A);
 	triangle.B											= matrixView.Transform(triangle.B);
 	triangle.C											= matrixView.Transform(triangle.C);
+	if(triangle.A.z < 0 || triangle.A.z >= 1) return 0;
+	if(triangle.B.z < 0 || triangle.B.z >= 1) return 0;
+	if(triangle.C.z < 0 || triangle.C.z >= 1) return 0;
 
-	::ced::STriangle<int32_t>								newTriangle			=
-		{ {(int32_t)triangle.A.x, (int32_t)triangle.A.y}
-		, {(int32_t)triangle.B.x, (int32_t)triangle.B.y}
-		, {(int32_t)triangle.C.x, (int32_t)triangle.C.y}
-		};
-	::ced::SCoord2	<int32_t>								halfScreen			= targetPixels.metrics().Cast<int32_t>() / 2;
-	newTriangle.A										+= {halfScreen.x, halfScreen.y, };
-	newTriangle.B										+= {halfScreen.x, halfScreen.y, };
-	newTriangle.C										+= {halfScreen.x, halfScreen.y, };
-	::ced::drawTriangle(targetPixels.metrics(), newTriangle, pixelCoords, pixelVertexWeights);
+	triangle.A											= matrixViewport.Transform(triangle.A);
+	triangle.B											= matrixViewport.Transform(triangle.B);
+	triangle.C											= matrixViewport.Transform(triangle.C);
+	::ced::drawTriangle(targetPixels.metrics(), triangle, pixelCoords, pixelVertexWeights, depthBuffer);
 	for(uint32_t iPixelCoord = 0; iPixelCoord < pixelCoords.size(); ++iPixelCoord) {
 		::ced::SCoord2<int32_t>									pixelCoord				= pixelCoords		[iPixelCoord];
 		const ::ced::STriangleWeights<double>					& vertexWeights			= pixelVertexWeights[iPixelCoord];
@@ -220,10 +241,12 @@ int													ced::drawTriangle
 	, int												iTriangle
 	, ::ced::SMatrix4<float>							& matrixTransform
 	, ::ced::SMatrix4<float>							& matrixView
+	, ::ced::SMatrix4<float>							& matrixViewport
 	, ::ced::SCoord3<float>								& lightVector
 	, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
 	, ::ced::container<::ced::STriangleWeights<double>>	& pixelVertexWeights
 	, ::ced::view_grid<::ced::SColor>					textureImage
+	, ::ced::container<uint32_t>						& depthBuffer
 	) {
 	::ced::STriangle3		<float>								triangle			= geometry.Triangles		[iTriangle];
 	const ::ced::STriangle3	<float>								& triangleNormals	= geometry.Normals			[iTriangle];
@@ -235,17 +258,17 @@ int													ced::drawTriangle
 	triangle.A											= matrixView.Transform(triangle.A);
 	triangle.B											= matrixView.Transform(triangle.B);
 	triangle.C											= matrixView.Transform(triangle.C);
+	if(triangle.A.z < 0 || triangle.A.z >= 1)
+		return 0;
+	if(triangle.B.z < 0 || triangle.B.z >= 1)
+		return 0;
+	if(triangle.C.z < 0 || triangle.C.z >= 1)
+		return 0;
 
-	::ced::STriangle<int32_t>									newTriangle			=
-		{ {(int32_t)triangle.A.x, (int32_t)triangle.A.y}
-		, {(int32_t)triangle.B.x, (int32_t)triangle.B.y}
-		, {(int32_t)triangle.C.x, (int32_t)triangle.C.y}
-		};
-	::ced::SCoord2	<int32_t>									halfScreen			= targetPixels.metrics().Cast<int32_t>() / 2;
-	newTriangle.A											+= {halfScreen.x, halfScreen.y, };
-	newTriangle.B											+= {halfScreen.x, halfScreen.y, };
-	newTriangle.C											+= {halfScreen.x, halfScreen.y, };
-	::ced::drawTriangle(targetPixels.metrics(), newTriangle, pixelCoords, pixelVertexWeights);
+	triangle.A											= matrixViewport.Transform(triangle.A);
+	triangle.B											= matrixViewport.Transform(triangle.B);
+	triangle.C											= matrixViewport.Transform(triangle.C);
+	::ced::drawTriangle(targetPixels.metrics(), triangle, pixelCoords, pixelVertexWeights, depthBuffer);
 
 	::ced::SCoord2<float>										imageUnit			= {textureImage.metrics().x - 1.0f, textureImage.metrics().y - 1.0f};
 	for(uint32_t iPixelCoord = 0; iPixelCoord < pixelCoords.size(); ++iPixelCoord) {

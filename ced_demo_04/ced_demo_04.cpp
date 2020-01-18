@@ -22,6 +22,7 @@ struct SApplication {
 	::ced::SColor										Colors		[4]		= { {0xff}, {0, 0xFF}, {0, 0, 0xFF}, {0xFF, 0xC0, 0x40} };
 
 	::ced::container<::SModel3D>						Models;
+	::ced::container<uint32_t>							DepthBuffer;
 	::ced::SGeometryTriangles							Geometry;
 };
 
@@ -35,7 +36,9 @@ int													cleanup				(SApplication & app)	{
 int													setup				(SApplication & app)	{
 	::ced::SWindow											& window			= app.Window;
 	::ced::windowSetup(window);
-	app.Pixels											= (::ced::SColor*)malloc(sizeof(::ced::SColor) * window.Size.x * window.Size.y);
+	const uint32_t											pixelCount			= window.Size.x * window.Size.y;
+	app.Pixels											= (::ced::SColor*)malloc(sizeof(::ced::SColor) * pixelCount);
+	app.DepthBuffer.resize(pixelCount);
 	//::ced::geometryBuildCube(app.Geometry);
 	//::ced::geometryBuildGrid(app.Geometry, {2U, 2U}, {1U, 1U});
 	::ced::geometryBuildSphere(app.Geometry, 16U, 16U, 1, {});
@@ -59,10 +62,13 @@ int													update				(SApplication & app)	{
 		return 1;
 	if(window.Resized) {
 		free(app.Pixels);
-		app.Pixels											= (::ced::SColor*)malloc(sizeof(::ced::SColor) * window.Size.x * window.Size.y);
+		const uint32_t											pixelCount			= window.Size.x * window.Size.y;
+		app.Pixels											= (::ced::SColor*)malloc(sizeof(::ced::SColor) * pixelCount);
+		app.DepthBuffer.resize(pixelCount);
 	}
 	::ced::view_grid<::ced::SColor>							targetPixels		= {app.Pixels, window.Size};
 	memset(targetPixels.begin(), 0, sizeof(::ced::SColor) * targetPixels.size());
+	memset(app.DepthBuffer.begin(), 0, sizeof(::ced::SColor) * app.DepthBuffer.size());
 
 	//------------------------------------------- Handle input
 	::ced::SCoord3<float>									cameraTarget		= {};
@@ -86,7 +92,9 @@ int													update				(SApplication & app)	{
 	matrixProjection.FieldOfView(::ced::MATH_PI * .25, targetPixels.metrics().x / (double)targetPixels.metrics().y, 0.01, 1000);
 	matrixViewport.Viewport(targetPixels.metrics(), 0.01, 1000);
 	matrixView											= matrixView * matrixProjection;
-	matrixView											= matrixView * matrixViewport.GetInverse();
+	matrixViewport										= matrixViewport.GetInverse();
+	matrixViewport._41									+= targetPixels.metrics().x / 2;
+	matrixViewport._42									+= targetPixels.metrics().y / 2;
 
 	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
 	::ced::container<::ced::STriangleWeights<double>>		pixelVertexWeights;
@@ -104,7 +112,7 @@ int													update				(SApplication & app)	{
 			pixelVertexWeights	.clear();
 			uint32_t												colorIndex			= (uint32_t)iModel % ::std::size(app.Colors);
 			::ced::SColor											triangleColor		= app.Colors[colorIndex];
-			::ced::drawTriangle(targetPixels, app.Geometry, iTriangle, matrixTransform, matrixView, lightVector, triangleColor, pixelCoords, pixelVertexWeights);
+			::ced::drawTriangle(targetPixels, app.Geometry, iTriangle, matrixTransform, matrixView, matrixViewport, lightVector, triangleColor, pixelCoords, pixelVertexWeights, app.DepthBuffer);
 		}
 	}
 	return app.Running ? 0 : 1;
