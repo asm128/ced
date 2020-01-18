@@ -183,8 +183,8 @@ int													ced::geometryBuildSphere	(SGeometryTriangles & geometry, uint32_
 				});
 		}
 		{
-			::ced::STriangle3<float>								triangleA			= {coords[0].Cast<float>() * radius, coords[2].Cast<float>() * radius, coords[1].Cast<float>() * radius};
-			::ced::STriangle3<float>								triangleB			= {coords[1].Cast<float>() * radius, coords[2].Cast<float>() * radius, coords[3].Cast<float>() * radius};
+			::ced::STriangle3<float>								triangleA			= {(coords[0] * radius).Cast<float>(), (coords[2] * radius).Cast<float>(), (coords[1] * radius).Cast<float>()};
+			::ced::STriangle3<float>								triangleB			= {(coords[1] * radius).Cast<float>(), (coords[2] * radius).Cast<float>(), (coords[3] * radius).Cast<float>()};
 			triangleA.A											-= gridCenter;
 			triangleA.B											-= gridCenter;
 			triangleA.C											-= gridCenter;

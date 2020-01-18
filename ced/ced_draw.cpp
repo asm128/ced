@@ -283,7 +283,7 @@ int													ced::drawTriangle
 		texCoord												+= triangleTexCoords.B * vertexWeights.B;
 		texCoord												+= triangleTexCoords.C * vertexWeights.C;
 		::ced::SColor												texelColor				= textureImage[(uint32_t)(texCoord.y * imageUnit.y)][(uint32_t)(texCoord.x * imageUnit.x)];
-		::ced::setPixel(targetPixels, pixelCoord, texelColor * lightFactor);
+		::ced::setPixel(targetPixels, pixelCoord, (texelColor * .3) + texelColor * lightFactor);
 	}
 	return 0;
 }

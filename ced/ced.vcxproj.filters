@@ -56,5 +56,8 @@
     <ClInclude Include="ced_color.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ced_model.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -105,7 +105,7 @@ int													update				(SApplication & app)	{
 		matrixRotation	.Rotation		(app.Models[iModel].Rotation);
 		matrixPosition	.SetTranslation	(app.Models[iModel].Position, true);
 
-		::ced::SMatrix4<float>									matrixTransform		= matrixScale * matrixPosition * matrixRotation;
+		::ced::SMatrix4<float>									matrixTransform		= matrixScale * matrixRotation * matrixPosition;
 		for(uint32_t iTriangle = 0; iTriangle < app.Geometry.Triangles.size(); ++iTriangle) {
 			pixelCoords			.clear();
 			pixelVertexWeights	.clear();

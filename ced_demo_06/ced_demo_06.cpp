@@ -42,7 +42,7 @@ int													setup				(SApplication & app)	{
 	app.DepthBuffer.resize(pixelCount);
 	//::ced::geometryBuildCube(app.Geometry);
 	//::ced::geometryBuildGrid(app.Geometry, {2U, 2U}, {1U, 1U});
-	::ced::geometryBuildSphere(app.Geometry, 4U, 2U, 2, {});
+	::ced::geometryBuildSphere(app.Geometry, 24U, 24U, 2, {});
 	//::ced::geometryBuildFigure0(app.Geometry, 10U, 10U, 1, {});
 	app.Models.resize(6);
 	for(uint32_t iModel = 0; iModel < app.Models.size(); ++iModel) {
@@ -53,7 +53,6 @@ int													setup				(SApplication & app)	{
 		model.Position.RotateY(::ced::MATH_2PI / app.Models.size() * iModel);
 	}
 
-	::ced::bmpFileLoad("../ced_data/cp437_12x12.bmp", app.Image);
 	app.Image.Metrics										= {256, 256};
 	app.Image.Pixels.resize(app.Image.Metrics.x * app.Image.Metrics.y);
 	for(uint32_t y = 0; y < app.Image.Metrics.y; ++y) // Generate noise color for planet texture
@@ -116,7 +115,7 @@ int													update				(SApplication & app)	{
 		matrixRotation	.Rotation		(app.Models[iModel].Rotation);
 		matrixPosition	.SetTranslation	(app.Models[iModel].Position, true);
 
-		::ced::SMatrix4<float>									matrixTransform		= matrixScale * matrixPosition * matrixRotation;
+		::ced::SMatrix4<float>									matrixTransform		= matrixScale * matrixRotation * matrixPosition;
 		for(uint32_t iTriangle = 0; iTriangle < app.Geometry.Triangles.size(); ++iTriangle) {
 			pixelCoords			.clear();
 			pixelVertexWeights	.clear();

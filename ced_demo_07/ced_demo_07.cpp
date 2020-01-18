@@ -1,3 +1,4 @@
+#include "ced_model.h"
 #include "ced_geometry.h"
 #include "ced_image.h"
 #include "ced_draw.h"
@@ -8,12 +9,6 @@
 #include <cstdint>
 #include <algorithm>
 
-struct SModel3D {
-	::ced::SCoord3<float>								Scale;
-	::ced::SCoord3<float>								Rotation;
-	::ced::SCoord3<float>								Position;
-};
-
 struct SApplication {
 	::ced::SWindow										Window				= {};
 	::ced::SColor										* Pixels			= 0;
@@ -23,9 +18,10 @@ struct SApplication {
 	::ced::SColor										Colors		[4]		= { {0xff}, {0, 0xFF}, {0, 0, 0xFF}, {0xFF, 0xC0, 0x40} };
 
 	::ced::SImage										Image				= {};
-	::ced::container<uint32_t>							DepthBuffer;
-	::ced::container<::SModel3D>						Models;
-	::ced::SGeometryTriangles							Geometry;
+	::ced::container<uint32_t>							DepthBuffer			= {};
+	::ced::container<::ced::SModel3D>					Models				= {};
+	::ced::container<::ced::SEntity>					Entities			= {};
+	::ced::SGeometryTriangles							Geometry			= {};
 };
 
 int													cleanup				(SApplication & app)	{
@@ -42,18 +38,25 @@ int													setup				(SApplication & app)	{
 	app.DepthBuffer.resize(pixelCount);
 	//::ced::geometryBuildCube(app.Geometry);
 	//::ced::geometryBuildGrid(app.Geometry, {2U, 2U}, {1U, 1U});
-	::ced::geometryBuildSphere(app.Geometry, 4U, 2U, 2, {});
+	::ced::geometryBuildSphere(app.Geometry, 4U, 2U, 1, {0, 1});
 	//::ced::geometryBuildFigure0(app.Geometry, 10U, 10U, 1, {});
-	app.Models.resize(6);
-	for(uint32_t iModel = 0; iModel < app.Models.size(); ++iModel) {
-		SModel3D												& model			= app.Models[iModel];
+	app.Models		.resize(7);
+	app.Entities	.resize(7);
+	app.Models		[0]									= {};
+	app.Models		[0].Scale							= {1, 1, 1};
+	app.Models		[0].Rotation.z						= (float)(::ced::MATH_PI_2);
+	app.Entities	[0]									= {-1};
+	for(uint32_t iModel = 1; iModel < app.Models.size(); ++iModel) {
+		::ced::SModel3D											& model			= app.Models[iModel];
 		model.Scale											= {1, 1, 1};
 		//model.Rotation										= {0, 1, 0};
 		model.Position										= {4, 0.5};
-		model.Position.RotateY(::ced::MATH_2PI / app.Models.size() * iModel);
+		model.Position.RotateY(::ced::MATH_2PI / (app.Models.size() - 1)* iModel);
+		::ced::SEntity											& entity		= app.Entities[iModel];
+		entity.Parent										= 0;
+ 		app.Entities[0].Children.push_back(iModel);
 	}
 
-	::ced::bmpFileLoad("../ced_data/cp437_12x12.bmp", app.Image);
 	app.Image.Metrics										= {256, 256};
 	app.Image.Pixels.resize(app.Image.Metrics.x * app.Image.Metrics.y);
 	for(uint32_t y = 0; y < app.Image.Metrics.y; ++y) // Generate noise color for planet texture
@@ -82,16 +85,31 @@ int													update				(SApplication & app)	{
 
 	//------------------------------------------- Handle input
 	::ced::SCoord3<float>									cameraTarget		= {};
-	static ::ced::SCoord3<float>							cameraPosition		= {15, 5, 0};
+	static ::ced::SCoord3<float>							cameraPosition		= {0.000001f, 50, 0};
 	::ced::SCoord3<float>									cameraUp			= {0, 1, 0};
 
-	if(GetAsyncKeyState('Q')) cameraPosition.y					-= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
-	if(GetAsyncKeyState('E')) cameraPosition.y					+= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
+	double speed = 10;
 
-	//------------------------------------------- Transform and Draw
+	if(GetAsyncKeyState('Q')) cameraPosition.y				-= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
+	if(GetAsyncKeyState('E')) cameraPosition.y				+= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
+
+	if(GetAsyncKeyState('W')) app.Models[0].Position.x		-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+	if(GetAsyncKeyState('S')) app.Models[0].Position.x		+= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+	if(GetAsyncKeyState('A')) app.Models[0].Position.z		-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+	if(GetAsyncKeyState('D')) app.Models[0].Position.z		+= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+
+	if(GetAsyncKeyState(VK_NUMPAD8)) app.Models[0].Rotation.x		-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+	if(GetAsyncKeyState(VK_NUMPAD2)) app.Models[0].Rotation.x		+= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+	if(GetAsyncKeyState(VK_NUMPAD6)) app.Models[0].Rotation.z		-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+	if(GetAsyncKeyState(VK_NUMPAD4)) app.Models[0].Rotation.z		+= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+
+	app.Models[0].Rotation.y							+= (float)lastFrameSeconds;
+	for(uint32_t iModel = 1; iModel < app.Models.size(); ++iModel)
+		app.Models[iModel].Rotation.y						+= (float)lastFrameSeconds * 5;
+
 	static ::ced::SCoord3<float>							lightVector			= {15, 12, 0};
-	lightVector											= lightVector	.RotateY(lastFrameSeconds * 2);
-	cameraPosition										= cameraPosition.RotateY(lastFrameSeconds / 2);
+	lightVector											= lightVector.RotateY(lastFrameSeconds * 2);
+	//------------------------------------------- Transform and Draw
 
 	lightVector.Normalize();
 
@@ -108,7 +126,7 @@ int													update				(SApplication & app)	{
 
 	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
 	::ced::container<::ced::STriangleWeights<double>>		pixelVertexWeights;
-	for(uint32_t iModel = 0; iModel < app.Models.size(); ++iModel) {
+	for(uint32_t iModel = 1; iModel < app.Models.size(); ++iModel) {
 		::ced::SMatrix4<float>									matrixScale		;
 		::ced::SMatrix4<float>									matrixRotation	;
 		::ced::SMatrix4<float>									matrixPosition	;
@@ -116,7 +134,18 @@ int													update				(SApplication & app)	{
 		matrixRotation	.Rotation		(app.Models[iModel].Rotation);
 		matrixPosition	.SetTranslation	(app.Models[iModel].Position, true);
 
-		::ced::SMatrix4<float>									matrixTransform		= matrixScale * matrixPosition * matrixRotation;
+		::ced::SMatrix4<float>									parentMatrixScale		;
+		::ced::SMatrix4<float>									parentMatrixRotation	;
+		::ced::SMatrix4<float>									parentMatrixPosition	;
+		::ced::SEntity											& entity				= app.Entities[iModel];
+
+		parentMatrixScale	.Scale			(app.Models[entity.Parent].Scale, true);
+		parentMatrixRotation.Rotation		(app.Models[entity.Parent].Rotation);
+		parentMatrixPosition.SetTranslation	(app.Models[entity.Parent].Position, true);
+
+		::ced::SMatrix4<float>									matrixTransform			= matrixScale * matrixRotation * matrixPosition;
+		::ced::SMatrix4<float>									matrixTransformParent	= parentMatrixScale * parentMatrixRotation * parentMatrixPosition;
+		matrixTransform										= matrixTransform  * matrixTransformParent ;
 		for(uint32_t iTriangle = 0; iTriangle < app.Geometry.Triangles.size(); ++iTriangle) {
 			pixelCoords			.clear();
 			pixelVertexWeights	.clear();
