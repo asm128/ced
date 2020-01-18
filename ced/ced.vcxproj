@@ -164,6 +164,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ced_draw.cpp" />
+    <ClCompile Include="ced_framework.cpp" />
     <ClCompile Include="ced_geometry.cpp" />
     <ClCompile Include="ced_image.cpp" />
     <ClCompile Include="ced_window.cpp" />
@@ -171,6 +172,7 @@
   <ItemGroup>
     <ClInclude Include="ced_color.h" />
     <ClInclude Include="ced_draw.h" />
+    <ClInclude Include="ced_framework.h" />
     <ClInclude Include="ced_geometry.h" />
     <ClInclude Include="ced_image.h" />
     <ClInclude Include="ced_math.h" />

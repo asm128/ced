@@ -9,12 +9,15 @@
 #include <algorithm>
 
 struct SApplication {
-	::ced::SFramework									Framework;
+	::ced::SFramework									Framework			= {};
 
 	::ced::SImage										Image				= {};
+	::ced::container<::ced::SMatrix4<float>>			ModelMatricesLocal	= {};
+	::ced::container<::ced::SMatrix4<float>>			ModelMatricesGlobal	= {};
 	::ced::container<::ced::SModel3D>					Models				= {};
 	::ced::container<::ced::SEntity>					Entities			= {};
 	::ced::SGeometryTriangles							Geometry			= {};
+	::ced::SCamera										Camera				= {};
 };
 
 int													cleanup				(SApplication & app)	{ return ::ced::frameworkCleanup(app.Framework); }
@@ -26,8 +29,10 @@ int													setup				(SApplication & app)	{
 	//::ced::geometryBuildGrid(app.Geometry, {2U, 2U}, {1U, 1U});
 	::ced::geometryBuildSphere(app.Geometry, 4U, 2U, 1, {0, 1});
 	//::ced::geometryBuildFigure0(app.Geometry, 10U, 10U, 1, {});
-	app.Models		.resize(7);
-	app.Entities	.resize(7);
+	app.ModelMatricesLocal	.resize(7);
+	app.ModelMatricesGlobal	.resize(7);
+	app.Models				.resize(7);
+	app.Entities			.resize(7);
 	app.Models		[0]									= {};
 	app.Models		[0].Scale							= {1, 1, 1};
 	app.Models		[0].Rotation.z						= (float)(::ced::MATH_PI_2);
@@ -36,7 +41,7 @@ int													setup				(SApplication & app)	{
 		::ced::SModel3D											& model			= app.Models[iModel];
 		model.Scale											= {1, 1, 1};
 		//model.Rotation										= {0, 1, 0};
-		model.Position										= {4, 0.5};
+		model.Position										= {2, 0.5};
 		model.Position.RotateY(::ced::MATH_2PI / (app.Models.size() - 1)* iModel);
 		::ced::SEntity											& entity		= app.Entities[iModel];
 		entity.Parent										= 0;
@@ -59,24 +64,18 @@ int													update				(SApplication & app)	{
 	//------------------------------------------- Handle input
 	double													speed				= 10;
 	double													lastFrameSeconds	= framework.Timer.ElapsedMicroseconds * .000001;
+	if(GetAsyncKeyState('Q')) app.Camera.Position.y				-= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
+	if(GetAsyncKeyState('E')) app.Camera.Position.y				+= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
 
-	//------------------------------------------- Handle input
-	::ced::SCoord3<float>									cameraTarget		= {};
-	static ::ced::SCoord3<float>							cameraPosition		= {0.000001f, 50, 0};
-	::ced::SCoord3<float>									cameraUp			= {0, 1, 0};
+	if(GetAsyncKeyState('W')) app.Models[0].Position.x			-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+	if(GetAsyncKeyState('S')) app.Models[0].Position.x			+= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+	if(GetAsyncKeyState('A')) app.Models[0].Position.z			-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+	if(GetAsyncKeyState('D')) app.Models[0].Position.z			+= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
 
-	if(GetAsyncKeyState('Q')) cameraPosition.y				-= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
-	if(GetAsyncKeyState('E')) cameraPosition.y				+= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
-
-	if(GetAsyncKeyState('W')) app.Models[0].Position.x		-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-	if(GetAsyncKeyState('S')) app.Models[0].Position.x		+= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-	if(GetAsyncKeyState('A')) app.Models[0].Position.z		-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-	if(GetAsyncKeyState('D')) app.Models[0].Position.z		+= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-
-	if(GetAsyncKeyState(VK_NUMPAD8)) app.Models[0].Rotation.x		-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-	if(GetAsyncKeyState(VK_NUMPAD2)) app.Models[0].Rotation.x		+= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-	if(GetAsyncKeyState(VK_NUMPAD6)) app.Models[0].Rotation.z		-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-	if(GetAsyncKeyState(VK_NUMPAD4)) app.Models[0].Rotation.z		+= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+	if(GetAsyncKeyState(VK_NUMPAD8)) app.Models[0].Rotation.x	-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+	if(GetAsyncKeyState(VK_NUMPAD2)) app.Models[0].Rotation.x	+= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+	if(GetAsyncKeyState(VK_NUMPAD6)) app.Models[0].Rotation.z	-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+	if(GetAsyncKeyState(VK_NUMPAD4)) app.Models[0].Rotation.z	+= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
 
 	app.Models[0].Rotation.y							+= (float)lastFrameSeconds;
 	for(uint32_t iModel = 1; iModel < app.Models.size(); ++iModel)
@@ -92,7 +91,7 @@ int													update				(SApplication & app)	{
 	::ced::SMatrix4<float>									matrixView			= {};
 	::ced::SMatrix4<float>									matrixProjection	= {};
 	::ced::SMatrix4<float>									matrixViewport		= {};
-	matrixView.LookAt(cameraPosition, cameraTarget, cameraUp);
+	matrixView.LookAt(app.Camera.Position, app.Camera.Target, app.Camera.Up);
 	matrixProjection.FieldOfView(::ced::MATH_PI * .25, targetPixels.metrics().x / (double)targetPixels.metrics().y, 0.01, 1000);
 	matrixViewport.Viewport(targetPixels.metrics(), 0.01, 1000);
 	matrixView											= matrixView * matrixProjection;
@@ -110,10 +109,9 @@ int													update				(SApplication & app)	{
 		matrices.Position	.SetTranslation	(app.Models[iModel].Position, true);
 
 		::ced::SEntity											& entity				= app.Entities[iModel];
-
 		matricesParent.Scale	.Scale			(app.Models[entity.Parent].Scale, true);
-		matricesParent.Rotation.Rotation		(app.Models[entity.Parent].Rotation);
-		matricesParent.Position.SetTranslation	(app.Models[entity.Parent].Position, true);
+		matricesParent.Rotation	.Rotation		(app.Models[entity.Parent].Rotation);
+		matricesParent.Position	.SetTranslation	(app.Models[entity.Parent].Position, true);
 
 		::ced::SMatrix4<float>									matrixTransform			= matrices.Scale * matrices.Rotation * matrices.Position;
 		::ced::SMatrix4<float>									matrixTransformParent	= matricesParent.Scale * matricesParent.Rotation * matricesParent.Position;
