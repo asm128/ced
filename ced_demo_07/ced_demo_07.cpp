@@ -55,7 +55,8 @@ int													setup				(SApplication & app)	{
 
 int													update				(SApplication & app)	{
 	::ced::SFramework										& framework			= app.Framework;
-	::ced::frameworkUpdate(app.Framework);
+	if(1 == ::ced::frameworkUpdate(app.Framework))
+		framework.Running = false;
 	//------------------------------------------- Handle input
 	double													speed				= 10;
 	double													lastFrameSeconds	= framework.Timer.ElapsedMicroseconds * .000001;

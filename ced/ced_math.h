@@ -43,10 +43,8 @@ namespace ced
 		}
 
 		double							Length					()								const noexcept	{
-			int									lengthSquared			= x * x + y * y;
-			if(0 == lengthSquared)
-				return 0;
-			return sqrt(lengthSquared);
+			_tValue								lengthSquared			= x * x + y * y;
+			return (0 == lengthSquared) ? 0 : sqrt(lengthSquared);
 		}
 	};
 
