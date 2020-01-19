@@ -1,12 +1,17 @@
 #include "ced_demo_08.h"
 
 int													drawStars			(SStars & stars, ::ced::view_grid<::ced::SColor> targetPixels)	{
-	::ced::SColor											colorStar			= {0xfF, 0xfF, 0xfF};
+	::ced::SColor											colors[]			=
+		{ {0xfF, 0xfF, 0xfF}
+		, {0xfF, 0x80, 0x40}
+		, {0x40, 0x80, 0xfF}
+		, {0x40, 0x80, 0x80}
+		};
 	for(uint32_t iStar = 0; iStar < stars.Brightness.size(); ++iStar) {
 		::ced::SCoord2<float>									starPos			= stars.Position[iStar];
-		::ced::SColor											starFinalColor	= colorStar * stars.Brightness[iStar];
+		::ced::SColor											starFinalColor	= colors[iStar % ::std::size(colors)] * stars.Brightness[iStar];
 		::ced::setPixel(targetPixels, starPos.Cast<int32_t>(), starFinalColor);
-		const	int32_t											brightRadius	= 5;
+		const	int32_t											brightRadius	= 1 + (iStar % 4) + (rand() % 4);
 		double													brightUnit		= 1.0 / brightRadius;
 		for(int32_t y = -brightRadius; y < brightRadius; ++y)
 		for(int32_t x = -brightRadius; x < brightRadius; ++x) {
@@ -17,7 +22,7 @@ int													drawStars			(SStars & stars, ::ced::view_grid<::ced::SColor> tar
 				if( pixelPos.y >= 0 && pixelPos.y < (int32_t)targetPixels.metrics().y
 				 && pixelPos.x >= 0 && pixelPos.x < (int32_t)targetPixels.metrics().x
  				)
-					::ced::setPixel(targetPixels, pixelPos, targetPixels[pixelPos.y][pixelPos.x] + colorStar * stars.Brightness[iStar] * (1.0-(brightDistance * brightUnit * (1 + (rand() % 3)))));
+					::ced::setPixel(targetPixels, pixelPos, targetPixels[pixelPos.y][pixelPos.x] + starFinalColor * (1.0-(brightDistance * brightUnit * (1 + (rand() % 3)))));
 			}
 		}
 	}
@@ -77,12 +82,12 @@ int													draw				(SApplication & app)	{
 
 	drawStars(app.Stars, {framework.Pixels, framework.Window.Size});
 
-	app.LightVector.Normalize();
+	app.Scene.LightVector.Normalize();
 
 	::ced::SMatrix4<float>									matrixView			= {};
 	::ced::SMatrix4<float>									matrixProjection	= {};
 	::ced::SMatrix4<float>									matrixViewport		= {};
-	matrixView.LookAt(app.Camera.Position, app.Camera.Target, app.Camera.Up);
+	matrixView.LookAt(app.Scene.Camera.Position, app.Scene.Camera.Target, app.Scene.Camera.Up);
 	matrixProjection.FieldOfView(::ced::MATH_PI * .25, targetPixels.metrics().x / (double)targetPixels.metrics().y, 0.01, 1000);
 	matrixViewport.Viewport(targetPixels.metrics(), 0.01, 1000);
 	matrixView											= matrixView * matrixProjection;
@@ -98,23 +103,25 @@ int													draw				(SApplication & app)	{
 	::ced::container<::ced::STriangleWeights<double>>		pixelVertexWeights;
 	::ced::SModelTransform									matrices;
 	::ced::SModelTransform									matricesParent;
-	for(uint32_t iModel = 1; iModel < app.Models.size(); ++iModel) {
-		matrices.Scale		.Scale			(app.Models[iModel].Scale	, true);
-		matrices.Rotation	.Rotation		(app.Models[iModel].Rotation);
-		matrices.Position	.SetTranslation	(app.Models[iModel].Position, true);
+	for(uint32_t iModel = 0; iModel < app.Scene.Models.size(); ++iModel) {
+		matrices.Scale		.Scale			(app.Scene.Models[iModel].Scale	, true);
+		matrices.Rotation	.Rotation		(app.Scene.Models[iModel].Rotation);
+		matrices.Position	.SetTranslation	(app.Scene.Models[iModel].Position, true);
 
-		::ced::SEntity											& entity				= app.Entities[iModel];
-		matricesParent.Scale	.Scale			(app.Models[entity.Parent].Scale, true);
-		matricesParent.Rotation	.Rotation		(app.Models[entity.Parent].Rotation);
-		matricesParent.Position	.SetTranslation	(app.Models[entity.Parent].Position, true);
+		::ced::SEntity											& entity				= app.Scene.Entities[iModel];
+		if(-1 == entity.Parent)
+			continue;
+		matricesParent.Scale	.Scale			(app.Scene.Models[entity.Parent].Scale, true);
+		matricesParent.Rotation	.Rotation		(app.Scene.Models[entity.Parent].Rotation);
+		matricesParent.Position	.SetTranslation	(app.Scene.Models[entity.Parent].Position, true);
 
 		::ced::SMatrix4<float>									matrixTransform			= matrices.Scale * matrices.Rotation * matrices.Position;
 		::ced::SMatrix4<float>									matrixTransformParent	= matricesParent.Scale * matricesParent.Rotation * matricesParent.Position;
 		matrixTransform										= matrixTransform  * matrixTransformParent ;
-		for(uint32_t iTriangle = 0; iTriangle < app.Geometry.Triangles.size(); ++iTriangle) {
+		for(uint32_t iTriangle = 0; iTriangle < app.Scene.Geometry.Triangles.size(); ++iTriangle) {
 			pixelCoords			.clear();
 			pixelVertexWeights	.clear();
-			::ced::drawQuadTriangle(targetPixels, app.Geometry, iTriangle, matrixTransform, matrixView, matrixViewport, app.LightVector, pixelCoords, pixelVertexWeights, {app.Image.Pixels.begin(), app.Image.Metrics}, framework.DepthBuffer);
+			::ced::drawQuadTriangle(targetPixels, app.Scene.Geometry, iTriangle, matrixTransform, matrixView, matrixViewport, app.Scene.LightVector, pixelCoords, pixelVertexWeights, {app.Scene.Image.Pixels.begin(), app.Scene.Image.Metrics}, framework.DepthBuffer);
 		}
 	}
 	return 0;

@@ -21,9 +21,7 @@ struct SShots	{
 	::ced::container<float>								Brightness		= {};
 };
 
-struct SApplication {
-	::ced::SFramework									Framework			= {};
-
+struct SScene	{
 	::ced::SImage										Image				= {};
 	::ced::container<::ced::SMatrix4<float>>			ModelMatricesLocal	= {};
 	::ced::container<::ced::SMatrix4<float>>			ModelMatricesGlobal	= {};
@@ -32,9 +30,14 @@ struct SApplication {
 	::ced::SGeometryQuads								Geometry			= {};
 	::ced::SCamera										Camera				= {};
 	::ced::SCoord3<float>								LightVector			= {15, 12, 0};
+};
 
-	::SStars											Stars;
-	::SShots											Shots;
+struct SApplication {
+	::ced::SFramework									Framework			= {};
+
+	::SScene											Scene				;
+	::SStars											Stars				;
+	::SShots											Shots				;
 };
 
 int													draw				(SApplication & app);
