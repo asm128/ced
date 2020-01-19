@@ -84,6 +84,23 @@ int													updateShots			(::SShots & shots, float lastFrameSeconds)	{
 	return 0;
 }
 
+int													updateDebris			(::SDebris & debris, float lastFrameSeconds)	{
+	for(uint32_t iShot = 0; iShot < debris.Position.size(); ++iShot) {
+		debris.Position		[iShot]						+= debris.Direction[iShot] * (debris.Speed[iShot] * lastFrameSeconds);
+		if(debris.Position[iShot].x > 50) {
+			debris.Direction	[iShot]						= debris.Direction	[debris.Position.size() - 1];
+			debris.Position		[iShot]						= debris.Position	[debris.Position.size() - 1];
+			debris.Speed		[iShot]						= debris.Speed		[debris.Position.size() - 1];
+			debris.Brightness	[iShot]						= debris.Brightness	[debris.Position.size() - 1];
+			debris.Direction	.resize(debris.Direction	.size() - 1);
+			debris.Position		.resize(debris.Position		.size() - 1);
+			debris.Speed		.resize(debris.Speed		.size() - 1);
+			debris.Brightness	.resize(debris.Brightness	.size() - 1);
+		}
+	}
+	return 0;
+}
+
 int													updateStars			(::SStars & stars, uint32_t yMax, float lastFrameSeconds)	{
 	for(uint32_t iStar = 0; iStar < stars.Brightness.size(); ++iStar) {
 		::ced::SCoord2<float>									 & starPos			= stars.Position[iStar];
@@ -97,6 +114,27 @@ int													updateStars			(::SStars & stars, uint32_t yMax, float lastFrameS
 	return 0;
 }
 
+// Intersects ray r = p + td, |d| = 1, with sphere s and, if intersecting,
+// returns t value of intersection and intersection point q
+int intersectRaySphere(const ::ced::SCoord3<float> & p, const ::ced::SCoord3<float> & d, const ::ced::SCoord3<float> & sphereCenter, double sphereRadius, float &t, ::ced::SCoord3<float> &q) {
+	const ::ced::SCoord3<float>				m			= p - sphereCenter;
+	double									b			= m.Dot(d);
+	double									c			= m.Dot(m) - sphereRadius * sphereRadius;
+
+	if (c > 0.0f && b > 0.0f)	// Exit if r’s origin outside s (c > 0) and r pointing away from s (b > 0)
+		return 0;
+	double									discr		= b * b - c;
+
+	if (discr < 0.0f)	// A negative discriminant corresponds to ray missing sphere
+		return 0;
+
+	t					= (float)(-b - sqrt(discr));	// Ray now found to intersect sphere, compute smallest t value of intersection
+	if (t < 0.0f)	// If t is negative, ray started inside sphere so clamp t to zero
+		t					= 0.0f;
+
+	q					= p + d * t;
+	return 1;
+}
 int													update				(SApplication & app)	{
 	::ced::SFramework										& framework			= app.Framework;
 	if(1 == ::ced::frameworkUpdate(app.Framework))
@@ -107,8 +145,8 @@ int													update				(SApplication & app)	{
 	app.Shots.Delay										+= lastFrameSeconds;
 	if(GetAsyncKeyState(VK_SPACE)) {
 		if(app.Shots.Delay >= 0.1) {
-			app.Shots.PositionPrev	.push_back(app.Scene.Models[0].Position);
-			app.Shots.Position		.push_back(app.Scene.Models[0].Position);
+			app.Shots.PositionPrev	.push_back(app.Scene.Models[0].Position + ::ced::SCoord3<float>{2.0,});
+			app.Shots.Position		.push_back(app.Scene.Models[0].Position + ::ced::SCoord3<float>{2.0,});
 			app.Shots.Speed			.push_back(200);
 			app.Shots.Brightness	.push_back(1);
 			app.Shots.Delay									= 0;
@@ -136,6 +174,31 @@ int													update				(SApplication & app)	{
 		::setupStars(app.Stars, framework.Window.Size);
 	::updateStars(app.Stars, framework.Window.Size.y, (float)lastFrameSeconds);
 	::updateShots(app.Shots, (float)lastFrameSeconds);
+	::updateDebris(app.Debris, (float)lastFrameSeconds);
+
+	for(uint32_t iShot = 0; iShot < app.Shots.Position.size(); ++iShot) {
+		const ::ced::SLine3<float>						shotSegment		= {app.Shots.PositionPrev[iShot], app.Shots.Position[iShot]};
+		for(uint32_t iModel = 0; iModel < app.Scene.Models.size(); ++iModel) {
+			if(-1 == app.Scene.Entities[iModel].Parent)
+				continue;
+			::ced::SCoord3<float>						sphereCenter	= app.Scene.Models[iModel].Position + app.Scene.Models[app.Scene.Entities[iModel].Parent].Position;
+			float										t				= 0;
+			::ced::SCoord3<float>						q				= {};
+
+			intersectRaySphere(shotSegment.A, (shotSegment.B - shotSegment.A).Normalize(), sphereCenter, 1, t, q);
+			if(t > 1) {
+				for(uint32_t i = 0; i < 10; ++i) {
+					int32_t newIndex = app.Debris.Direction	.push_back(::ced::SCoord3<float>{app.Scene.Models[0].Position}.Normalize());
+					app.Debris.Direction[newIndex].RotateX(rand() * (1 / ::ced::MATH_2PI));
+					app.Debris.Direction[newIndex].RotateY(rand() * (1 / ::ced::MATH_2PI));
+					app.Debris.Direction[newIndex].RotateZ(rand() * (1 / ::ced::MATH_2PI));
+					app.Debris.Position		.push_back(q);
+					app.Debris.Speed		.push_back(50);
+					app.Debris.Brightness	.push_back(1);
+				}
+			}
+		}
+	}
 
 	::draw(app);
 	return framework.Running ? 0 : 1;

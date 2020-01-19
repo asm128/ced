@@ -29,19 +29,45 @@ int													drawStars			(SStars & stars, ::ced::view_grid<::ced::SColor> tar
 	return 0;
 }
 
-int													drawShots			(SApplication & app, const ::ced::SMatrix4<float> & matrixVPV)	{
+
+int													drawDebris			(::ced::view_grid<::ced::SColor> targetPixels, SDebris & debris, const ::ced::SMatrix4<float> & matrixVPV)	{
 	::ced::SColor											colorShot			= {0xfF, 0x20, 0x40};
-	::ced::SFramework										& framework			= app.Framework;
-	::ced::view_grid<::ced::SColor>							targetPixels		= {framework.Pixels, framework.Window.Size};
 	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
-	for(uint32_t iShot = 0; iShot < app.Shots.Brightness.size(); ++iShot) {
-		::ced::SCoord3<float>									starPosPrev		= app.Shots.PositionPrev[iShot];
-		::ced::SCoord3<float>									starPos			= app.Shots.Position[iShot];
+	for(uint32_t iShot = 0; iShot < debris.Brightness.size(); ++iShot) {
+		::ced::SCoord3<float>									starPos			= debris.Position[iShot];
+		starPos												= matrixVPV.Transform(starPos);
+		::ced::SColor											starFinalColor	= colorShot * debris.Brightness[iShot];
+		const ::ced::SCoord2<int32_t>							pixelCoord		= {(int32_t)starPos.x, (int32_t)starPos.y};
+		::ced::setPixel(targetPixels, pixelCoord, starFinalColor);
+		const	int32_t											brightRadius		= 5;
+		double													brightUnit			= 1.0 / brightRadius;
+		for(int32_t y = -brightRadius; y < brightRadius; ++y)
+		for(int32_t x = -brightRadius; x < brightRadius; ++x) {
+			::ced::SCoord2<float>									brightPos			= {(float)x, (float)y};
+			const double											brightDistance		= brightPos.Length();
+			if(brightDistance <= brightRadius) {
+				::ced::SCoord2<int32_t>									pixelPos			= pixelCoord + (brightPos).Cast<int32_t>();
+				if( pixelPos.y >= 0 && pixelPos.y < (int32_t)targetPixels.metrics().y
+					&& pixelPos.x >= 0 && pixelPos.x < (int32_t)targetPixels.metrics().x
+					)
+					::ced::setPixel(targetPixels, pixelPos, targetPixels[pixelPos.y][pixelPos.x] + colorShot * debris.Brightness[iShot] * (1.0-(brightDistance * brightUnit * (1 + (rand() % 3)))));
+			}
+		}
+	}
+	return 0;
+}
+
+int													drawShots			(::ced::view_grid<::ced::SColor> targetPixels, SShots & shots, const ::ced::SMatrix4<float> & matrixVPV)	{
+	::ced::SColor											colorShot			= {0xfF, 0x20, 0x40};
+	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
+	for(uint32_t iShot = 0; iShot < shots.Brightness.size(); ++iShot) {
+		::ced::SCoord3<float>									starPosPrev		= shots.PositionPrev[iShot];
+		::ced::SCoord3<float>									starPos			= shots.Position[iShot];
 		::ced::SLine3<float>									raySegment		= {starPosPrev, starPos};
 		raySegment.A										= matrixVPV.Transform(raySegment.A);
 		raySegment.B										= matrixVPV.Transform(raySegment.B);
 
-		::ced::SColor											starFinalColor	= colorShot * app.Shots.Brightness[iShot];
+		::ced::SColor											starFinalColor	= colorShot * shots.Brightness[iShot];
 		::ced::drawLine(targetPixels,
 			{ {(int32_t)raySegment.A.x, (int32_t)raySegment.A.y}
 			, {(int32_t)raySegment.B.x, (int32_t)raySegment.B.y}
@@ -60,7 +86,7 @@ int													drawShots			(SApplication & app, const ::ced::SMatrix4<float> & 
 					if( pixelPos.y >= 0 && pixelPos.y < (int32_t)targetPixels.metrics().y
 					 && pixelPos.x >= 0 && pixelPos.x < (int32_t)targetPixels.metrics().x
 						)
-						::ced::setPixel(targetPixels, pixelPos, targetPixels[pixelPos.y][pixelPos.x] + colorShot * app.Shots.Brightness[iShot] * (1.0-(brightDistance * brightUnit * (1 + (rand() % 3)))));
+						::ced::setPixel(targetPixels, pixelPos, targetPixels[pixelPos.y][pixelPos.x] + colorShot * shots.Brightness[iShot] * (1.0-(brightDistance * brightUnit * (1 + (rand() % 3)))));
 				}
 			}
 		}
@@ -95,8 +121,8 @@ int													draw				(SApplication & app)	{
 	matrixViewport._41									+= targetPixels.metrics().x / 2;
 	matrixViewport._42									+= targetPixels.metrics().y / 2;
 
-
-	::drawShots(app, matrixView * matrixViewport);
+	::drawShots(targetPixels, app.Shots, matrixView * matrixViewport);
+	::drawDebris(targetPixels, app.Debris, matrixView * matrixViewport);
 
 
 	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
