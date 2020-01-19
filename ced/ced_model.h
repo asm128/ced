@@ -25,7 +25,7 @@ namespace ced
 
 	struct SCamera {
 		::ced::SCoord3<float>								Target				= {};
-		::ced::SCoord3<float>								Position			= {0.000001f, 100, 0};
+		::ced::SCoord3<float>								Position			= {-0.000001f, 100, 0};
 		::ced::SCoord3<float>								Up					= {0, 1, 0};
 	};
 } // namespace

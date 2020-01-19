@@ -178,6 +178,7 @@
     <ClInclude Include="ced_math.h" />
     <ClInclude Include="ced_matrix.h" />
     <ClInclude Include="ced_model.h" />
+    <ClInclude Include="ced_stars.h" />
     <ClInclude Include="ced_timer.h" />
     <ClInclude Include="ced_view.h" />
     <ClInclude Include="ced_window.h" />

@@ -1,46 +1,26 @@
-#include "ced_model.h"
-#include "ced_geometry.h"
-#include "ced_image.h"
-#include "ced_draw.h"
+#include "ced_demo_08.h"
 
-#include "ced_framework.h"
-
-#include <cstdint>
-#include <algorithm>
-
-
-
-struct SApplication {
-	::ced::SFramework									Framework			= {};
-
-	::ced::SImage										Image				= {};
-	::ced::container<::ced::SMatrix4<float>>			ModelMatricesLocal	= {};
-	::ced::container<::ced::SMatrix4<float>>			ModelMatricesGlobal	= {};
-	::ced::container<::ced::SModel3D>					Models				= {};
-	::ced::container<::ced::SEntity>					Entities			= {};
-	::ced::SGeometryTriangles							Geometry			= {};
-	::ced::SCamera										Camera				= {};
-	::ced::SCoord3<float>								LightVector			= {15, 12, 0};
-
-	::ced::container<::ced::SCoord2<float>>				StarPosition		= {};
-	::ced::container<float>								StarSpeed			= {};
-	::ced::container<float>								StarBrightness		= {};
-};
 
 int													cleanup				(SApplication & app)	{ return ::ced::frameworkCleanup(app.Framework); }
+
+int													setupStars			(SStars & stars, ::ced::SCoord2<uint32_t> targetSize)	{
+	if(0 == targetSize.y) return 0;
+	if(0 == targetSize.x) return 0;
+	stars.Speed		.resize(128);
+	stars.Brightness.resize(128);
+	stars.Position	.resize(128);
+	for(uint32_t iStar = 0; iStar < stars.Brightness.size(); ++iStar) {
+		stars.Speed			[iStar]						= float(16 + (rand() % 64));
+		stars.Brightness	[iStar]						= float(1.0 / 65535 * rand());
+		stars.Position		[iStar].y					= float(rand() % targetSize.y);
+		stars.Position		[iStar].x					= float(rand() % targetSize.x);
+	}
+	return 0;
+}
 int													setup				(SApplication & app)	{
 	::ced::SFramework										& framework			= app.Framework;
 	::ced::frameworkSetup(framework);
-
-	app.StarSpeed		.resize(128);
-	app.StarBrightness	.resize(128);
-	app.StarPosition	.resize(128);
-	for(uint32_t iStar = 0; iStar < app.StarBrightness.size(); ++iStar) {
-		app.StarSpeed		[iStar]						= float(16 + (rand() % 64));
-		app.StarBrightness	[iStar]						= float(1.0 / 65535 * rand());
-		app.StarPosition	[iStar].y					= float(rand() % framework.Window.Size.y);
-		app.StarPosition	[iStar].x					= float(rand() % framework.Window.Size.x);
-	}
+	::setupStars(app.Stars, framework.Window.Size);
 
 	//::ced::geometryBuildCube(app.Geometry);
 	//::ced::geometryBuildGrid(app.Geometry, {2U, 2U}, {1U, 1U});
@@ -75,74 +55,32 @@ int													setup				(SApplication & app)	{
 	return 0;
 }
 
-int													draw				(SApplication & app)	{
-	//------------------------------------------- Transform and Draw
-	::ced::SFramework										& framework			= app.Framework;
-	::ced::view_grid<::ced::SColor>							targetPixels		= {framework.Pixels, framework.Window.Size};
-	if(0 == targetPixels.size())
-		return 1;
-	::ced::SColor											colorBackground		= {0x20, 0x8, 0x4};
-	::ced::SColor											colorStar			= {0xfF, 0xfF, 0xfF};
-	//colorBackground										+= (colorBackground * (0.5 + (0.5 / 65535 * rand())) * ((rand() % 2) ? -1 : 1)) ;
-	for(uint32_t y = 0; y < framework.Window.Size.y; ++y) // Generate noise color for planet texture
-	for(uint32_t x = 0; x < framework.Window.Size.x; ++x)
-		framework.Pixels[y * framework.Window.Size.x + x]	= colorBackground;
-
-	for(uint32_t iStar = 0; iStar < app.StarBrightness.size(); ++iStar) {
-		::ced::SCoord2<float>								starPos			= app.StarPosition[iStar];
-		::ced::SColor										starFinalColor	= colorStar * app.StarBrightness[iStar];
-		::ced::setPixel(targetPixels, starPos.Cast<int32_t>(), starFinalColor);
-		const	int32_t										brightRadius	= 5;
-		double												brightUnit		= 1.0 / brightRadius;
-		for(int32_t y = -brightRadius; y < brightRadius; ++y)
-		for(int32_t x = -brightRadius; x < brightRadius; ++x) {
-			::ced::SCoord2<float>								brightPos		= {(float)x, (float)y};
-			const double										brightDistance	= brightPos.Length();
-			if(brightDistance <= brightRadius) {
-				::ced::SCoord2<int32_t>								pixelPos		= (starPos + brightPos).Cast<int32_t>();
-				if( pixelPos.y >= 0 && pixelPos.y < (int32_t)targetPixels.metrics().y
-				 && pixelPos.x >= 0 && pixelPos.x < (int32_t)targetPixels.metrics().x
-					)
-					::ced::setPixel(targetPixels, pixelPos, targetPixels[pixelPos.y][pixelPos.x] + colorStar * app.StarBrightness[iStar] * (1.0-(brightDistance * brightUnit * (1 + (rand() % 3)))));
-			}
+int													updateShots			(::SShots & shots, float lastFrameSeconds)	{
+	for(uint32_t iShot = 0; iShot < shots.Position.size(); ++iShot) {
+		shots.PositionPrev	[iShot]						= shots.Position	[iShot];
+		shots.Position		[iShot].x					+= float(shots.Speed[iShot] * lastFrameSeconds);
+		if(shots.Position[iShot].x > 50) {
+			shots.PositionPrev	[iShot]						= shots.PositionPrev	[shots.Position.size() - 1];
+			shots.Position		[iShot]						= shots.Position		[shots.Position.size() - 1];
+			shots.Speed			[iShot]						= shots.Speed			[shots.Position.size() - 1];
+			shots.Brightness	[iShot]						= shots.Brightness		[shots.Position.size() - 1];
+			shots.PositionPrev	.resize(shots.PositionPrev	.size() - 1);
+			shots.Position		.resize(shots.Position		.size() - 1);
+			shots.Speed			.resize(shots.Speed			.size() - 1);
+			shots.Brightness	.resize(shots.Brightness	.size() - 1);
 		}
-
 	}
+	return 0;
+}
 
-	app.LightVector.Normalize();
-
-	::ced::SMatrix4<float>									matrixView			= {};
-	::ced::SMatrix4<float>									matrixProjection	= {};
-	::ced::SMatrix4<float>									matrixViewport		= {};
-	matrixView.LookAt(app.Camera.Position, app.Camera.Target, app.Camera.Up);
-	matrixProjection.FieldOfView(::ced::MATH_PI * .25, targetPixels.metrics().x / (double)targetPixels.metrics().y, 0.01, 1000);
-	matrixViewport.Viewport(targetPixels.metrics(), 0.01, 1000);
-	matrixView											= matrixView * matrixProjection;
-	matrixViewport										= matrixViewport.GetInverse();
-	matrixViewport._41									+= targetPixels.metrics().x / 2;
-	matrixViewport._42									+= targetPixels.metrics().y / 2;
-
-	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
-	::ced::container<::ced::STriangleWeights<double>>		pixelVertexWeights;
-	::ced::SModelTransform									matrices;
-	::ced::SModelTransform									matricesParent;
-	for(uint32_t iModel = 1; iModel < app.Models.size(); ++iModel) {
-		matrices.Scale		.Scale			(app.Models[iModel].Scale	, true);
-		matrices.Rotation	.Rotation		(app.Models[iModel].Rotation);
-		matrices.Position	.SetTranslation	(app.Models[iModel].Position, true);
-
-		::ced::SEntity											& entity				= app.Entities[iModel];
-		matricesParent.Scale	.Scale			(app.Models[entity.Parent].Scale, true);
-		matricesParent.Rotation	.Rotation		(app.Models[entity.Parent].Rotation);
-		matricesParent.Position	.SetTranslation	(app.Models[entity.Parent].Position, true);
-
-		::ced::SMatrix4<float>									matrixTransform			= matrices.Scale * matrices.Rotation * matrices.Position;
-		::ced::SMatrix4<float>									matrixTransformParent	= matricesParent.Scale * matricesParent.Rotation * matricesParent.Position;
-		matrixTransform										= matrixTransform  * matrixTransformParent ;
-		for(uint32_t iTriangle = 0; iTriangle < app.Geometry.Triangles.size(); ++iTriangle) {
-			pixelCoords			.clear();
-			pixelVertexWeights	.clear();
-			::ced::drawTriangle(targetPixels, app.Geometry, iTriangle, matrixTransform, matrixView, matrixViewport, app.LightVector, pixelCoords, pixelVertexWeights, {app.Image.Pixels.begin(), app.Image.Metrics}, framework.DepthBuffer);
+int													updateStars			(::SStars & stars, uint32_t yMax, float lastFrameSeconds)	{
+	for(uint32_t iStar = 0; iStar < stars.Brightness.size(); ++iStar) {
+		::ced::SCoord2<float>									 & starPos			= stars.Position[iStar];
+		starPos.y											+= stars.Speed[iStar] * lastFrameSeconds;
+		stars.Brightness[iStar]								= float(1.0 / 65535 * rand());
+		if(starPos.y >= yMax) {
+			stars.Speed		[iStar]								= float(16 + (rand() % 64));
+			starPos.y											= 0;
 		}
 	}
 	return 0;
@@ -155,13 +93,23 @@ int													update				(SApplication & app)	{
 	//------------------------------------------- Handle input
 	double													speed				= 10;
 	double													lastFrameSeconds	= framework.Timer.ElapsedMicroseconds * .000001;
+	app.Shots.Delay										+= lastFrameSeconds;
+	if(GetAsyncKeyState(VK_SPACE)) {
+		if(app.Shots.Delay >= 0.1) {
+			app.Shots.PositionPrev	.push_back(app.Models[0].Position);
+			app.Shots.Position		.push_back(app.Models[0].Position);
+			app.Shots.Speed			.push_back(200);
+			app.Shots.Brightness	.push_back(1);
+			app.Shots.Delay									= 0;
+		}
+	}
 	if(GetAsyncKeyState('Q')) app.Camera.Position.y				-= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
 	if(GetAsyncKeyState('E')) app.Camera.Position.y				+= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
 
-	if(GetAsyncKeyState('W')) app.Models[0].Position.x			-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-	if(GetAsyncKeyState('S')) app.Models[0].Position.x			+= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-	if(GetAsyncKeyState('A')) app.Models[0].Position.z			-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-	if(GetAsyncKeyState('D')) app.Models[0].Position.z			+= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+	if(GetAsyncKeyState('W')) app.Models[0].Position.x			+= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+	if(GetAsyncKeyState('S')) app.Models[0].Position.x			-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+	if(GetAsyncKeyState('A')) app.Models[0].Position.z			+= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+	if(GetAsyncKeyState('D')) app.Models[0].Position.z			-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
 
 	if(GetAsyncKeyState(VK_NUMPAD8)) app.Models[0].Rotation.x	-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
 	if(GetAsyncKeyState(VK_NUMPAD2)) app.Models[0].Rotation.x	+= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
@@ -173,26 +121,12 @@ int													update				(SApplication & app)	{
 		app.Models[iModel].Rotation.y						+= (float)lastFrameSeconds * 5;
 
 	app.LightVector										= app.LightVector.RotateY(lastFrameSeconds * 2);
+	if(framework.Window.Resized)
+		::setupStars(app.Stars, framework.Window.Size);
+	::updateStars(app.Stars, framework.Window.Size.y, (float)lastFrameSeconds);
+	::updateShots(app.Shots, (float)lastFrameSeconds);
 
-	if(framework.Window.Resized) {
-		if(framework.Window.Size.x)
-			for(uint32_t iStar = 0; iStar < app.StarBrightness.size(); ++iStar) {
-				::ced::SCoord2<float>								 & starPos			= app.StarPosition[iStar];
-				starPos.x										= (float)(rand() % framework.Window.Size.x);
-				starPos.y										= (float)(rand() % framework.Window.Size.y);
-			}
-	}
-	for(uint32_t iStar = 0; iStar < app.StarBrightness.size(); ++iStar) {
-		::ced::SCoord2<float>								 & starPos			= app.StarPosition[iStar];
-		starPos.y										+= float(app.StarSpeed[iStar] * lastFrameSeconds);
-		app.StarBrightness	[iStar]						= float(1.0 / 65535 * rand());
-		if(starPos.y >= framework.Window.Size.y) {
-			app.StarSpeed		[iStar]						= float(16 + (rand() % 64));
-			starPos.y										= 0;
-		}
-	}
-
-	draw(app);
+	::draw(app);
 	return framework.Running ? 0 : 1;
 }
 

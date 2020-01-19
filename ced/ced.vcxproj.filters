@@ -65,5 +65,8 @@
     <ClInclude Include="ced_framework.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ced_stars.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -18,5 +18,13 @@
     <ClCompile Include="ced_demo_08.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ced_demo_08_draw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ced_demo_08.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
