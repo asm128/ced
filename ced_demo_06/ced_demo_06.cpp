@@ -61,7 +61,7 @@ int													update				(SApplication & app)	{
 	if(GetAsyncKeyState('E')) cameraPosition.y					+= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
 
 	//------------------------------------------- Transform and Draw
-	::ced::view_grid<::ced::SColor>							targetPixels		= {framework.Pixels, framework.Window.Size};
+	::ced::view_grid<::ced::SColorBGRA>							targetPixels		= {framework.Pixels, framework.Window.Size};
 	static ::ced::SCoord3<float>							lightVector			= {15, 12, 0};
 	lightVector											= lightVector	.RotateY(lastFrameSeconds * 2);
 	cameraPosition										= cameraPosition.RotateY(lastFrameSeconds / 2);

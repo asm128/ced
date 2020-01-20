@@ -86,7 +86,7 @@ int													update				(SApplication & app)	{
 	static ::ced::SCoord3<float>							lightVector			= {15, 12, 0};
 	lightVector											= lightVector.RotateY(lastFrameSeconds * 2);
 	//------------------------------------------- Transform and Draw
-	::ced::view_grid<::ced::SColor>							targetPixels		= {framework.Pixels, framework.Window.Size};
+	::ced::view_grid<::ced::SColorBGRA>							targetPixels		= {framework.Pixels, framework.Window.Size};
 
 	lightVector.Normalize();
 

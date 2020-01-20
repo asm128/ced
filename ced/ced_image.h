@@ -8,7 +8,7 @@ namespace ced
 {
 	struct SImage {
 		::ced::SCoord2<uint32_t>							Metrics		;
-		::ced::container<::ced::SColor>						Pixels		;
+		::ced::container<::ced::SColorBGRA>						Pixels		;
 	};
 
 	int													bmpFileLoad				(const char* filename, ::ced::SImage & imageLoaded);

@@ -114,7 +114,7 @@ int													update				(SApplication & app)	{
 	double													lastFrameSeconds	= framework.Timer.ElapsedMicroseconds * .000001;
 	app.AnimationTime									+= lastFrameSeconds;
 	app.ShotsPlayer.Delay								+= lastFrameSeconds * 10;
-	app.ShotsEnemy.Delay								+= lastFrameSeconds * 5;
+	app.ShotsEnemy.Delay								+= lastFrameSeconds * 1;
 	::ced::SModel3D											& modelPlayer		= app.Scene.Models[0];
 	::ced::SModel3D											& modelEnemy		= app.Scene.Models[7];
 

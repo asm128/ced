@@ -10,12 +10,12 @@ int													ced::frameworkUpdate		(::ced::SFramework & framework)	{
 	if(window.Resized) {
 		free(framework.Pixels);
 		const uint32_t											pixelCount			= window.Size.x * window.Size.y;
-		framework.Pixels									= (::ced::SColor*)malloc(sizeof(::ced::SColor) * pixelCount);
+		framework.Pixels									= (::ced::SColorBGRA*)malloc(sizeof(::ced::SColorBGRA) * pixelCount);
 		framework.DepthBuffer.resize(pixelCount);
 	}
-	::ced::view_grid<::ced::SColor>							targetPixels		= {framework.Pixels, window.Size};
-	memset(targetPixels.begin(), 0, sizeof(::ced::SColor) * targetPixels.size());
-	memset(framework.DepthBuffer.begin(), 0, sizeof(::ced::SColor) * framework.DepthBuffer.size());
+	::ced::view_grid<::ced::SColorBGRA>							targetPixels		= {framework.Pixels, window.Size};
+	memset(targetPixels.begin(), 0, sizeof(::ced::SColorBGRA) * targetPixels.size());
+	memset(framework.DepthBuffer.begin(), 0, sizeof(::ced::SColorBGRA) * framework.DepthBuffer.size());
 	return 0;
 }
 
@@ -23,7 +23,7 @@ int													ced::frameworkSetup			(::ced::SFramework & framework)	{
 	::ced::SWindow											& window					= framework.Window;
 	::ced::windowSetup(window);
 	const uint32_t											pixelCount					= window.Size.x * window.Size.y;
-	framework.Pixels									= (::ced::SColor*)malloc(sizeof(::ced::SColor) * pixelCount);
+	framework.Pixels									= (::ced::SColorBGRA*)malloc(sizeof(::ced::SColorBGRA) * pixelCount);
 	framework.DepthBuffer.resize(pixelCount);
 	return 0;
 }

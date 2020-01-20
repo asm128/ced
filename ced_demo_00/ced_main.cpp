@@ -7,14 +7,14 @@
 
 struct SApplication {
 	::ced::SWindow					Window				= {};
-	::ced::SColor					* Pixels			= 0;
+	::ced::SColorBGRA					* Pixels			= 0;
 	::ced::STimer					Timer				= {};
 	bool							Running				= true;
 
 	::ced::SRectangle	<int32_t>	Rectangles	[4]		= {};
 	::ced::SCircle		<int32_t>	Circles		[4]		= {};
 	::ced::STriangle	<int32_t>	Triangles	[4]		= {};
-	::ced::SColor					Colors		[4]		= { {0xff}, {0, 0xFF}, {0, 0, 0xFF} };
+	::ced::SColorBGRA				Colors		[4]		= { {0xff, 0, 0}, {0, 0xFF, 0}, {0, 0, 0xFF} };
 };
 
 int									cleanup				(SApplication & app)	{
@@ -26,7 +26,7 @@ int									cleanup				(SApplication & app)	{
 int									setup				(SApplication & app)	{
 	::ced::SWindow							& window			= app.Window;
 	::ced::windowSetup(app.Window);
-	app.Pixels							= (::ced::SColor*)malloc(sizeof(::ced::SColor) * window.Size.x * window.Size.y);
+	app.Pixels							= (::ced::SColorBGRA*)malloc(sizeof(::ced::SColorBGRA) * window.Size.x * window.Size.y);
 
 	for(uint32_t y = 0; y < (uint32_t)2; ++y)
 	for(uint32_t x = 0; x < (uint32_t)2; ++x) {
@@ -61,7 +61,7 @@ int									update				(SApplication & app)	{
 		return 1;
 	if(window.Resized) {
 		free(app.Pixels);
-		app.Pixels							= (::ced::SColor*)malloc(sizeof(::ced::SColor) * window.Size.x * window.Size.y);
+		app.Pixels							= (::ced::SColorBGRA*)malloc(sizeof(::ced::SColorBGRA) * window.Size.x * window.Size.y);
 		for(uint32_t y = 0; y < (uint32_t)2; ++y)
 		for(uint32_t x = 0; x < (uint32_t)2; ++x) {
 			::ced::SRectangle	<int32_t>			& rectangle			= app.Rectangles[y * 2 + x];
@@ -72,7 +72,7 @@ int									update				(SApplication & app)	{
 			circle.Radius						= 10;
 		}
 	}
-	::ced::view_grid<::ced::SColor>			viewTarget			= {app.Pixels, window.Size};
+	::ced::view_grid<::ced::SColorBGRA>			viewTarget			= {app.Pixels, window.Size};
 	::ced::SLine<int32_t>					lineA				= {{0, 0}, window.Size.Cast<int32_t>() / 2};
 	::ced::SLine<int32_t>					lineB				= {{(int32_t)window.Size.x / 2, 0}, {0, (int32_t)window.Size.y / 2}};
 	static double							angle				= 0;

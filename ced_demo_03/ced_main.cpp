@@ -49,11 +49,11 @@ struct SGeometryQuads {
 
 struct SApplication {
 	::ced::SWindow										Window				= {};
-	::ced::SColor										* Pixels			= 0;
+	::ced::SColorBGRA										* Pixels			= 0;
 	::ced::STimer										Timer				= {};
 	bool												Running				= true;
 	double												TotalTime			= 0;
-	::ced::SColor										Colors		[4]		= { {0xff}, {0, 0xFF}, {0, 0, 0xFF}, {0xFF, 0xC0, 0x40} };
+	::ced::SColorBGRA									Colors		[4]		= { {0xff,0, 0}, {0, 0xFF, 0}, {0, 0, 0xFF}, {0xFF, 0xC0, 0x40} };
 
 	::ced::container<::SModel3D>						Models;
 	::ced::container<uint32_t>							DepthBuffer;
@@ -112,7 +112,7 @@ int													setup				(SApplication & app)	{
 	::ced::SWindow											& window			= app.Window;
 	::ced::windowSetup(window);
 	const uint32_t											pixelCount			= window.Size.x * window.Size.y;
-	app.Pixels											= (::ced::SColor*)malloc(sizeof(::ced::SColor) * pixelCount);
+	app.Pixels											= (::ced::SColorBGRA*)malloc(sizeof(::ced::SColorBGRA) * pixelCount);
 	app.DepthBuffer.resize(pixelCount);
 	//::geometryBuildCube(app.Geometry);
 	::geometryBuildGrid(app.Geometry, {16U, 3U}, {1U, 1U});
@@ -137,12 +137,12 @@ int													update				(SApplication & app)	{
 	if(window.Resized) {
 		free(app.Pixels);
 		const uint32_t											pixelCount			= window.Size.x * window.Size.y;
-		app.Pixels											= (::ced::SColor*)malloc(sizeof(::ced::SColor) * pixelCount);
+		app.Pixels											= (::ced::SColorBGRA*)malloc(sizeof(::ced::SColorBGRA) * pixelCount);
 		app.DepthBuffer.resize(pixelCount);
 	}
-	::ced::view_grid<::ced::SColor>							targetPixels		= {app.Pixels, window.Size};
-	memset(targetPixels.begin(), 0, sizeof(::ced::SColor) * targetPixels.size());
-	memset(app.DepthBuffer.begin(), 0, sizeof(::ced::SColor) * app.DepthBuffer.size());
+	::ced::view_grid<::ced::SColorBGRA>							targetPixels		= {app.Pixels, window.Size};
+	memset(targetPixels.begin(), 0, sizeof(::ced::SColorBGRA) * targetPixels.size());
+	memset(app.DepthBuffer.begin(), 0, sizeof(::ced::SColorBGRA) * app.DepthBuffer.size());
 
 	//------------------------------------------- Handle input
 	::ced::SCoord3<float>									cameraTarget		= {};
@@ -206,7 +206,7 @@ int													update				(SApplication & app)	{
 			::ced::drawTriangle(targetPixels.metrics(), triangle, pixelCoords, pixelVertexWeights, app.DepthBuffer);
 			for(uint32_t iPixelCoord = 0; iPixelCoord < pixelCoords.size(); ++iPixelCoord) {
 				::ced::SCoord2<int32_t>									pixelCoord			= pixelCoords[iPixelCoord];
-				::ced::SColor											pixelColor			= app.Colors[colorIndex];
+				::ced::SColorBGRA											pixelColor			= app.Colors[colorIndex];
 				pixelColor.r										= (uint8_t)(0xFF * pixelVertexWeights[iPixelCoord].A);
 				pixelColor.g										= (uint8_t)(0xFF * pixelVertexWeights[iPixelCoord].B);
 				pixelColor.b										= (uint8_t)(0xFF * pixelVertexWeights[iPixelCoord].C);

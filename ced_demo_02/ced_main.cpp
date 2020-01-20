@@ -38,11 +38,11 @@ static constexpr const ::ced::SCoord3<int8_t>		geometryNormals	[6]		=
 
 struct SApplication {
 	::ced::SWindow									Window				= {};
-	::ced::SColor									* Pixels			= 0;
+	::ced::SColorBGRA								* Pixels			= 0;
 	::ced::STimer									Timer				= {};
 	bool											Running				= true;
 	double											TotalTime			= 0;
-	::ced::SColor									Colors		[4]		= { {0xff}, {0, 0xFF}, {0, 0, 0xFF}, {0xFF, 0xC0, 0x40} };
+	::ced::SColorBGRA								Colors		[4]		= { {0xff, 0, 0}, {0, 0xFF, 0}, {0, 0, 0xFF}, {0xFF, 0xC0, 0x40} };
 
 	::ced::container<::ced::STriangle3	<float>>	Triangles;
 	::ced::container<::ced::SCoord3		<float>>	Normals;
@@ -74,7 +74,7 @@ int												setupTriangles		(SApplication & app)	{
 int												setup				(SApplication & app)	{
 	::ced::SWindow										& window			= app.Window;
 	::ced::windowSetup(window);
-	app.Pixels										= (::ced::SColor*)malloc(sizeof(::ced::SColor) * window.Size.x * window.Size.y);
+	app.Pixels										= (::ced::SColorBGRA*)malloc(sizeof(::ced::SColorBGRA) * window.Size.x * window.Size.y);
 	setupTriangles(app);
 	return 0;
 }
@@ -87,11 +87,11 @@ int												update				(SApplication & app)	{
 		return 1;
 	if(window.Resized) {
 		free(app.Pixels);
-		app.Pixels										= (::ced::SColor*)malloc(sizeof(::ced::SColor) * window.Size.x * window.Size.y);
+		app.Pixels										= (::ced::SColorBGRA*)malloc(sizeof(::ced::SColorBGRA) * window.Size.x * window.Size.y);
 		::setupTriangles(app);
 	}
-	::ced::view_grid<::ced::SColor>						targetPixels		= {app.Pixels, window.Size};
-	memset(targetPixels.begin(), 0, sizeof(::ced::SColor) * targetPixels.size());
+	::ced::view_grid<::ced::SColorBGRA>						targetPixels		= {app.Pixels, window.Size};
+	memset(targetPixels.begin(), 0, sizeof(::ced::SColorBGRA) * targetPixels.size());
 
 	::ced::SCoord3<float>								cameraTarget		= {};
 	static ::ced::SCoord3<float>						cameraPosition		= {5, 2, 0};

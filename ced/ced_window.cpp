@@ -9,7 +9,7 @@ LRESULT	WINAPI							wndProc					(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
-int										blitBuffer				(HDC hdc, const ::ced::SColor * pixels, ::ced::SCoord2<uint32_t> targetSize)	{
+int										blitBuffer				(HDC hdc, const ::ced::SColorBGRA * pixels, ::ced::SCoord2<uint32_t> targetSize)	{
 	BITMAPINFO									bitmapInfo				= {};
 	bitmapInfo.bmiHeader.biSize				= sizeof(BITMAPINFO);
 	bitmapInfo.bmiHeader.biWidth			= targetSize.x;
@@ -17,7 +17,7 @@ int										blitBuffer				(HDC hdc, const ::ced::SColor * pixels, ::ced::SCoord
 	bitmapInfo.bmiHeader.biPlanes			= 1;
 	bitmapInfo.bmiHeader.biBitCount			= 32;
 	bitmapInfo.bmiHeader.biCompression		= BI_RGB;
-	bitmapInfo.bmiHeader.biSizeImage		= targetSize.x * targetSize.y * sizeof(::ced::SColor);
+	bitmapInfo.bmiHeader.biSizeImage		= targetSize.x * targetSize.y * sizeof(::ced::SColorBGRA);
 	bitmapInfo.bmiHeader.biXPelsPerMeter	= 0xce4;
 	bitmapInfo.bmiHeader.biYPelsPerMeter	= 0xce4;
 
@@ -58,7 +58,7 @@ int32_t									ced::windowSetup		(::ced::SWindow & window) {
 	return 0;
 }
 
-int32_t									ced::windowUpdate		(::ced::SWindow & window, const ::ced::SColor* pixels) {
+int32_t									ced::windowUpdate		(::ced::SWindow & window, const ::ced::SColorBGRA* pixels) {
 	HDC											deviceContext			= GetDC(window.Handle);
 	::blitBuffer(deviceContext, pixels, window.Size);
 	ReleaseDC	(window.Handle, deviceContext);

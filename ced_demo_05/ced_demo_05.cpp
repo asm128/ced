@@ -9,16 +9,16 @@
 
 struct SImage {
 	::ced::SCoord2<uint32_t>							Metrics		;
-	::ced::container<::ced::SColor>						Pixels		;
+	::ced::container<::ced::SColorBGRA>						Pixels		;
 };
 
 struct SApplication {
 	::ced::SWindow										Window				= {};
-	::ced::SColor										* Pixels			= 0;
+	::ced::SColorBGRA									* Pixels			= 0;
 	::ced::STimer										Timer				= {};
 	bool												Running				= true;
 	double												TotalTime			= 0;
-	::ced::SColor										Colors		[4]		= { {0xff}, {0, 0xFF}, {0, 0, 0xFF}, {0xFF, 0xC0, 0x40} };
+	::ced::SColorBGRA									Colors		[4]		= { {0xff}, {0, 0xFF, 0}, {0, 0, 0xFF}, {0xFF, 0xC0, 0x40} };
 
 	::SImage											Image				= {};
 };
@@ -59,7 +59,7 @@ int													setup				(SApplication & app)	{
 	::ced::SWindow											& window			= app.Window;
 	window.Size											= app.Image.Metrics;
 	::ced::windowSetup(window);
-	app.Pixels											= (::ced::SColor*)malloc(sizeof(::ced::SColor) * window.Size.x * window.Size.y);
+	app.Pixels											= (::ced::SColorBGRA*)malloc(sizeof(::ced::SColorBGRA) * window.Size.x * window.Size.y);
 	return 0;
 }
 
@@ -71,12 +71,12 @@ int													update				(SApplication & app)	{
 		return 1;
 	if(window.Resized) {
 		free(app.Pixels);
-		app.Pixels											= (::ced::SColor*)malloc(sizeof(::ced::SColor) * window.Size.x * window.Size.y);
+		app.Pixels											= (::ced::SColorBGRA*)malloc(sizeof(::ced::SColorBGRA) * window.Size.x * window.Size.y);
 	}
-	::ced::view_grid<::ced::SColor>							targetPixels		= {app.Pixels, window.Size};
-	memset(targetPixels.begin(), 0, sizeof(::ced::SColor) * targetPixels.size());
+	::ced::view_grid<::ced::SColorBGRA>							targetPixels		= {app.Pixels, window.Size};
+	memset(targetPixels.begin(), 0, sizeof(::ced::SColorBGRA) * targetPixels.size());
 
-	::ced::view_grid<const ::ced::SColor>					viewImage				= {app.Image.Pixels.begin(), app.Image.Metrics};
+	::ced::view_grid<const ::ced::SColorBGRA>					viewImage				= {app.Image.Pixels.begin(), app.Image.Metrics};
 	for(uint32_t y = 0; y < app.Image.Metrics.y; ++y)
 	for(uint32_t x = 0; x < app.Image.Metrics.x; ++x) {
 		targetPixels[y][x]									= viewImage[y][x];

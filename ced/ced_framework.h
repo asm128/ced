@@ -8,7 +8,7 @@ namespace ced
 {
 	struct SFramework {
 		::ced::SWindow										Window				= {};
-		::ced::SColor										* Pixels			= 0;
+		::ced::SColorBGRA										* Pixels			= 0;
 		::ced::container<uint32_t>							DepthBuffer			= {};
 		::ced::STimer										Timer				= {};
 		uint64_t											TotalFrames			= 0;

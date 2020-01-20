@@ -17,7 +17,7 @@ namespace ced
 	};
 
 	int32_t							windowSetup		(::ced::SWindow & window);
-	int32_t							windowUpdate	(::ced::SWindow & window, const ::ced::SColor* pixels);
+	int32_t							windowUpdate	(::ced::SWindow & window, const ::ced::SColorBGRA* pixels);
 	int32_t							windowCleanup	(::ced::SWindow & window);
 } // namespace
 
