@@ -41,6 +41,8 @@ struct SScene	{
 struct SApplication {
 	::ced::SFramework									Framework			= {};
 
+	::ced::container<int32_t>							Health				= {};
+
 	::SScene											Scene				;
 	::SStars											Stars				;
 	::SShots											Shots				;

@@ -20,6 +20,7 @@ int													setupStars			(SStars & stars, ::ced::SCoord2<uint32_t> targetSiz
 
 int													modelCreate			(SApplication & app)	{
 	int32_t													indexModel			= app.Scene.ModelMatricesLocal.size();
+	app.Health						.resize(indexModel + 7);
 	app.Scene.ModelMatricesLocal	.resize(indexModel + 7);
 	app.Scene.ModelMatricesGlobal	.resize(indexModel + 7);
 	app.Scene.Models				.resize(indexModel + 7);
@@ -39,6 +40,7 @@ int													modelCreate			(SApplication & app)	{
 		model.Position.RotateY(::ced::MATH_2PI / (app.Scene.Models.size() - 1)* iModel);
 		::ced::SEntity											& entity		= app.Scene.Entities[iModel];
 		entity.Parent										= indexModel;
+		app.Health[iModel]									= 1000;
  		app.Scene.Entities[indexModel].Children.push_back(iModel);
 	}
 	return 0;
@@ -87,7 +89,8 @@ int													updateShots			(::SShots & shots, float lastFrameSeconds)	{
 int													updateDebris			(::SDebris & debris, float lastFrameSeconds)	{
 	for(uint32_t iShot = 0; iShot < debris.Position.size(); ++iShot) {
 		debris.Position		[iShot]						+= debris.Direction[iShot] * (debris.Speed[iShot] * lastFrameSeconds);
-		if(debris.Position[iShot].x > 50) {
+		debris.Brightness 	[iShot]						-= lastFrameSeconds ;
+		if(debris.Position[iShot].Length() > 50) {
 			debris.Direction	[iShot]						= debris.Direction	[debris.Position.size() - 1];
 			debris.Position		[iShot]						= debris.Position	[debris.Position.size() - 1];
 			debris.Speed		[iShot]						= debris.Speed		[debris.Position.size() - 1];
@@ -145,8 +148,8 @@ int													update				(SApplication & app)	{
 	app.Shots.Delay										+= lastFrameSeconds;
 	if(GetAsyncKeyState(VK_SPACE)) {
 		if(app.Shots.Delay >= 0.1) {
-			app.Shots.PositionPrev	.push_back(app.Scene.Models[0].Position + ::ced::SCoord3<float>{2.0,});
-			app.Shots.Position		.push_back(app.Scene.Models[0].Position + ::ced::SCoord3<float>{2.0,});
+			app.Shots.PositionPrev	.push_back(app.Scene.Models[0].Position + ::ced::SCoord3<float>{3.0,});
+			app.Shots.Position		.push_back(app.Scene.Models[0].Position + ::ced::SCoord3<float>{3.0,});
 			app.Shots.Speed			.push_back(200);
 			app.Shots.Brightness	.push_back(1);
 			app.Shots.Delay									= 0;
@@ -176,26 +179,49 @@ int													update				(SApplication & app)	{
 	::updateShots(app.Shots, (float)lastFrameSeconds);
 	::updateDebris(app.Debris, (float)lastFrameSeconds);
 
+	::ced::SModelTransform									matricesParent;
 	for(uint32_t iShot = 0; iShot < app.Shots.Position.size(); ++iShot) {
 		const ::ced::SLine3<float>						shotSegment		= {app.Shots.PositionPrev[iShot], app.Shots.Position[iShot]};
 		for(uint32_t iModel = 0; iModel < app.Scene.Models.size(); ++iModel) {
 			if(-1 == app.Scene.Entities[iModel].Parent)
 				continue;
-			::ced::SCoord3<float>						sphereCenter	= app.Scene.Models[iModel].Position + app.Scene.Models[app.Scene.Entities[iModel].Parent].Position;
-			float										t				= 0;
-			::ced::SCoord3<float>						q				= {};
+			if(app.Health[iModel] <= 0)
+				continue;
+			::ced::SCoord3<float>							sphereCenter	= app.Scene.Models[iModel].Position;
+			matricesParent.Scale	.Scale			(app.Scene.Models[app.Scene.Entities[iModel].Parent].Scale, true);
+			matricesParent.Rotation	.Rotation		(app.Scene.Models[app.Scene.Entities[iModel].Parent].Rotation);
+			matricesParent.Position	.SetTranslation	(app.Scene.Models[app.Scene.Entities[iModel].Parent].Position, true);
 
-			intersectRaySphere(shotSegment.A, (shotSegment.B - shotSegment.A).Normalize(), sphereCenter, 1, t, q);
-			if(t > 1) {
+			::ced::SMatrix4<float>							matrixTransformParent	= matricesParent.Scale * matricesParent.Rotation * matricesParent.Position;
+			sphereCenter								= matrixTransformParent.Transform(sphereCenter);
+
+			float											t				= 0;
+			::ced::SCoord3<float>							q				= {};
+
+			if( intersectRaySphere(shotSegment.A, (shotSegment.B - shotSegment.A).Normalize(), sphereCenter, 1, t, q)
+			 && t < 1
+			) {
+				app.Health[iModel]									-= 100;
 				for(uint32_t i = 0; i < 10; ++i) {
-					int32_t newIndex = app.Debris.Direction	.push_back(::ced::SCoord3<float>{app.Scene.Models[0].Position}.Normalize());
-					app.Debris.Direction[newIndex].RotateX(rand() * (1 / ::ced::MATH_2PI));
-					app.Debris.Direction[newIndex].RotateY(rand() * (1 / ::ced::MATH_2PI));
-					app.Debris.Direction[newIndex].RotateZ(rand() * (1 / ::ced::MATH_2PI));
+					int32_t newIndex = app.Debris.Direction	.push_back({0, 1, 0});
+					app.Debris.Direction[newIndex].RotateX(rand() * (::ced::MATH_2PI / 65535));
+					app.Debris.Direction[newIndex].RotateY(rand() * (::ced::MATH_2PI / 65535));
+					app.Debris.Direction[newIndex].RotateZ(rand() * (::ced::MATH_2PI / 65535));
+					app.Debris.Direction[newIndex].Normalize();
 					app.Debris.Position		.push_back(q);
 					app.Debris.Speed		.push_back(50);
 					app.Debris.Brightness	.push_back(1);
 				}
+				app.Shots.PositionPrev	[iShot]						= app.Shots.PositionPrev	[app.Shots.Position.size() - 1];
+				app.Shots.Position		[iShot]						= app.Shots.Position		[app.Shots.Position.size() - 1];
+				app.Shots.Speed			[iShot]						= app.Shots.Speed			[app.Shots.Position.size() - 1];
+				app.Shots.Brightness	[iShot]						= app.Shots.Brightness		[app.Shots.Position.size() - 1];
+				app.Shots.PositionPrev	.resize(app.Shots.PositionPrev	.size() - 1);
+				app.Shots.Position		.resize(app.Shots.Position		.size() - 1);
+				app.Shots.Speed			.resize(app.Shots.Speed			.size() - 1);
+				app.Shots.Brightness	.resize(app.Shots.Brightness	.size() - 1);
+				--iShot;
+				break;
 			}
 		}
 	}

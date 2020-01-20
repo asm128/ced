@@ -2,10 +2,10 @@
 
 int													drawStars			(SStars & stars, ::ced::view_grid<::ced::SColor> targetPixels)	{
 	::ced::SColor											colors[]			=
-		{ {0xfF, 0xfF, 0xfF}
-		, {0xfF, 0x80, 0x40}
-		, {0x40, 0x80, 0xfF}
-		, {0x40, 0x80, 0x80}
+		{ {0xfF, 0xfF, 0xfF, }
+		, {0x40, 0x80, 0xfF, }
+		, {0xfF, 0x80, 0x40, }
+		, {0x80, 0x80, 0x40, }
 		};
 	for(uint32_t iStar = 0; iStar < stars.Brightness.size(); ++iStar) {
 		::ced::SCoord2<float>									starPos			= stars.Position[iStar];
@@ -30,16 +30,32 @@ int													drawStars			(SStars & stars, ::ced::view_grid<::ced::SColor> tar
 }
 
 
-int													drawDebris			(::ced::view_grid<::ced::SColor> targetPixels, SDebris & debris, const ::ced::SMatrix4<float> & matrixVPV)	{
-	::ced::SColor											colorShot			= {0xfF, 0x20, 0x40};
+int													drawDebris			(::ced::view_grid<::ced::SColor> targetPixels, SDebris & debris, const ::ced::SMatrix4<float> & matrixVPV, ::ced::view_grid<uint32_t> depthBuffer)	{
+	::ced::SColor											colors[]			=
+		{ {0xFF, 0xFF, 0xFF, }
+		, {0x20, 0x80, 0xFF, }
+		, {0x40, 0xD0, 0xFF, }
+		, {0x00, 0x00, 0xFF, }
+		};
 	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
-	for(uint32_t iShot = 0; iShot < debris.Brightness.size(); ++iShot) {
-		::ced::SCoord3<float>									starPos			= debris.Position[iShot];
+	for(uint32_t iParticle = 0; iParticle < debris.Brightness.size(); ++iParticle) {
+		::ced::SColor											colorShot			= colors[iParticle % ::std::size(colors)];
+		::ced::SCoord3<float>									starPos			= debris.Position[iParticle];
 		starPos												= matrixVPV.Transform(starPos);
-		::ced::SColor											starFinalColor	= colorShot * debris.Brightness[iShot];
 		const ::ced::SCoord2<int32_t>							pixelCoord		= {(int32_t)starPos.x, (int32_t)starPos.y};
+		if( pixelCoord.y < 0 || pixelCoord.y >= (int32_t)targetPixels.metrics().y
+		 || pixelCoord.x < 0 || pixelCoord.x >= (int32_t)targetPixels.metrics().x
+		)
+			continue;
+		if(starPos.z > 1 || starPos.z < 0)
+			continue;
+		uint32_t												depth				= uint32_t((1.0 - starPos.z) * 0xFFFFFFFFU);
+		if(depth < depthBuffer[pixelCoord.y][pixelCoord.x])
+			continue;
+		depthBuffer[pixelCoord.y][pixelCoord.x]				= depth;
+		::ced::SColor											starFinalColor	= colorShot * debris.Brightness[iParticle];
 		::ced::setPixel(targetPixels, pixelCoord, starFinalColor);
-		const	int32_t											brightRadius		= 5;
+		const	int32_t											brightRadius		= 2;
 		double													brightUnit			= 1.0 / brightRadius;
 		for(int32_t y = -brightRadius; y < brightRadius; ++y)
 		for(int32_t x = -brightRadius; x < brightRadius; ++x) {
@@ -48,16 +64,16 @@ int													drawDebris			(::ced::view_grid<::ced::SColor> targetPixels, SDeb
 			if(brightDistance <= brightRadius) {
 				::ced::SCoord2<int32_t>									pixelPos			= pixelCoord + (brightPos).Cast<int32_t>();
 				if( pixelPos.y >= 0 && pixelPos.y < (int32_t)targetPixels.metrics().y
-					&& pixelPos.x >= 0 && pixelPos.x < (int32_t)targetPixels.metrics().x
-					)
-					::ced::setPixel(targetPixels, pixelPos, targetPixels[pixelPos.y][pixelPos.x] + colorShot * debris.Brightness[iShot] * (1.0-(brightDistance * brightUnit * (1 + (rand() % 3)))));
+				 && pixelPos.x >= 0 && pixelPos.x < (int32_t)targetPixels.metrics().x
+				 )
+					::ced::setPixel(targetPixels, pixelPos, targetPixels[pixelPos.y][pixelPos.x] + colorShot * debris.Brightness[iParticle] * (1.0-(brightDistance * brightUnit * (1 + (rand() % 3)))));
 			}
 		}
 	}
 	return 0;
 }
 
-int													drawShots			(::ced::view_grid<::ced::SColor> targetPixels, SShots & shots, const ::ced::SMatrix4<float> & matrixVPV)	{
+int													drawShots			(::ced::view_grid<::ced::SColor> targetPixels, SShots & shots, const ::ced::SMatrix4<float> & matrixVPV, ::ced::view_grid<uint32_t> depthBuffer)	{
 	::ced::SColor											colorShot			= {0xfF, 0x20, 0x40};
 	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
 	for(uint32_t iShot = 0; iShot < shots.Brightness.size(); ++iShot) {
@@ -74,7 +90,13 @@ int													drawShots			(::ced::view_grid<::ced::SColor> targetPixels, SShot
 			}, pixelCoords);
 		for(uint32_t iPixelCoord = 0; iPixelCoord < pixelCoords.size(); ++iPixelCoord) {
 			const ::ced::SCoord2<int32_t>							& pixelCoord		= pixelCoords[iPixelCoord];
+			uint32_t												depth				= uint32_t((1.0 - raySegment.B.z) * 0xFFFFFFFFU);
+			if(depth < depthBuffer[pixelCoord.y][pixelCoord.x])
+				continue;
+			depthBuffer[pixelCoord.y][pixelCoord.x]	= depth;
+
 			::ced::setPixel(targetPixels, pixelCoord, starFinalColor);
+
 			const	int32_t											brightRadius		= 5;
 			double													brightUnit			= 1.0 / brightRadius;
 			for(int32_t y = -brightRadius; y < brightRadius; ++y)
@@ -85,8 +107,9 @@ int													drawShots			(::ced::view_grid<::ced::SColor> targetPixels, SShot
 					::ced::SCoord2<int32_t>									pixelPos			= pixelCoord + (brightPos).Cast<int32_t>();
 					if( pixelPos.y >= 0 && pixelPos.y < (int32_t)targetPixels.metrics().y
 					 && pixelPos.x >= 0 && pixelPos.x < (int32_t)targetPixels.metrics().x
-						)
+						) {
 						::ced::setPixel(targetPixels, pixelPos, targetPixels[pixelPos.y][pixelPos.x] + colorShot * shots.Brightness[iShot] * (1.0-(brightDistance * brightUnit * (1 + (rand() % 3)))));
+					}
 				}
 			}
 		}
@@ -121,18 +144,17 @@ int													draw				(SApplication & app)	{
 	matrixViewport._41									+= targetPixels.metrics().x / 2;
 	matrixViewport._42									+= targetPixels.metrics().y / 2;
 
-	::drawShots(targetPixels, app.Shots, matrixView * matrixViewport);
-	::drawDebris(targetPixels, app.Debris, matrixView * matrixViewport);
-
-
 	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
 	::ced::container<::ced::STriangleWeights<double>>		pixelVertexWeights;
 	::ced::SModelTransform									matrices;
 	::ced::SModelTransform									matricesParent;
 	for(uint32_t iModel = 0; iModel < app.Scene.Models.size(); ++iModel) {
-		matrices.Scale		.Scale			(app.Scene.Models[iModel].Scale	, true);
-		matrices.Rotation	.Rotation		(app.Scene.Models[iModel].Rotation);
-		matrices.Position	.SetTranslation	(app.Scene.Models[iModel].Position, true);
+		if(app.Health[iModel] <= 0)
+			continue;
+		::ced::SModel3D											& model			= app.Scene.Models[iModel];
+		matrices.Scale		.Scale			(model.Scale	, true);
+		matrices.Rotation	.Rotation		(model.Rotation);
+		matrices.Position	.SetTranslation	(model.Position, true);
 
 		::ced::SEntity											& entity				= app.Scene.Entities[iModel];
 		if(-1 == entity.Parent)
@@ -150,5 +172,8 @@ int													draw				(SApplication & app)	{
 			::ced::drawQuadTriangle(targetPixels, app.Scene.Geometry, iTriangle, matrixTransform, matrixView, matrixViewport, app.Scene.LightVector, pixelCoords, pixelVertexWeights, {app.Scene.Image.Pixels.begin(), app.Scene.Image.Metrics}, framework.DepthBuffer);
 		}
 	}
+
+	::drawShots(targetPixels, app.Shots, matrixView * matrixViewport, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
+	::drawDebris(targetPixels, app.Debris, matrixView * matrixViewport, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
 	return 0;
 }
