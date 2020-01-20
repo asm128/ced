@@ -28,6 +28,8 @@ struct SApplication {
 	::SShots											ShotsPlayer			;
 	::SShots											ShotsEnemy			;
 	::SDebris											Debris				;
+
+	double												AnimationTime		= 0;
 };
 
 int													draw				(SApplication & app);

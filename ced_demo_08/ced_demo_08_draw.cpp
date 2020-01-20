@@ -73,8 +73,7 @@ int													drawDebris			(::ced::view_grid<::ced::SColor> targetPixels, SDeb
 	return 0;
 }
 
-int													drawShots			(::ced::view_grid<::ced::SColor> targetPixels, SShots & shots, const ::ced::SMatrix4<float> & matrixVPV, ::ced::view_grid<uint32_t> depthBuffer)	{
-	::ced::SColor											colorShot			= {0xfF, 0x20, 0x40};
+int													drawShots			(::ced::view_grid<::ced::SColor> targetPixels, SShots & shots, const ::ced::SMatrix4<float> & matrixVPV, ::ced::SColor colorShot, ::ced::view_grid<uint32_t> depthBuffer)	{
 	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
 	for(uint32_t iShot = 0; iShot < shots.Brightness.size(); ++iShot) {
 		::ced::SCoord3<float>									starPosPrev		= shots.PositionPrev[iShot];
@@ -182,8 +181,10 @@ int													draw				(SApplication & app)	{
 		}
 	}
 
-	::drawShots(targetPixels, app.ShotsPlayer	, matrixView * matrixViewport, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
-	::drawShots(targetPixels, app.ShotsEnemy	, matrixView * matrixViewport, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
+	::ced::SColor											colorShotPlayer			= {0x20, 0xfF, 0x40};
+	::ced::SColor											colorShotEnemy			= {0x40, 0x20, 0xfF};
+	::drawShots(targetPixels, app.ShotsPlayer	, matrixView * matrixViewport, colorShotPlayer	, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
+	::drawShots(targetPixels, app.ShotsEnemy	, matrixView * matrixViewport, colorShotEnemy	, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
 	::drawDebris(targetPixels, app.Debris		, matrixView * matrixViewport, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
 	return 0;
 }

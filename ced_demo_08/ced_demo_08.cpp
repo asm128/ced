@@ -86,14 +86,14 @@ int													updateStars			(::SStars & stars, uint32_t yMax, float lastFrameS
 
 // Intersects ray r = p + td, |d| = 1, with sphere s and, if intersecting,
 // returns t value of intersection and intersection point q
-int intersectRaySphere(const ::ced::SCoord3<float> & p, const ::ced::SCoord3<float> & d, const ::ced::SCoord3<float> & sphereCenter, double sphereRadius, float &t, ::ced::SCoord3<float> &q) {
-	const ::ced::SCoord3<float>				m			= p - sphereCenter;
-	double									b			= m.Dot(d);
-	double									c			= m.Dot(m) - sphereRadius * sphereRadius;
+int													intersectRaySphere		(const ::ced::SCoord3<float> & p, const ::ced::SCoord3<float> & d, const ::ced::SCoord3<float> & sphereCenter, double sphereRadius, float &t, ::ced::SCoord3<float> &q) {
+	const ::ced::SCoord3<float>								m						= p - sphereCenter;
+	double													b						= m.Dot(d);
+	double													c						= m.Dot(m) - sphereRadius * sphereRadius;
 
 	if (c > 0.0f && b > 0.0f)	// Exit if r’s origin outside s (c > 0) and r pointing away from s (b > 0)
 		return 0;
-	double									discr		= b * b - c;
+	double													discr					= b * b - c;
 
 	if (discr < 0.0f)	// A negative discriminant corresponds to ray missing sphere
 		return 0;
@@ -112,10 +112,13 @@ int													update				(SApplication & app)	{
 	//------------------------------------------- Handle input
 	double													speed				= 10;
 	double													lastFrameSeconds	= framework.Timer.ElapsedMicroseconds * .000001;
+	app.AnimationTime									+= lastFrameSeconds;
 	app.ShotsPlayer.Delay								+= lastFrameSeconds * 10;
-	app.ShotsEnemy.Delay								+= lastFrameSeconds * 2;
+	app.ShotsEnemy.Delay								+= lastFrameSeconds * 5;
 	::ced::SModel3D											& modelPlayer		= app.Scene.Models[0];
 	::ced::SModel3D											& modelEnemy		= app.Scene.Models[7];
+
+	modelEnemy.Position.z								= (float)(sin(app.AnimationTime) * 20);
 
 	if(GetAsyncKeyState(VK_SPACE)) {
 		::ced::SCoord3<float>									direction			= {1, 0, 0};
