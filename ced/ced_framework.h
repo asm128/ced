@@ -11,6 +11,7 @@ namespace ced
 		::ced::SColor										* Pixels			= 0;
 		::ced::container<uint32_t>							DepthBuffer			= {};
 		::ced::STimer										Timer				= {};
+		uint64_t											TotalFrames			= 0;
 		double												TotalTime			= 0;
 		bool												Running				= true;
 	};

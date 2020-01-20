@@ -68,41 +68,7 @@ int													setup				(SApplication & app)	{
 	return 0;
 }
 
-int													updateShots			(::SShots & shots, float lastFrameSeconds)	{
-	for(uint32_t iShot = 0; iShot < shots.Position.size(); ++iShot) {
-		shots.PositionPrev	[iShot]						= shots.Position	[iShot];
-		shots.Position		[iShot].x					+= float(shots.Speed[iShot] * lastFrameSeconds);
-		if(shots.Position[iShot].x > 50) {
-			shots.PositionPrev	[iShot]						= shots.PositionPrev	[shots.Position.size() - 1];
-			shots.Position		[iShot]						= shots.Position		[shots.Position.size() - 1];
-			shots.Speed			[iShot]						= shots.Speed			[shots.Position.size() - 1];
-			shots.Brightness	[iShot]						= shots.Brightness		[shots.Position.size() - 1];
-			shots.PositionPrev	.resize(shots.PositionPrev	.size() - 1);
-			shots.Position		.resize(shots.Position		.size() - 1);
-			shots.Speed			.resize(shots.Speed			.size() - 1);
-			shots.Brightness	.resize(shots.Brightness	.size() - 1);
-		}
-	}
-	return 0;
-}
 
-int													updateDebris			(::SDebris & debris, float lastFrameSeconds)	{
-	for(uint32_t iShot = 0; iShot < debris.Position.size(); ++iShot) {
-		debris.Position		[iShot]						+= debris.Direction[iShot] * (debris.Speed[iShot] * lastFrameSeconds);
-		debris.Brightness 	[iShot]						-= lastFrameSeconds ;
-		if(debris.Position[iShot].Length() > 50) {
-			debris.Direction	[iShot]						= debris.Direction	[debris.Position.size() - 1];
-			debris.Position		[iShot]						= debris.Position	[debris.Position.size() - 1];
-			debris.Speed		[iShot]						= debris.Speed		[debris.Position.size() - 1];
-			debris.Brightness	[iShot]						= debris.Brightness	[debris.Position.size() - 1];
-			debris.Direction	.resize(debris.Direction	.size() - 1);
-			debris.Position		.resize(debris.Position		.size() - 1);
-			debris.Speed		.resize(debris.Speed		.size() - 1);
-			debris.Brightness	.resize(debris.Brightness	.size() - 1);
-		}
-	}
-	return 0;
-}
 
 int													updateStars			(::SStars & stars, uint32_t yMax, float lastFrameSeconds)	{
 	for(uint32_t iStar = 0; iStar < stars.Brightness.size(); ++iStar) {
@@ -145,16 +111,13 @@ int													update				(SApplication & app)	{
 	//------------------------------------------- Handle input
 	double													speed				= 10;
 	double													lastFrameSeconds	= framework.Timer.ElapsedMicroseconds * .000001;
-	app.Shots.Delay										+= lastFrameSeconds;
-	if(GetAsyncKeyState(VK_SPACE)) {
-		if(app.Shots.Delay >= 0.1) {
-			app.Shots.PositionPrev	.push_back(app.Scene.Models[0].Position + ::ced::SCoord3<float>{3.0,});
-			app.Shots.Position		.push_back(app.Scene.Models[0].Position + ::ced::SCoord3<float>{3.0,});
-			app.Shots.Speed			.push_back(200);
-			app.Shots.Brightness	.push_back(1);
-			app.Shots.Delay									= 0;
-		}
-	}
+	app.ShotsPlayer.Delay								+= lastFrameSeconds * 10;
+	app.ShotsEnemy.Delay								+= lastFrameSeconds * 10;
+	if(GetAsyncKeyState(VK_SPACE))
+		app.ShotsPlayer.Spawn(app.Scene.Models[0].Position + ::ced::SCoord3<float>{2.0,}, {1, 0, 0}, 200);
+	if(app.Framework.TotalFrames % 100)
+		app.ShotsEnemy.Spawn(app.Scene.Models[7].Position + ::ced::SCoord3<float>{-2.0,}, {-1, 0, 0}, 200);
+
 	if(GetAsyncKeyState('Q')) app.Scene.Camera.Position.y				-= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
 	if(GetAsyncKeyState('E')) app.Scene.Camera.Position.y				+= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
 
@@ -176,50 +139,79 @@ int													update				(SApplication & app)	{
 	if(framework.Window.Resized)
 		::setupStars(app.Stars, framework.Window.Size);
 	::updateStars(app.Stars, framework.Window.Size.y, (float)lastFrameSeconds);
-	::updateShots(app.Shots, (float)lastFrameSeconds);
-	::updateDebris(app.Debris, (float)lastFrameSeconds);
+	app.ShotsPlayer	.Update((float)lastFrameSeconds);
+	app.ShotsEnemy	.Update((float)lastFrameSeconds);
+	app.Debris		.Update((float)lastFrameSeconds);
 
 	::ced::SModelTransform									matricesParent;
-	for(uint32_t iShot = 0; iShot < app.Shots.Position.size(); ++iShot) {
-		const ::ced::SLine3<float>						shotSegment		= {app.Shots.PositionPrev[iShot], app.Shots.Position[iShot]};
-		for(uint32_t iModel = 0; iModel < app.Scene.Models.size(); ++iModel) {
+	for(uint32_t iShot = 0; iShot < app.ShotsPlayer.Position.size(); ++iShot) {
+		const ::ced::SLine3<float>								shotSegment			= {app.ShotsPlayer.PositionPrev[iShot], app.ShotsPlayer.Position[iShot]};
+		for(uint32_t iModel = 7; iModel < app.Scene.Models.size(); ++iModel) {
 			if(-1 == app.Scene.Entities[iModel].Parent)
 				continue;
 			if(app.Health[iModel] <= 0)
 				continue;
-			::ced::SCoord3<float>							sphereCenter	= app.Scene.Models[iModel].Position;
+			::ced::SCoord3<float>									sphereCenter		= app.Scene.Models[iModel].Position;
 			matricesParent.Scale	.Scale			(app.Scene.Models[app.Scene.Entities[iModel].Parent].Scale, true);
 			matricesParent.Rotation	.Rotation		(app.Scene.Models[app.Scene.Entities[iModel].Parent].Rotation);
 			matricesParent.Position	.SetTranslation	(app.Scene.Models[app.Scene.Entities[iModel].Parent].Position, true);
 
-			::ced::SMatrix4<float>							matrixTransformParent	= matricesParent.Scale * matricesParent.Rotation * matricesParent.Position;
-			sphereCenter								= matrixTransformParent.Transform(sphereCenter);
+			::ced::SMatrix4<float>									matrixTransformParent	= matricesParent.Scale * matricesParent.Rotation * matricesParent.Position;
+			sphereCenter										= matrixTransformParent.Transform(sphereCenter);
 
-			float											t				= 0;
-			::ced::SCoord3<float>							q				= {};
+			float													t				= 0;
+			::ced::SCoord3<float>									q				= {};
 
 			if( intersectRaySphere(shotSegment.A, (shotSegment.B - shotSegment.A).Normalize(), sphereCenter, 1, t, q)
 			 && t < 1
 			) {
 				app.Health[iModel]									-= 100;
 				for(uint32_t i = 0; i < 10; ++i) {
-					int32_t newIndex = app.Debris.Direction	.push_back({0, 1, 0});
-					app.Debris.Direction[newIndex].RotateX(rand() * (::ced::MATH_2PI / 65535));
-					app.Debris.Direction[newIndex].RotateY(rand() * (::ced::MATH_2PI / 65535));
-					app.Debris.Direction[newIndex].RotateZ(rand() * (::ced::MATH_2PI / 65535));
-					app.Debris.Direction[newIndex].Normalize();
-					app.Debris.Position		.push_back(q);
-					app.Debris.Speed		.push_back(50);
-					app.Debris.Brightness	.push_back(1);
+					::ced::SCoord3<float>			direction			= {0, 1, 0};
+					direction.RotateX(rand() * (::ced::MATH_2PI / 65535));
+					direction.RotateY(rand() * (::ced::MATH_2PI / 65535));
+					direction.RotateZ(rand() * (::ced::MATH_2PI / 65535));
+					direction.Normalize();
+					app.Debris.Spawn(q, direction, 50);
 				}
-				app.Shots.PositionPrev	[iShot]						= app.Shots.PositionPrev	[app.Shots.Position.size() - 1];
-				app.Shots.Position		[iShot]						= app.Shots.Position		[app.Shots.Position.size() - 1];
-				app.Shots.Speed			[iShot]						= app.Shots.Speed			[app.Shots.Position.size() - 1];
-				app.Shots.Brightness	[iShot]						= app.Shots.Brightness		[app.Shots.Position.size() - 1];
-				app.Shots.PositionPrev	.resize(app.Shots.PositionPrev	.size() - 1);
-				app.Shots.Position		.resize(app.Shots.Position		.size() - 1);
-				app.Shots.Speed			.resize(app.Shots.Speed			.size() - 1);
-				app.Shots.Brightness	.resize(app.Shots.Brightness	.size() - 1);
+				app.ShotsPlayer.Remove(iShot);
+				--iShot;
+				break;
+			}
+		}
+	}
+
+	for(uint32_t iShot = 0; iShot < app.ShotsEnemy.Position.size(); ++iShot) {
+		const ::ced::SLine3<float>								shotSegment			= {app.ShotsEnemy.PositionPrev[iShot], app.ShotsEnemy.Position[iShot]};
+		for(uint32_t iModel = 0; iModel < 7; ++iModel) {
+			if(-1 == app.Scene.Entities[iModel].Parent)
+				continue;
+			if(app.Health[iModel] <= 0)
+				continue;
+			::ced::SCoord3<float>									sphereCenter		= app.Scene.Models[iModel].Position;
+			matricesParent.Scale	.Scale			(app.Scene.Models[app.Scene.Entities[iModel].Parent].Scale, true);
+			matricesParent.Rotation	.Rotation		(app.Scene.Models[app.Scene.Entities[iModel].Parent].Rotation);
+			matricesParent.Position	.SetTranslation	(app.Scene.Models[app.Scene.Entities[iModel].Parent].Position, true);
+
+			::ced::SMatrix4<float>									matrixTransformParent	= matricesParent.Scale * matricesParent.Rotation * matricesParent.Position;
+			sphereCenter										= matrixTransformParent.Transform(sphereCenter);
+
+			float													t				= 0;
+			::ced::SCoord3<float>									q				= {};
+
+			if( intersectRaySphere(shotSegment.A, (shotSegment.B - shotSegment.A).Normalize(), sphereCenter, 1, t, q)
+			 && t < 1
+			) {
+				app.Health[iModel]									-= 100;
+				for(uint32_t i = 0; i < 10; ++i) {
+					::ced::SCoord3<float>			direction			= {0, 1, 0};
+					direction.RotateX(rand() * (::ced::MATH_2PI / 65535));
+					direction.RotateY(rand() * (::ced::MATH_2PI / 65535));
+					direction.RotateZ(rand() * (::ced::MATH_2PI / 65535));
+					direction.Normalize();
+					app.Debris.Spawn(q, direction, 50);
+				}
+				app.ShotsEnemy.Remove(iShot);
 				--iShot;
 				break;
 			}

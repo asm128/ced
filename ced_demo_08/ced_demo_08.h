@@ -1,31 +1,11 @@
+#include "ced_demo_08_game.h"
+
 #include "ced_model.h"
 #include "ced_image.h"
-#include "ced_draw.h"
 #include "ced_framework.h"
 
 #ifndef CED_DEMO_08_H_298837492837
 #define CED_DEMO_08_H_298837492837
-
-struct SDebris	{
-	::ced::container<::ced::SCoord3<float>>				Position		= {};
-	::ced::container<::ced::SCoord3<float>>				Direction		= {};
-	::ced::container<float>								Speed			= {};
-	::ced::container<float>								Brightness		= {};
-};
-
-struct SStars	{
-	::ced::container<::ced::SCoord2<float>>				Position		= {};
-	::ced::container<float>								Speed			= {};
-	::ced::container<float>								Brightness		= {};
-};
-
-struct SShots	{
-	double												Delay			= 0;
-	::ced::container<::ced::SCoord3<float>>				PositionPrev	= {};
-	::ced::container<::ced::SCoord3<float>>				Position		= {};
-	::ced::container<float>								Speed			= {};
-	::ced::container<float>								Brightness		= {};
-};
 
 struct SScene	{
 	::ced::SImage										Image				= {};
@@ -45,7 +25,8 @@ struct SApplication {
 
 	::SScene											Scene				;
 	::SStars											Stars				;
-	::SShots											Shots				;
+	::SShots											ShotsPlayer			;
+	::SShots											ShotsEnemy			;
 	::SDebris											Debris				;
 };
 

@@ -103,6 +103,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ced_demo_08.h" />
+    <ClInclude Include="ced_demo_08_game.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

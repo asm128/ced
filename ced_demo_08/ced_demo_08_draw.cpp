@@ -173,7 +173,8 @@ int													draw				(SApplication & app)	{
 		}
 	}
 
-	::drawShots(targetPixels, app.Shots, matrixView * matrixViewport, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
-	::drawDebris(targetPixels, app.Debris, matrixView * matrixViewport, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
+	::drawShots(targetPixels, app.ShotsPlayer	, matrixView * matrixViewport, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
+	::drawShots(targetPixels, app.ShotsEnemy	, matrixView * matrixViewport, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
+	::drawDebris(targetPixels, app.Debris		, matrixView * matrixViewport, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
 	return 0;
 }

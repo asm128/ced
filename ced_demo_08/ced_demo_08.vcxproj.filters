@@ -26,5 +26,8 @@
     <ClInclude Include="ced_demo_08.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ced_demo_08_game.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -4,6 +4,7 @@ int													ced::frameworkUpdate		(::ced::SFramework & framework)	{
 	::ced::SWindow											& window					= framework.Window;
 	double													lastFrameSeconds			= framework.Timer.Tick() * .000001;
 	framework.TotalTime									+= lastFrameSeconds;
+	++framework.TotalFrames;
 	if(1 == ::ced::windowUpdate(window, framework.Pixels))
 		return 1;
 	if(window.Resized) {
