@@ -88,11 +88,20 @@ int													drawShots			(::ced::view_grid<::ced::SColor> targetPixels, SShot
 			{ {(int32_t)raySegment.A.x, (int32_t)raySegment.A.y}
 			, {(int32_t)raySegment.B.x, (int32_t)raySegment.B.y}
 			}, pixelCoords);
+		pixelCoords.push_back({int32_t(raySegment.A.x), int32_t(raySegment.A.y)});
+		pixelCoords.push_back({int32_t(raySegment.B.x), int32_t(raySegment.B.y)});
 		for(uint32_t iPixelCoord = 0; iPixelCoord < pixelCoords.size(); ++iPixelCoord) {
 			const ::ced::SCoord2<int32_t>							& pixelCoord		= pixelCoords[iPixelCoord];
+			if( pixelCoord.y < 0 || pixelCoord.y >= (int32_t)targetPixels.metrics().y
+			 || pixelCoord.x < 0 || pixelCoord.x >= (int32_t)targetPixels.metrics().x
+			)
+				continue;
+			if(raySegment.B.z < 0 || raySegment.B.z > 1)
+				continue;
 			uint32_t												depth				= uint32_t((1.0 - raySegment.B.z) * 0xFFFFFFFFU);
 			if(depth < depthBuffer[pixelCoord.y][pixelCoord.x])
 				continue;
+
 			depthBuffer[pixelCoord.y][pixelCoord.x]	= depth;
 
 			::ced::setPixel(targetPixels, pixelCoord, starFinalColor);
@@ -108,7 +117,7 @@ int													drawShots			(::ced::view_grid<::ced::SColor> targetPixels, SShot
 					if( pixelPos.y >= 0 && pixelPos.y < (int32_t)targetPixels.metrics().y
 					 && pixelPos.x >= 0 && pixelPos.x < (int32_t)targetPixels.metrics().x
 						) {
-						::ced::setPixel(targetPixels, pixelPos, targetPixels[pixelPos.y][pixelPos.x] + colorShot * shots.Brightness[iShot] * (1.0-(brightDistance * brightUnit * (1 + (rand() % 3)))));
+						::ced::setPixel(targetPixels, pixelPos, targetPixels[pixelPos.y][pixelPos.x] + colorShot * shots.Brightness[iShot] * (1.0-(brightDistance * brightUnit)));
 					}
 				}
 			}

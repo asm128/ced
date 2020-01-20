@@ -43,7 +43,7 @@ int													modelCreate			(SApplication & app)	{
 		app.Health[iModel]									= 1000;
  		app.Scene.Entities[indexModel].Children.push_back(iModel);
 	}
-	return 0;
+	return indexModel;
 }
 
 int													setup				(SApplication & app)	{
@@ -55,8 +55,9 @@ int													setup				(SApplication & app)	{
 	//::ced::geometryBuildGrid(app.Geometry, {2U, 2U}, {1U, 1U});
 	::ced::geometryBuildSphere(app.Scene.Geometry, 4U, 2U, 1, {0, 1});
 	//::ced::geometryBuildFigure0(app.Geometry, 10U, 10U, 1, {});
-	::modelCreate(app);
-	::modelCreate(app);
+
+	app.Scene.Models[::modelCreate(app)].Position				= {-30};
+	app.Scene.Models[::modelCreate(app)].Position				= {+30};
 
 	app.Scene.Image.Metrics										= {256, 256};
 	app.Scene.Image.Pixels.resize(app.Scene.Image.Metrics.x * app.Scene.Image.Metrics.y);
@@ -112,19 +113,29 @@ int													update				(SApplication & app)	{
 	double													speed				= 10;
 	double													lastFrameSeconds	= framework.Timer.ElapsedMicroseconds * .000001;
 	app.ShotsPlayer.Delay								+= lastFrameSeconds * 10;
-	app.ShotsEnemy.Delay								+= lastFrameSeconds * 10;
-	if(GetAsyncKeyState(VK_SPACE))
-		app.ShotsPlayer.Spawn(app.Scene.Models[0].Position + ::ced::SCoord3<float>{2.0,}, {1, 0, 0}, 200);
-	if(app.Framework.TotalFrames % 100)
-		app.ShotsEnemy.Spawn(app.Scene.Models[7].Position + ::ced::SCoord3<float>{-2.0,}, {-1, 0, 0}, 200);
+	app.ShotsEnemy.Delay								+= lastFrameSeconds * 2;
+	::ced::SModel3D											& modelPlayer		= app.Scene.Models[0];
+	::ced::SModel3D											& modelEnemy		= app.Scene.Models[7];
 
-	if(GetAsyncKeyState('Q')) app.Scene.Camera.Position.y				-= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
-	if(GetAsyncKeyState('E')) app.Scene.Camera.Position.y				+= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
+	if(GetAsyncKeyState(VK_SPACE)) {
+		::ced::SCoord3<float>									direction			= {1, 0, 0};
+		direction.RotateY(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
+		app.ShotsPlayer.Spawn(modelPlayer.Position, direction, 200);
+	}
 
-	if(GetAsyncKeyState('W')) app.Scene.Models[0].Position.x			+= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-	if(GetAsyncKeyState('S')) app.Scene.Models[0].Position.x			-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-	if(GetAsyncKeyState('A')) app.Scene.Models[0].Position.z			+= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-	if(GetAsyncKeyState('D')) app.Scene.Models[0].Position.z			-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+	if(1 < (modelPlayer.Position - modelEnemy.Position).Length()) {
+		::ced::SCoord3<float>									direction			= modelPlayer.Position - modelEnemy.Position;
+		direction.RotateY(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
+		app.ShotsEnemy.Spawn(modelEnemy.Position, direction.Normalize(), 20);
+	}
+
+	if(GetAsyncKeyState('Q')) app.Scene.Camera.Position.y			-= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
+	if(GetAsyncKeyState('E')) app.Scene.Camera.Position.y			+= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
+
+	if(GetAsyncKeyState('W')) app.Scene.Models[0].Position.x		+= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+	if(GetAsyncKeyState('S')) app.Scene.Models[0].Position.x		-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+	if(GetAsyncKeyState('A')) app.Scene.Models[0].Position.z		+= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+	if(GetAsyncKeyState('D')) app.Scene.Models[0].Position.z		-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
 
 	if(GetAsyncKeyState(VK_NUMPAD8)) app.Scene.Models[0].Rotation.x	-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
 	if(GetAsyncKeyState(VK_NUMPAD2)) app.Scene.Models[0].Rotation.x	+= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
@@ -204,7 +215,7 @@ int													update				(SApplication & app)	{
 			) {
 				app.Health[iModel]									-= 100;
 				for(uint32_t i = 0; i < 10; ++i) {
-					::ced::SCoord3<float>			direction			= {0, 1, 0};
+					::ced::SCoord3<float>									direction			= {0, 1, 0};
 					direction.RotateX(rand() * (::ced::MATH_2PI / 65535));
 					direction.RotateY(rand() * (::ced::MATH_2PI / 65535));
 					direction.RotateZ(rand() * (::ced::MATH_2PI / 65535));

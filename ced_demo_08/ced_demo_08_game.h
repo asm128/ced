@@ -65,13 +65,13 @@ struct SShots	{
 		for(uint32_t iShot = 0; iShot < Position.size(); ++iShot) {
 			PositionPrev[iShot]							= Position	[iShot];
 			Position	[iShot]							+= Direction[iShot] * (Speed[iShot] * lastFrameSeconds);
-			Brightness 	[iShot]							-= lastFrameSeconds ;
 			if (Position[iShot].Length() > 100)
 				Remove(iShot);
 		}
 		return 0;
 	}
 	int											Remove			(uint32_t iShot) {
+		Direction		[iShot]						= Direction		[Position.size() - 1];
 		PositionPrev	[iShot]						= PositionPrev	[Position.size() - 1];
 		Position		[iShot]						= Position		[Position.size() - 1];
 		Speed			[iShot]						= Speed			[Position.size() - 1];
@@ -80,6 +80,7 @@ struct SShots	{
 		Position		.resize(Position		.size() - 1);
 		Speed			.resize(Speed			.size() - 1);
 		Brightness		.resize(Brightness		.size() - 1);
+		Direction		.resize(Direction		.size() - 1);
 		return Position.size();
 	}
 };
