@@ -113,8 +113,8 @@ int													update				(SApplication & app)	{
 	double													speed				= 10;
 	double													lastFrameSeconds	= framework.Timer.ElapsedMicroseconds * .000001;
 	app.AnimationTime									+= lastFrameSeconds;
-	app.ShotsPlayer.Delay								+= lastFrameSeconds * 10;
-	app.ShotsEnemy.Delay								+= lastFrameSeconds * 1;
+	app.ShotsPlayer.Delay								+= lastFrameSeconds * 20;
+	app.ShotsEnemy.Delay								+= lastFrameSeconds * 7;
 	::ced::SModel3D											& modelPlayer		= app.Scene.Models[0];
 	::ced::SModel3D											& modelEnemy		= app.Scene.Models[7];
 
@@ -123,6 +123,7 @@ int													update				(SApplication & app)	{
 	if(GetAsyncKeyState(VK_SPACE)) {
 		::ced::SCoord3<float>									direction			= {1, 0, 0};
 		direction.RotateY(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
+		direction.RotateZ(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
 		app.ShotsPlayer.Spawn(modelPlayer.Position, direction, 200);
 	}
 

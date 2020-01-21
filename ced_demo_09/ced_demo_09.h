@@ -8,30 +8,30 @@
 #define CED_DEMO_08_H_298837492837
 
 struct SScene	{
-	::ced::SImage										Image				= {};
-	::ced::container<::ced::SMatrix4<float>>			ModelMatricesLocal	= {};
-	::ced::container<::ced::SMatrix4<float>>			ModelMatricesGlobal	= {};
-	::ced::container<::ced::SModel3D>					Models				= {};
-	::ced::container<::ced::SEntity>					Entities			= {};
-	::ced::SGeometryQuads								Geometry			= {};
-	::ced::SCamera										Camera				= {};
-	::ced::SCoord3<float>								LightVector			= {15, 12, 0};
+	::ced::SImage										Image					= {};
+	::ced::container<::ced::SMatrix4<float>>			ModelMatricesLocal		= {};
+	::ced::container<::ced::SMatrix4<float>>			ModelMatricesGlobal		= {};
+	::ced::container<::ced::SModel3D>					Models					= {};
+	::ced::container<::ced::SEntity>					Entities				= {};
+	::ced::SGeometryQuads								Geometry				= {};
+	::ced::SCamera										Camera					= {};
+	::ced::SCoord3<float>								LightVector				= {15, 12, 0};
 };
 
 struct SApplication {
-	::ced::SFramework									Framework			= {};
+	::ced::SFramework									Framework				= {};
 
-	::ced::container<int32_t>							Health				= {};
+	::ced::container<int32_t>							Health					= {};
 
-	::SScene											Scene				;
-	::SStars											Stars				;
-	::SShots											ShotsPlayer			;
-	::SShots											ShotsEnemy			;
-	::SDebris											Debris				;
+	::SScene											Scene					;
+	::SStars											Stars					;
+	::SShots											ShotsPlayer				;
+	::SShots											ShotsEnemy				;
+	::SDebris											Debris					;
 
-	double												AnimationTime		= 0;
+	double												AnimationTime			= 0;
 };
 
-int													draw				(SApplication & app);
+int													draw					(SApplication & app);
 
 #endif // CED_DEMO_08_H_298837492837

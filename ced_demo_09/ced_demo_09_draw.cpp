@@ -177,13 +177,17 @@ int													draw				(SApplication & app)	{
 		::ced::SMatrix4<float>									matrixTransformParent	= matricesParent.Scale * matricesParent.Rotation * matricesParent.Position;
 		matrixTransform										= matrixTransform  * matrixTransformParent ;
 		::ced::container<::ced::SCoord3<float>>					lightPoints				= {};
-		::ced::container<::ced::SColorBGRA>							lightColors				= {};
-		lightPoints.resize(app.ShotsEnemy.Position.size() + app.ShotsPlayer.Position.size() + app.Debris.Position.size());
-		lightColors.resize(app.ShotsEnemy.Position.size() + app.ShotsPlayer.Position.size() + app.Debris.Position.size());
-		uint32_t												iOffset					= 0;
+		::ced::container<::ced::SColorBGRA>						lightColors				= {};
+		lightPoints.resize(app.ShotsEnemy.Position.size() + app.ShotsPlayer.Position.size() + app.Debris.Position.size() + 2);
+		lightColors.resize(app.ShotsEnemy.Position.size() + app.ShotsPlayer.Position.size() + app.Debris.Position.size() + 2);
+		lightPoints[0]									= app.Scene.Models[0].Position;
+		lightColors[0]									= {0x80, 0x80, 0x80};
+		lightPoints[1]									= app.Scene.Models[7].Position;
+		lightColors[1]									= {0x80, 0x80, 0x80};
+		uint32_t												iOffset					= 2;
 		for(uint32_t iShot = 0; iShot < app.ShotsEnemy.Position.size(); ++iShot) {
-			lightPoints[iShot]									= app.ShotsEnemy.Position[iShot];
-			lightColors[iShot]									= {0, 0, 0xfF};
+			lightPoints[iOffset + iShot]						= app.ShotsEnemy.Position[iShot];
+			lightColors[iOffset + iShot]						= {0, 0, 0xfF};
 		}
 		iOffset												+= app.ShotsEnemy.Position.size();
 		for(uint32_t iShot = 0; iShot < app.ShotsPlayer.Position.size(); ++iShot) {
