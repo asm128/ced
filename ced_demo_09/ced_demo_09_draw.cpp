@@ -52,23 +52,24 @@ int													drawDebris			(::ced::view_grid<::ced::SColorBGRA> targetPixels, 
 		uint32_t												depth				= uint32_t((1.0 - starPos.z) * 0xFFFFFFFFU);
 		if(depth < depthBuffer[pixelCoord.y][pixelCoord.x])
 			continue;
-		depthBuffer[pixelCoord.y][pixelCoord.x]				= depth;
 		::ced::SColorBGRA											starFinalColor	= colorShot * debris.Brightness[iParticle];
 		::ced::setPixel(targetPixels, pixelCoord, starFinalColor);
-		const	int32_t											brightRadius		= 2;
+		const	double											brightRadius		= 3.0;
 		double													brightUnit			= 1.0 / brightRadius;
-		for(int32_t y = -brightRadius; y < brightRadius; ++y)
-		for(int32_t x = -brightRadius; x < brightRadius; ++x) {
+		for(int32_t y = (int32_t)-brightRadius; y < (int32_t)brightRadius; ++y)
+		for(int32_t x = (int32_t)-brightRadius; x < (int32_t)brightRadius; ++x) {
 			::ced::SCoord2<float>									brightPos			= {(float)x, (float)y};
 			const double											brightDistance		= brightPos.Length();
 			if(brightDistance <= brightRadius) {
-				::ced::SCoord2<int32_t>									pixelPos			= pixelCoord + (brightPos).Cast<int32_t>();
-				if( pixelPos.y >= 0 && pixelPos.y < (int32_t)targetPixels.metrics().y
-				 && pixelPos.x >= 0 && pixelPos.x < (int32_t)targetPixels.metrics().x
-				 && depth < depthBuffer[pixelPos.y][pixelPos.x]
+				::ced::SCoord2<int32_t>									blendPos			= pixelCoord + (brightPos).Cast<int32_t>();
+				if( blendPos.y >= 0 && blendPos.y < (int32_t)targetPixels.metrics().y
+				 && blendPos.x >= 0 && blendPos.x < (int32_t)targetPixels.metrics().x
+				 && depth >= depthBuffer[blendPos.y][blendPos.x]
 				) {
-					depthBuffer[pixelPos.y][pixelPos.x]				= depth;
-					::ced::setPixel(targetPixels, pixelPos, targetPixels[pixelPos.y][pixelPos.x] + colorShot * debris.Brightness[iParticle] * (1.0-(brightDistance * brightUnit * (1 + (rand() % 3)))));
+					depthBuffer[blendPos.y][blendPos.x]					= depth;
+					double													finalBrightness					= 1.0-(brightDistance * brightUnit);
+					::ced::SColorFloat										backgroundColor					= targetPixels[blendPos.y][blendPos.x];
+					::ced::setPixel(targetPixels, blendPos, backgroundColor + starFinalColor * finalBrightness);
 				}
 			}
 		}
@@ -162,8 +163,10 @@ int													draw				(SApplication & app)	{
 	::ced::container<::ced::STriangleWeights<double>>		pixelVertexWeights;
 	::ced::SModelTransform									matrices;
 	::ced::SModelTransform									matricesParent;
-	::ced::SColorBGRA											colorShotPlayer			= ::ced::SColorBGRA{0x40, 0xfF, 0x80};// *.2;
-	::ced::SColorBGRA											colorShotEnemy			= ::ced::SColorBGRA{0x00, 0x00, 0xfF};// *.2;
+	::ced::SColorBGRA										colorShotPlayer			= ::ced::SColorBGRA{0x40, 0xfF, 0x80};// *.2;
+	::ced::SColorBGRA										colorShotEnemy			= ::ced::SColorBGRA{0x00, 0x00, 0xfF};// *.2;
+	::ced::SColorBGRA										colorLightPlayer		= ::ced::SColorBGRA{0xFF, 0xFF, 0xFF};// *.2;
+	::ced::SColorBGRA										colorLightEnemy			= ::ced::SColorBGRA{0xFF, 0xFF, 0xFF};// *.2;
 	for(uint32_t iModel = 0; iModel < app.Scene.Models.size(); ++iModel) {
 		if(app.Health[iModel] <= 0)
 			continue;
@@ -184,21 +187,23 @@ int													draw				(SApplication & app)	{
 		matrixTransform										= matrixTransform  * matrixTransformParent ;
 		::ced::container<::ced::SCoord3<float>>					lightPoints				= {};
 		::ced::container<::ced::SColorBGRA>						lightColors				= {};
-		lightPoints.resize(app.ShotsEnemy.Position.size() + app.ShotsPlayer.Position.size() + app.Debris.Position.size() + 2);
-		lightColors.resize(app.ShotsEnemy.Position.size() + app.ShotsPlayer.Position.size() + app.Debris.Position.size() + 2);
+		lightPoints.resize(app.ShotsEnemy.Position.size() + app.ShotsPlayer.Position.size() + app.Debris.Position.size() + 4);
+		lightColors.resize(app.ShotsEnemy.Position.size() + app.ShotsPlayer.Position.size() + app.Debris.Position.size() + 4);
 		lightPoints[0]									= app.Scene.Models[0].Position;
-		lightColors[0]									= {0x80, 0x80, 0x80};
-		lightPoints[1]									= app.Scene.Models[7].Position;
-		lightColors[1]									= {0x80, 0x80, 0x80};
-		uint32_t												iOffset					= 2;
+		lightColors[0]									= colorLightPlayer;
+		for(uint32_t iEnemy = 1; iEnemy < 4; ++iEnemy) {
+			lightPoints[iEnemy]								= app.Scene.Models[7 * iEnemy].Position;
+			lightColors[iEnemy]								= colorLightEnemy;
+		}
+		uint32_t												iOffset					= 4;
 		for(uint32_t iShot = 0; iShot < app.ShotsEnemy.Position.size(); ++iShot) {
 			lightPoints[iOffset + iShot]						= app.ShotsEnemy.Position[iShot];
-			lightColors[iOffset + iShot]						= {0, 0, 0xfF};
+			lightColors[iOffset + iShot]						= colorShotEnemy;
 		}
 		iOffset												+= app.ShotsEnemy.Position.size();
 		for(uint32_t iShot = 0; iShot < app.ShotsPlayer.Position.size(); ++iShot) {
 			lightPoints[iOffset + iShot]						= app.ShotsPlayer.Position[iShot];
-			lightColors[iOffset + iShot]						= {0,0xFF, 0};
+			lightColors[iOffset + iShot]						= colorShotPlayer;
 		}
 		iOffset												+= app.ShotsPlayer.Position.size();
 		for(uint32_t iShot = 0; iShot < app.Debris.Position.size(); ++iShot) {
