@@ -80,21 +80,6 @@ int													setup				(SApplication & app)	{
 	return 0;
 }
 
-
-
-int													updateStars			(::SStars & stars, uint32_t yMax, float lastFrameSeconds)	{
-	for(uint32_t iStar = 0; iStar < stars.Brightness.size(); ++iStar) {
-		::ced::SCoord2<float>									 & starPos			= stars.Position[iStar];
-		starPos.y											+= stars.Speed[iStar] * lastFrameSeconds;
-		stars.Brightness[iStar]								= float(1.0 / 65535 * rand());
-		if(starPos.y >= yMax) {
-			stars.Speed		[iStar]								= float(16 + (rand() % 64));
-			starPos.y											= 0;
-		}
-	}
-	return 0;
-}
-
 // Intersects ray r = p + td, |d| = 1, with sphere s and, if intersecting,
 // returns t value of intersection and intersection point q
 int													intersectRaySphere		(const ::ced::SCoord3<float> & p, const ::ced::SCoord3<float> & d, const ::ced::SCoord3<float> & sphereCenter, double sphereRadius, float &t, ::ced::SCoord3<float> &q) {
@@ -123,6 +108,8 @@ int													update				(SApplication & app)	{
 	//------------------------------------------- Handle input
 	double													speed				= 10;
 	double													lastFrameSeconds	= framework.Timer.ElapsedMicroseconds * .000001;
+	lastFrameSeconds									= ::std::min(lastFrameSeconds, 0.200);
+
 	app.AnimationTime									+= lastFrameSeconds;
 	app.ShotsPlayer.Delay								+= lastFrameSeconds * 20;
 	::ced::SModel3D											& modelPlayer		= app.Scene.Models[0];
@@ -165,10 +152,10 @@ int													update				(SApplication & app)	{
 	app.Scene.LightVector										= app.Scene.LightVector.RotateY(lastFrameSeconds * 2);
 	if(framework.Window.Resized)
 		::setupStars(app.Stars, framework.Window.Size);
-	::updateStars(app.Stars, framework.Window.Size.y, (float)lastFrameSeconds);
 	app.ShotsPlayer	.Update((float)lastFrameSeconds);
 	app.ShotsEnemy	.Update((float)lastFrameSeconds);
 	app.Debris		.Update((float)lastFrameSeconds);
+	app.Stars		.Update(framework.Window.Size.y, (float)lastFrameSeconds);
 
 	::ced::SModelTransform									matricesParent;
 	for(uint32_t iShot = 0; iShot < app.ShotsPlayer.Position.size(); ++iShot) {
@@ -192,6 +179,7 @@ int													update				(SApplication & app)	{
 			if( intersectRaySphere(shotSegment.A, (shotSegment.B - shotSegment.A).Normalize(), sphereCenter, 1, t, q)
 			 && t < 1
 			) {
+				PlaySoundA((LPCSTR)SND_ALIAS_SYSTEMHAND, GetModuleHandle(0), SND_ALIAS_ID | SND_ASYNC);
 				app.Health[iModel]									-= 500;
 				for(uint32_t i = 0; i < 10; ++i) {
 					::ced::SCoord3<float>			direction			= {0, 1, 0};
@@ -229,6 +217,7 @@ int													update				(SApplication & app)	{
 			if( intersectRaySphere(shotSegment.A, (shotSegment.B - shotSegment.A).Normalize(), sphereCenter, 1, t, q)
 			 && t < 1
 			) {
+				PlaySoundA((LPCSTR)SND_ALIAS_SYSTEMEXCLAMATION, GetModuleHandle(0), SND_ALIAS_ID | SND_ASYNC);
 				app.Health[iModel]									-= 500;
 				for(uint32_t i = 0; i < 10; ++i) {
 					::ced::SCoord3<float>									direction			= {0, 1, 0};

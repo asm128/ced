@@ -1,3 +1,4 @@
+#define NOMINMAX
 #include <cstdint>
 #include <cmath>
 

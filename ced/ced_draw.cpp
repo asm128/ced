@@ -87,6 +87,74 @@ int								ced::drawLine       	(::ced::view_grid<::ced::SColorBGRA> pixels, ::c
 	return 0;
 }
 
+
+// https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
+int								ced::drawLine
+	( ::ced::view_grid<::ced::SColorBGRA>			pixels
+	, ::ced::SLine3<int32_t>						line
+	, ::ced::container<::ced::SCoord2<int32_t>>		& pixelCoords
+	, ::ced::view_grid<uint32_t>					& depthBuffer
+	) {
+	int32_t								dx						= (int32_t)abs(line.B.x - line.A.x);
+	int32_t								sx						= (int32_t)line.A.x < line.B.x ? 1 : -1;
+	int32_t								dy						= (int32_t)-abs(line.B.y - line.A.y );
+	int32_t								sy						= (int32_t)line.A.y < line.B.y ? 1 : -1;
+	int32_t								err						= dx + dy;  /* error value e_xy */
+
+	double								xDiff					= (line.B.x - line.A.x);
+	double								yDiff					= (line.B.y - line.A.y);
+	bool								yAxis					= yDiff > xDiff;
+	uint32_t							intZ					= uint32_t((0xFFFFFFFFU) * line.A.z);
+	if( line.A.x >= 0 && line.A.x < (int32_t)pixels.metrics().x
+	 && line.A.y >= 0 && line.A.y < (int32_t)pixels.metrics().y
+	) {
+		if( depthBuffer[line.A.y][line.A.x] <= intZ ) {
+			depthBuffer[line.A.y][line.A.x]	= intZ;
+			pixelCoords.push_back({line.A.x, line.A.y});
+		}
+	}
+
+	while (true) {   /* loop */
+		if (line.A.x == line.B.x && line.A.y == line.B.y)
+			break;
+		int32_t								e2						= 2 * err;
+		if (e2 >= dy) {
+			err								+= dy; /* e_xy+e_x > 0 */
+			line.A.x						+= sx;
+			if( line.A.x >= 0 && line.A.x < (int32_t)pixels.metrics().x
+			 && line.A.y >= 0 && line.A.y < (int32_t)pixels.metrics().y
+			) {
+				double							factor					= yAxis ? 1.0 / yDiff * line.A.y : 1.0 / xDiff * line.A.x;
+				double							finalZ					= line.B.z * factor - (line.A.z * (1.0 - factor));
+				intZ						= uint32_t((0xFFFFFFFFU) * (finalZ));
+				if(depthBuffer[line.A.y][line.A.x] > intZ)
+					continue;
+
+				depthBuffer[line.A.y][line.A.x]	= intZ;
+				pixelCoords.push_back({line.A.x, line.A.y});
+			}
+		}
+		if (e2 <= dx) { /* e_xy+e_y < 0 */
+			err								+= dx;
+			line.A.y						+= sy;
+			if( line.A.x >= 0 && line.A.x < (int32_t)pixels.metrics().x
+			 && line.A.y >= 0 && line.A.y < (int32_t)pixels.metrics().y
+			) {
+				double							factor					= yAxis ? 1.0 / yDiff * line.A.y : 1.0 / xDiff * line.A.x;
+				double							finalZ					= line.B.z * factor - (line.A.z * (1.0 - factor));
+				intZ						= uint32_t((0xFFFFFFFFU) * (finalZ));
+				if(depthBuffer[line.A.y][line.A.x] > intZ)
+					continue;
+
+				depthBuffer[line.A.y][line.A.x]	= intZ;
+				pixelCoords.push_back({line.A.x, line.A.y});
+			}
+		}
+
+	}
+	return 0;
+}
+
 //https://fgiesen.wordpress.com/2013/02/08/triangle-rasterization-in-practice/
 double									orient2d				(const ::ced::SLine<int32_t>	& segment, const ::ced::SCoord2<int32_t>& point)		{ return (segment.B.x - segment.A.x) * (point.y - segment.A.y) - (segment.B.y - segment.A.y) * (point.x - segment.A.x); }
 double									orient2d				(const ::ced::SLine3<int32_t>	& segment, const ::ced::SCoord2<int32_t>& point)		{ return (segment.B.x - segment.A.x) * (point.y - segment.A.y) - (segment.B.y - segment.A.y) * (point.x - segment.A.x); }

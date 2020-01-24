@@ -1,4 +1,5 @@
 #include "ced_demo_09.h"
+#include <algorithm>
 
 int													drawStars			(SStars & stars, ::ced::view_grid<::ced::SColorBGRA> targetPixels)	{
 	::ced::SColorBGRA											colors[]			=
@@ -34,12 +35,12 @@ int													drawDebris			(::ced::view_grid<::ced::SColorBGRA> targetPixels, 
 	::ced::SColorBGRA											colors[]			=
 		{ {0xFF, 0xFF, 0xFF, }
 		, {0x20, 0x80, 0xFF, }
-		, {0x40, 0xD0, 0xFF, }
+		, {0x40, 0x80, 0xFF, }
 		, {0x00, 0x00, 0xFF, }
 		};
 	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
 	for(uint32_t iParticle = 0; iParticle < debris.Brightness.size(); ++iParticle) {
-		::ced::SColorBGRA											colorShot			= colors[iParticle % ::std::size(colors)];
+		::ced::SColorBGRA										colorShot			= colors[iParticle % ::std::size(colors)];
 		::ced::SCoord3<float>									starPos			= debris.Position[iParticle];
 		starPos												= matrixVPV.Transform(starPos);
 		const ::ced::SCoord2<int32_t>							pixelCoord		= {(int32_t)starPos.x, (int32_t)starPos.y};
@@ -52,7 +53,9 @@ int													drawDebris			(::ced::view_grid<::ced::SColorBGRA> targetPixels, 
 		uint32_t												depth				= uint32_t((1.0 - starPos.z) * 0xFFFFFFFFU);
 		if(depth < depthBuffer[pixelCoord.y][pixelCoord.x])
 			continue;
-		::ced::SColorBGRA											starFinalColor	= colorShot * debris.Brightness[iParticle];
+		::ced::SColorFloat											starFinalColor	= colorShot * debris.Brightness[iParticle];
+		starFinalColor.g										= ::std::max(0.0f, starFinalColor.g - (1.0f - ::std::min(1.0f, debris.Brightness[iParticle] * 2.5f * (1.0f / debris.Brightness.size() * iParticle * 2))));
+		starFinalColor.b										= ::std::max(0.0f, starFinalColor.b - (1.0f - ::std::min(1.0f, debris.Brightness[iParticle] * 2.5f * (1.0f / debris.Brightness.size() * iParticle * 1))));
 		::ced::setPixel(targetPixels, pixelCoord, starFinalColor);
 		const	double											brightRadius		= 3.0;
 		double													brightUnit			= 1.0 / brightRadius;
@@ -90,7 +93,7 @@ int													drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixels, S
 		::ced::drawLine(targetPixels,
 			{ {(int32_t)raySegment.A.x, (int32_t)raySegment.A.y}
 			, {(int32_t)raySegment.B.x, (int32_t)raySegment.B.y}
-			}, pixelCoords);
+			}, pixelCoords, depthBuffer);
 		//if(2 > pixelCoords.size()) {
 		//	pixelCoords.push_back({int32_t(raySegment.A.x), int32_t(raySegment.A.y)});
 		//	pixelCoords.push_back({int32_t(raySegment.B.x), int32_t(raySegment.B.y + 1)});

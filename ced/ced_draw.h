@@ -15,6 +15,12 @@ namespace ced
 	int								drawCircle			(::ced::view_grid<::ced::SColorBGRA> pixels	, ::ced::SCircle	<int32_t>	circle		, ::ced::SColorBGRA color);
 	int								drawLine			(::ced::view_grid<::ced::SColorBGRA> pixels	, ::ced::SLine		<int32_t>	line		, ::ced::SColorBGRA color);
 	int								drawLine			(::ced::view_grid<::ced::SColorBGRA> pixels	, ::ced::SLine		<int32_t>	line		, ::ced::container<::ced::SCoord2<int32_t>> & pixelCoords);
+	int								drawLine
+		( ::ced::view_grid<::ced::SColorBGRA>			pixels
+		, ::ced::SLine3<int32_t>						line
+		, ::ced::container<::ced::SCoord2<int32_t>>		& pixelCoords
+		, ::ced::view_grid<uint32_t>					& depthBuffer
+		);
 	int								drawTriangle		(::ced::view_grid<::ced::SColorBGRA> pixels	, ::ced::STriangle	<int32_t>	triangle	, ::ced::SColorBGRA color);
 	int								drawTriangle		(::ced::SCoord2<uint32_t> targetSize	, ::ced::STriangle3	<float>		triangle	, ::ced::container<::ced::SCoord2<int32_t>> & pixelCoords, ::ced::container<::ced::STriangleWeights<double>> & proportions, ::ced::container<uint32_t> & depthBuffer);
 	int								drawQuadTriangle

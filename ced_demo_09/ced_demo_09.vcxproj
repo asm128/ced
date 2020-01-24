@@ -68,7 +68,7 @@
       <SubSystem>Windows</SubSystem>
       <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
       <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
-      <AdditionalDependencies>ced.lib;user32.lib;gdi32.lib;</AdditionalDependencies>
+      <AdditionalDependencies>ced.lib;user32.lib;gdi32.lib;winmm.lib;</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
