@@ -181,9 +181,10 @@ int													draw				(SApplication & app)	{
 		::ced::SEntity											& entity				= app.Scene.Entities[iModel];
 		if(-1 == entity.Parent)
 			continue;
-		matricesParent.Scale	.Scale			(app.Scene.Models[entity.Parent].Scale, true);
-		matricesParent.Rotation	.Rotation		(app.Scene.Models[entity.Parent].Rotation);
-		matricesParent.Position	.SetTranslation	(app.Scene.Models[entity.Parent].Position, true);
+		::ced::SModel3D											& modelParent			= app.Scene.Models[entity.Parent];
+		matricesParent.Scale	.Scale			(modelParent.Scale, true);
+		matricesParent.Rotation	.Rotation		(modelParent.Rotation);
+		matricesParent.Position	.SetTranslation	(modelParent.Position, true);
 
 		::ced::SMatrix4<float>									matrixTransform			= matrices.Scale * matrices.Rotation * matrices.Position;
 		::ced::SMatrix4<float>									matrixTransformParent	= matricesParent.Scale * matricesParent.Rotation * matricesParent.Position;

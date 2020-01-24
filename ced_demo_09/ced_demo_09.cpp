@@ -60,16 +60,31 @@ int													setup				(SApplication & app)	{
 	::ced::geometryBuildSphere(app.Scene.Geometry, 4U, 2U, 1, {0, 1});
 	//::ced::geometryBuildFigure0(app.Geometry, 10U, 10U, 1, {});
 
-	app.Scene.Models[::modelCreate(app)].Position				= {-30};
-	app.Scene.Models[::modelCreate(app)].Position				= {+25};
-	app.Scene.Models[::modelCreate(app)].Position				= {+30};
-	app.Scene.Models[::modelCreate(app)].Position				= {+35};
+	app.Scene.Models[::modelCreate(app)].Position		= {-30};
+	app.Scene.Models[::modelCreate(app)].Position		= {+25};
+	app.Scene.Models[::modelCreate(app)].Position		= {+30};
+	app.Scene.Models[::modelCreate(app)].Position		= {+35};
 
-	app.Scene.Image.Metrics										= {256, 256};
+	app.Scene.Image.Metrics								= {32, 32};
 	app.Scene.Image.Pixels.resize(app.Scene.Image.Metrics.x * app.Scene.Image.Metrics.y);
-	for(uint32_t y = 0; y < app.Scene.Image.Metrics.y; ++y) // Generate noise color for planet texture
-	for(uint32_t x = 0; x < app.Scene.Image.Metrics.x; ++x) {
-		app.Scene.Image.Pixels[y * app.Scene.Image.Metrics.x + x] = {(uint8_t)rand(), (uint8_t)rand(), (uint8_t)rand(), 0xFF};
+	for(uint32_t y = 0; y < app.Scene.Image.Metrics.y; ++y) {// Generate noise color for planet texture
+		//::ced::SColorFloat										baseColor					= {1.0f / 65535.0f * rand(), 1.0f / 65535.0f * rand(), 1.0f / 65535.0f * rand(), 0xFF};;
+		bool yAffect = 0 == ((rand() / 1024) % (y ? y : 1));
+		bool xAffect = 0 == ((rand() / 1024) % (y ? y : 1));
+		::ced::SColorFloat										baseColor
+			= yAffect
+			? xAffect
+			? ::ced::CYAN	* ::std::max(0.0f, (1.0f / RAND_MAX * rand()))
+			: ::ced::RED	* ::std::max(0.0f, (1.0f / RAND_MAX * rand()))
+			: ::ced::WHITE	* ::std::max(0.0f, (1.0f / RAND_MAX * rand()))
+			;
+		bool zAffect = 0 == y % 4;
+		for(uint32_t x = 0; x < app.Scene.Image.Metrics.x; ++x) {
+			if(zAffect)
+				app.Scene.Image.Pixels[y * app.Scene.Image.Metrics.x + x] = yAffect ? ::ced::DARKCYAN : baseColor * ::std::max(.5, sin(x));
+			else
+				app.Scene.Image.Pixels[y * app.Scene.Image.Metrics.x + x] = baseColor;
+		}
 	}
 
 	app.Scene.Camera.Target				= {};
@@ -116,7 +131,7 @@ int													update				(SApplication & app)	{
 	for(uint32_t iEnemy = 7; iEnemy < app.Scene.Models.size(); iEnemy += 7) {
 		app.ShotsEnemy.Delay								+= lastFrameSeconds * 2;
 		::ced::SModel3D											& modelEnemy		= app.Scene.Models[iEnemy];
-		modelEnemy.Position.z								= (float)(sin(app.AnimationTime) * 20) * ((iEnemy % 2) ? -1 : 1);
+		modelEnemy.Position.z								= (float)(sin(app.AnimationTime) * 30) * ((iEnemy % 2) ? -1 : 1);
 		if(1 < (modelPlayer.Position - modelEnemy.Position).Length()) {
 			::ced::SCoord3<float>									direction			= modelPlayer.Position - modelEnemy.Position;
 			direction.RotateY(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
@@ -140,14 +155,15 @@ int													update				(SApplication & app)	{
 	if(GetAsyncKeyState('A')) app.Scene.Models[0].Position.z		+= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
 	if(GetAsyncKeyState('D')) app.Scene.Models[0].Position.z		-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
 
-	if(GetAsyncKeyState(VK_NUMPAD8)) app.Scene.Models[0].Rotation.x	-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-	if(GetAsyncKeyState(VK_NUMPAD2)) app.Scene.Models[0].Rotation.x	+= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-	if(GetAsyncKeyState(VK_NUMPAD6)) app.Scene.Models[0].Rotation.z	-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-	if(GetAsyncKeyState(VK_NUMPAD4)) app.Scene.Models[0].Rotation.z	+= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+	if(GetAsyncKeyState(VK_NUMPAD8)) app.Scene.Models[0].Rotation.x	-= (float)(lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+	if(GetAsyncKeyState(VK_NUMPAD2)) app.Scene.Models[0].Rotation.x	+= (float)(lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+	if(GetAsyncKeyState(VK_NUMPAD6)) app.Scene.Models[0].Rotation.z	-= (float)(lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+	if(GetAsyncKeyState(VK_NUMPAD4)) app.Scene.Models[0].Rotation.z	+= (float)(lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+	if(GetAsyncKeyState(VK_NUMPAD5)) app.Scene.Models[0].Rotation	= {0, 0, (float)::ced::MATH_PI_2};
 
-	app.Scene.Models[0].Rotation.y							+= (float)lastFrameSeconds;
+	app.Scene.Models[0].Rotation.y							+= (float)lastFrameSeconds * .5f;
 	for(uint32_t iModel = 1; iModel < app.Scene.Models.size(); ++iModel)
-		app.Scene.Models[iModel].Rotation.y						+= (float)lastFrameSeconds * 5;
+		app.Scene.Models[iModel].Rotation.y						+= (float)lastFrameSeconds * 10;
 
 	app.Scene.LightVector										= app.Scene.LightVector.RotateY(lastFrameSeconds * 2);
 	if(framework.Window.Resized)

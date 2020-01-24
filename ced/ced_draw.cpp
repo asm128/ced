@@ -266,7 +266,7 @@ int													ced::drawQuadTriangle
 	, ::ced::container<uint32_t>						& depthBuffer
 	) {
 	::ced::STriangle3	<float>								triangleWorld		= geometry.Triangles	[iTriangle];
-	::ced::STriangle3	<float>								triangle			= geometry.Triangles	[iTriangle];
+	::ced::STriangle3	<float>								triangle			= triangleWorld;
 	::ced::SCoord3		<float>								normal				= geometry.Normals		[iTriangle / 2];
 
 	triangleWorld.A										= matrixTransform.Transform(triangleWorld.A);
