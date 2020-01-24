@@ -33,9 +33,9 @@ int													drawStars			(SStars & stars, ::ced::view_grid<::ced::SColorBGRA>
 
 int													drawDebris			(::ced::view_grid<::ced::SColorBGRA> targetPixels, SDebris & debris, const ::ced::SMatrix4<float> & matrixVPV, ::ced::view_grid<uint32_t> depthBuffer)	{
 	::ced::SColorBGRA											colors[]			=
-		{ {0xFF, 0xFF, 0xFF, }
-		, {0x20, 0x80, 0xFF, }
+		{ {0x80, 0xAF, 0xFF, }
 		, {0x40, 0x80, 0xFF, }
+		, {0x20, 0x80, 0xFF, }
 		, {0x00, 0x00, 0xFF, }
 		};
 	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
@@ -211,7 +211,7 @@ int													draw				(SApplication & app)	{
 		iOffset												+= app.ShotsPlayer.Position.size();
 		for(uint32_t iShot = 0; iShot < app.Debris.Position.size(); ++iShot) {
 			lightPoints[iOffset + iShot]						= app.Debris.Position[iShot];
-			lightColors[iOffset + iShot]						= {0x05,0x10, 0xFF};
+			lightColors[iOffset + iShot]						= {0x2F,0xAF, 0xFF};
 		}
 		for(uint32_t iTriangle = 0; iTriangle < app.Scene.Geometry.Triangles.size(); ++iTriangle) {
 			pixelCoords			.clear();

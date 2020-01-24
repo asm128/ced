@@ -34,7 +34,7 @@ int													modelCreate			(::SApplication & app)	{
 	else
 		app.Scene.Models		[indexModel].Rotation.z		= (float)(-::ced::MATH_PI_2);
 	app.Scene.Entities		[indexModel]				= {-1};
-	const uint32_t												partHealth			= 200;
+	const uint32_t												partHealth			= 1000;
 	app.Health[indexModel]									= partHealth * countParts;
 	for(uint32_t iModel = indexModel + 1; iModel < app.Scene.Models.size(); ++iModel) {
 		::ced::SModel3D											& model			= app.Scene.Models[iModel];
@@ -180,7 +180,7 @@ int													update				(SApplication & app)	{
 			 && t < 1
 			) {
 				PlaySoundA((LPCSTR)SND_ALIAS_SYSTEMHAND, GetModuleHandle(0), SND_ALIAS_ID | SND_ASYNC);
-				app.Health[iModel]									-= 500;
+				app.Health[iModel]									-= 100;
 				for(uint32_t i = 0; i < 10; ++i) {
 					::ced::SCoord3<float>			direction			= {0, 1, 0};
 					direction.RotateX(rand() * (::ced::MATH_2PI / 65535));
@@ -218,7 +218,7 @@ int													update				(SApplication & app)	{
 			 && t < 1
 			) {
 				PlaySoundA((LPCSTR)SND_ALIAS_SYSTEMEXCLAMATION, GetModuleHandle(0), SND_ALIAS_ID | SND_ASYNC);
-				app.Health[iModel]									-= 500;
+				app.Health[iModel]									-= 100;
 				for(uint32_t i = 0; i < 10; ++i) {
 					::ced::SCoord3<float>									direction			= {0, 1, 0};
 					direction.RotateX(rand() * (::ced::MATH_2PI / 65535));
