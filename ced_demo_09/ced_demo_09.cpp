@@ -58,6 +58,7 @@ int													setup				(SApplication & app)	{
 
 	app.Scene.Models[::modelCreate(app)].Position				= {-30};
 	app.Scene.Models[::modelCreate(app)].Position				= {+30};
+	app.Scene.Models[::modelCreate(app)].Position				= {+30};
 
 	app.Scene.Image.Metrics										= {256, 256};
 	app.Scene.Image.Pixels.resize(app.Scene.Image.Metrics.x * app.Scene.Image.Metrics.y);
@@ -119,23 +120,24 @@ int													update				(SApplication & app)	{
 	double													lastFrameSeconds	= framework.Timer.ElapsedMicroseconds * .000001;
 	app.AnimationTime									+= lastFrameSeconds;
 	app.ShotsPlayer.Delay								+= lastFrameSeconds * 20;
-	app.ShotsEnemy.Delay								+= lastFrameSeconds * 7;
 	::ced::SModel3D											& modelPlayer		= app.Scene.Models[0];
-	::ced::SModel3D											& modelEnemy		= app.Scene.Models[7];
+	for(uint32_t iEnemy = 7; iEnemy < app.Scene.Models.size(); iEnemy += 7) {
+		app.ShotsEnemy.Delay								+= lastFrameSeconds * 2;
+		::ced::SModel3D											& modelEnemy		= app.Scene.Models[iEnemy];
+		modelEnemy.Position.z								= (float)(sin(app.AnimationTime) * 20)	* ((iEnemy % 2) ? -1 : 1);
+		if(1 < (modelPlayer.Position - modelEnemy.Position).Length()) {
+			::ced::SCoord3<float>									direction			= modelPlayer.Position - modelEnemy.Position;
+			direction.RotateY(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
+			app.ShotsEnemy.Spawn(modelEnemy.Position, direction.Normalize(), 20);
+		}
+	}
 
-	modelEnemy.Position.z								= (float)(sin(app.AnimationTime) * 20);
 
 	if(GetAsyncKeyState(VK_SPACE)) {
 		::ced::SCoord3<float>									direction			= {1, 0, 0};
 		direction.RotateY(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
 		direction.RotateZ(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
 		app.ShotsPlayer.Spawn(modelPlayer.Position, direction, 200);
-	}
-
-	if(1 < (modelPlayer.Position - modelEnemy.Position).Length()) {
-		::ced::SCoord3<float>									direction			= modelPlayer.Position - modelEnemy.Position;
-		direction.RotateY(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
-		app.ShotsEnemy.Spawn(modelEnemy.Position, direction.Normalize(), 20);
 	}
 
 	if(GetAsyncKeyState('Q')) app.Scene.Camera.Position.y			-= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);

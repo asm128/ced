@@ -241,7 +241,7 @@ int													ced::drawQuadTriangle
 			double														lightFactor			= vectorToLight.Dot(normal.Normalize());
 			if(lightToPoint.Length() > 5 || lightFactor <= 0)
 				continue;
-			double														range				= 5;
+			double														range				= 10;
 			double														invAttenuation		= ::std::max(0.0, 1.0 - (lightToPoint.Length() / range));
 			fragmentColor											+= ::ced::SColorFloat{texelColor * lightColors[iLight] * invAttenuation * .5};
 		}

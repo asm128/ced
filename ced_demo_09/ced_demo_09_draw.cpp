@@ -163,7 +163,7 @@ int													draw				(SApplication & app)	{
 	::ced::SModelTransform									matrices;
 	::ced::SModelTransform									matricesParent;
 	::ced::SColorBGRA											colorShotPlayer			= ::ced::SColorBGRA{0x40, 0xfF, 0x80};// *.2;
-	::ced::SColorBGRA											colorShotEnemy			= ::ced::SColorBGRA{0x80, 0x40, 0xfF};// *.2;
+	::ced::SColorBGRA											colorShotEnemy			= ::ced::SColorBGRA{0x00, 0x00, 0xfF};// *.2;
 	for(uint32_t iModel = 0; iModel < app.Scene.Models.size(); ++iModel) {
 		if(app.Health[iModel] <= 0)
 			continue;
