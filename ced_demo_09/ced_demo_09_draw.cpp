@@ -11,7 +11,7 @@ int													drawStars			(SStars & stars, ::ced::view_grid<::ced::SColorBGRA>
 		::ced::SCoord2<float>									starPos			= stars.Position[iStar];
 		::ced::SColorBGRA											starFinalColor	= colors[iStar % ::std::size(colors)] * stars.Brightness[iStar];
 		::ced::setPixel(targetPixels, starPos.Cast<int32_t>(), starFinalColor);
-		const	int32_t											brightRadius	= 1 + (iStar % 4) + (rand() % 4);
+		const	int32_t											brightRadius	= 1 + (iStar % 2) + (rand() % 2);
 		double													brightUnit		= 1.0 / brightRadius;
 		for(int32_t y = -brightRadius; y < brightRadius; ++y)
 		for(int32_t x = -brightRadius; x < brightRadius; ++x) {
@@ -65,15 +65,18 @@ int													drawDebris			(::ced::view_grid<::ced::SColorBGRA> targetPixels, 
 				::ced::SCoord2<int32_t>									pixelPos			= pixelCoord + (brightPos).Cast<int32_t>();
 				if( pixelPos.y >= 0 && pixelPos.y < (int32_t)targetPixels.metrics().y
 				 && pixelPos.x >= 0 && pixelPos.x < (int32_t)targetPixels.metrics().x
-				 )
+				 && depth < depthBuffer[pixelPos.y][pixelPos.x]
+				) {
+					depthBuffer[pixelPos.y][pixelPos.x]				= depth;
 					::ced::setPixel(targetPixels, pixelPos, targetPixels[pixelPos.y][pixelPos.x] + colorShot * debris.Brightness[iParticle] * (1.0-(brightDistance * brightUnit * (1 + (rand() % 3)))));
+				}
 			}
 		}
 	}
 	return 0;
 }
 
-int													drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixels, SShots & shots, const ::ced::SMatrix4<float> & matrixVPV, ::ced::SColorBGRA colorShot, ::ced::view_grid<uint32_t> depthBuffer)	{
+int													drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixels, SShots & shots, const ::ced::SMatrix4<float> & matrixVPV, ::ced::SColorFloat colorShot, ::ced::view_grid<uint32_t> depthBuffer)	{
 	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
 	for(uint32_t iShot = 0; iShot < shots.Brightness.size(); ++iShot) {
 		::ced::SCoord3<float>									starPosPrev		= shots.PositionPrev[iShot];
@@ -82,41 +85,44 @@ int													drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixels, S
 		raySegment.A										= matrixVPV.Transform(raySegment.A);
 		raySegment.B										= matrixVPV.Transform(raySegment.B);
 
-		::ced::SColorBGRA											starFinalColor	= colorShot * shots.Brightness[iShot];
+		::ced::SColorFloat											starFinalColor	= colorShot * shots.Brightness[iShot];
 		::ced::drawLine(targetPixels,
 			{ {(int32_t)raySegment.A.x, (int32_t)raySegment.A.y}
 			, {(int32_t)raySegment.B.x, (int32_t)raySegment.B.y}
 			}, pixelCoords);
-		pixelCoords.push_back({int32_t(raySegment.A.x), int32_t(raySegment.A.y)});
-		pixelCoords.push_back({int32_t(raySegment.B.x), int32_t(raySegment.B.y)});
+		//if(2 > pixelCoords.size()) {
+		//	pixelCoords.push_back({int32_t(raySegment.A.x), int32_t(raySegment.A.y)});
+		//	pixelCoords.push_back({int32_t(raySegment.B.x), int32_t(raySegment.B.y + 1)});
+		//}
 		for(uint32_t iPixelCoord = 0; iPixelCoord < pixelCoords.size(); ++iPixelCoord) {
 			const ::ced::SCoord2<int32_t>							& pixelCoord		= pixelCoords[iPixelCoord];
 			if( pixelCoord.y < 0 || pixelCoord.y >= (int32_t)targetPixels.metrics().y
 			 || pixelCoord.x < 0 || pixelCoord.x >= (int32_t)targetPixels.metrics().x
 			)
 				continue;
-			if(raySegment.B.z < 0 || raySegment.B.z > 1)
+			uint32_t												depth				= uint32_t((1.0 - raySegment.A.z) * 0xFFFFFFFFU);
+			if(depth <= depthBuffer[pixelCoord.y][pixelCoord.x])
 				continue;
-			uint32_t												depth				= uint32_t((1.0 - raySegment.B.z) * 0xFFFFFFFFU);
-			if(depth < depthBuffer[pixelCoord.y][pixelCoord.x])
-				continue;
-
-			depthBuffer[pixelCoord.y][pixelCoord.x]	= depth;
+			depthBuffer[pixelCoord.y][pixelCoord.x]				= depth;
 
 			::ced::setPixel(targetPixels, pixelCoord, starFinalColor);
 
-			const	int32_t											brightRadius		= 5;
+			const	double											brightRadius		= 7.5;
 			double													brightUnit			= 1.0 / brightRadius;
-			for(int32_t y = -brightRadius; y < brightRadius; ++y)
-			for(int32_t x = -brightRadius; x < brightRadius; ++x) {
+			for(int32_t y = (int32_t)-brightRadius; y < (int32_t)brightRadius; ++y)
+			for(int32_t x = (int32_t)-brightRadius; x < (int32_t)brightRadius; ++x) {
 				::ced::SCoord2<float>									brightPos			= {(float)x, (float)y};
 				const double											brightDistance		= brightPos.Length();
 				if(brightDistance <= brightRadius) {
-					::ced::SCoord2<int32_t>									pixelPos			= pixelCoord + (brightPos).Cast<int32_t>();
-					if( pixelPos.y >= 0 && pixelPos.y < (int32_t)targetPixels.metrics().y
-					 && pixelPos.x >= 0 && pixelPos.x < (int32_t)targetPixels.metrics().x
-						) {
-						::ced::setPixel(targetPixels, pixelPos, targetPixels[pixelPos.y][pixelPos.x] + colorShot * shots.Brightness[iShot] * (1.0-(brightDistance * brightUnit)));
+					::ced::SCoord2<int32_t>									blendPos			= pixelCoord + (brightPos).Cast<int32_t>();
+					if( blendPos.y >= 0 && blendPos.y < (int32_t)targetPixels.metrics().y
+					 && blendPos.x >= 0 && blendPos.x < (int32_t)targetPixels.metrics().x
+					 && depth >= depthBuffer[blendPos.y][blendPos.x]
+					) {
+						depthBuffer[blendPos.y][blendPos.x]					= depth;
+						double													finalBrightness					= 1.0-(brightDistance * brightUnit);
+						::ced::SColorFloat										backgroundColor					= targetPixels[blendPos.y][blendPos.x];
+						::ced::setPixel(targetPixels, blendPos, backgroundColor + starFinalColor * finalBrightness);
 					}
 				}
 			}
@@ -156,8 +162,8 @@ int													draw				(SApplication & app)	{
 	::ced::container<::ced::STriangleWeights<double>>		pixelVertexWeights;
 	::ced::SModelTransform									matrices;
 	::ced::SModelTransform									matricesParent;
-	::ced::SColorBGRA											colorShotPlayer			= {0x20, 0xfF, 0x40};
-	::ced::SColorBGRA											colorShotEnemy			= {0x40, 0x20, 0xfF};
+	::ced::SColorBGRA											colorShotPlayer			= ::ced::SColorBGRA{0x40, 0xfF, 0x80};// *.2;
+	::ced::SColorBGRA											colorShotEnemy			= ::ced::SColorBGRA{0x80, 0x40, 0xfF};// *.2;
 	for(uint32_t iModel = 0; iModel < app.Scene.Models.size(); ++iModel) {
 		if(app.Health[iModel] <= 0)
 			continue;

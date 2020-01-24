@@ -60,6 +60,7 @@ int								ced::drawLine       	(::ced::view_grid<::ced::SColorBGRA> pixels, ::c
 	int32_t								dy						= (int32_t)-abs(line.B.y - line.A.y );
 	int32_t								sy						= (int32_t)line.A.y < line.B.y ? 1 : -1;
 	int32_t								err						= dx + dy;  /* error value e_xy */
+	pixelCoords.push_back({line.A.x, line.A.y});
 	while (true) {   /* loop */
 		if (line.A.x == line.B.x && line.A.y == line.B.y)
 			break;
@@ -232,17 +233,17 @@ int													ced::drawQuadTriangle
 		::ced::SCoord3<float>										position				= triangleWorld.A * vertexWeights.A;
 		position												+= triangleWorld.B * vertexWeights.B;
 		position												+= triangleWorld.C * vertexWeights.C;
-		::ced::SColorBGRA												texelColor				= textureImage[(uint32_t)(texCoord.y * imageUnit.y)][(uint32_t)(texCoord.x * imageUnit.x)];
-		::ced::SColorBGRA												fragmentColor			= {};
+		::ced::SColorFloat												texelColor				= textureImage[(uint32_t)(texCoord.y * imageUnit.y)][(uint32_t)(texCoord.x * imageUnit.x)];
+		::ced::SColorFloat												fragmentColor			= {};
 		for(uint32_t iLight = 0; iLight < lightPoints.size(); ++iLight) {
 			::ced::SCoord3<float>										lightToPoint		= lightPoints[iLight] - position;
 			::ced::SCoord3<float>										vectorToLight		= lightToPoint;
 			double														lightFactor			= vectorToLight.Dot(normal.Normalize());
 			if(lightToPoint.Length() > 5 || lightFactor <= 0)
 				continue;
-			double														range				= 10;
+			double														range				= 5;
 			double														invAttenuation		= ::std::max(0.0, 1.0 - (lightToPoint.Length() / range));
-			fragmentColor											= texelColor * lightColors[iLight] * invAttenuation * .5;
+			fragmentColor											+= ::ced::SColorFloat{texelColor * lightColors[iLight] * invAttenuation * .5};
 		}
 		::ced::setPixel(targetPixels, pixelCoord, texelColor *.5 + fragmentColor);
 		(void)lightVector;

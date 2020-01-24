@@ -66,6 +66,11 @@ int													setup				(SApplication & app)	{
 		app.Scene.Image.Pixels[y * app.Scene.Image.Metrics.x + x] = {(uint8_t)rand(), (uint8_t)rand(), (uint8_t)rand(), 0xFF};
 	}
 
+	app.Scene.Camera.Target				= {};
+	app.Scene.Camera.Position			= {-0.000001f, 100, 0};
+	app.Scene.Camera.Up					= {0, 1, 0};
+
+
 	return 0;
 }
 
