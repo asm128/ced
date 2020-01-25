@@ -91,10 +91,11 @@ int								ced::drawLine       	(::ced::view_grid<::ced::SColorBGRA> pixels, ::c
 // https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 int								ced::drawLine
 	( ::ced::view_grid<::ced::SColorBGRA>			pixels
-	, ::ced::SLine3<int32_t>						line
-	, ::ced::container<::ced::SCoord2<int32_t>>		& pixelCoords
+	, const ::ced::SLine3<float>					& lineFloat
+	, ::ced::container<::ced::SCoord3<float>>		& pixelCoords
 	, ::ced::view_grid<uint32_t>					& depthBuffer
 	) {
+	::ced::SLine<int32_t>				line					= {{(int32_t)lineFloat.A.x, (int32_t)lineFloat.A.y}, {(int32_t)lineFloat.B.x, (int32_t)lineFloat.B.y}};
 	int32_t								dx						= (int32_t)abs(line.B.x - line.A.x);
 	int32_t								sx						= (int32_t)line.A.x < line.B.x ? 1 : -1;
 	int32_t								dy						= (int32_t)-abs(line.B.y - line.A.y );
@@ -104,13 +105,14 @@ int								ced::drawLine
 	double								xDiff					= (line.B.x - line.A.x);
 	double								yDiff					= (line.B.y - line.A.y);
 	bool								yAxis					= yDiff > xDiff;
-	uint32_t							intZ					= uint32_t((0xFFFFFFFFU) * line.A.z);
+	uint32_t							intZ					= uint32_t(0xFFFFFFFFU * lineFloat.A.z);
 	if( line.A.x >= 0 && line.A.x < (int32_t)pixels.metrics().x
 	 && line.A.y >= 0 && line.A.y < (int32_t)pixels.metrics().y
 	) {
-		if( depthBuffer[line.A.y][line.A.x] >= intZ ) {
+		if( depthBuffer[line.A.y][line.A.x] > intZ ) {
 			depthBuffer[line.A.y][line.A.x]	= intZ;
-			pixelCoords.push_back({line.A.x, line.A.y});
+			//pixelCoords.push_back({(int32_t)line.A.x, (int32_t)line.A.y});
+			pixelCoords.push_back(lineFloat.A);
 		}
 	}
 
@@ -124,14 +126,15 @@ int								ced::drawLine
 			if( line.A.x >= 0 && line.A.x < (int32_t)pixels.metrics().x
 			 && line.A.y >= 0 && line.A.y < (int32_t)pixels.metrics().y
 			) {
-				double							factor					= yAxis ? 1.0 / yDiff * line.A.y : 1.0 / xDiff * line.A.x;
-				double							finalZ					= line.B.z * factor - (line.A.z * (1.0 - factor));
-				intZ						= uint32_t((0xFFFFFFFFU) * (finalZ));
-				if(depthBuffer[line.A.y][line.A.x] < intZ)
+				const double					factor					= yAxis ? 1.0 / yDiff * line.A.y : 1.0 / xDiff * line.A.x;
+				const double					finalZ					= lineFloat.B.z * factor + (lineFloat.A.z * (1.0 - factor));
+				intZ						= uint32_t(0xFFFFFFFFU * (finalZ));
+				if(depthBuffer[line.A.y][line.A.x] <= intZ)
 					continue;
 
 				depthBuffer[line.A.y][line.A.x]	= intZ;
-				pixelCoords.push_back({line.A.x, line.A.y});
+				//pixelCoords.push_back({(int32_t)line.A.x, (int32_t)line.A.y});
+				pixelCoords.push_back({(float)line.A.x, (float)line.A.y, (float)finalZ});
 			}
 		}
 		if (e2 <= dx) { /* e_xy+e_y < 0 */
@@ -140,14 +143,16 @@ int								ced::drawLine
 			if( line.A.x >= 0 && line.A.x < (int32_t)pixels.metrics().x
 			 && line.A.y >= 0 && line.A.y < (int32_t)pixels.metrics().y
 			) {
-				double							factor					= yAxis ? 1.0 / yDiff * line.A.y : 1.0 / xDiff * line.A.x;
-				double							finalZ					= line.B.z * factor - (line.A.z * (1.0 - factor));
+				const double					factor					= 1.0 / (yAxis ? yDiff * line.A.y : xDiff * line.A.x);
+				const double					finalZ					= lineFloat.B.z * factor + (lineFloat.A.z * (1.0 - factor));
 				intZ						= uint32_t((0xFFFFFFFFU) * (finalZ));
-				if(depthBuffer[line.A.y][line.A.x] < intZ)
+				if(depthBuffer[line.A.y][line.A.x] <= intZ)
 					continue;
 
 				depthBuffer[line.A.y][line.A.x]	= intZ;
-				pixelCoords.push_back({line.A.x, line.A.y});
+				//pixelCoords.push_back({(int32_t)line.A.x, (int32_t)line.A.y});
+				pixelCoords.push_back({(float)line.A.x, (float)line.A.y, (float)finalZ});
+
 			}
 		}
 
@@ -238,8 +243,8 @@ int								ced::drawTriangle
 		if(finalZ >= 1.0 || finalZ <= 0)
 			continue;
 
-		uint32_t							intZ					= uint32_t((0xFFFFFFFFU) * (1.0 - finalZ));
-		if(depthBuffer[p.y * targetSize.x + p.x] > intZ)
+		uint32_t							intZ					= uint32_t(0xFFFFFFFFU * finalZ);
+		if(depthBuffer[p.y * targetSize.x + p.x] < intZ)
 			continue;
 
 		depthBuffer[p.y * targetSize.x + p.x] = intZ;
@@ -256,7 +261,6 @@ int													ced::drawQuadTriangle
 	, int												iTriangle
 	, ::ced::SMatrix4<float>							& matrixTransform
 	, ::ced::SMatrix4<float>							& matrixView
-	, ::ced::SMatrix4<float>							& matrixViewport
 	, ::ced::SCoord3<float>								& lightVector
 	, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
 	, ::ced::container<::ced::STriangleWeights<double>>	& pixelVertexWeights
@@ -280,10 +284,6 @@ int													ced::drawQuadTriangle
 	if(triangle.A.z < 0 || triangle.A.z >= 1) return 0;
 	if(triangle.B.z < 0 || triangle.B.z >= 1) return 0;
 	if(triangle.C.z < 0 || triangle.C.z >= 1) return 0;
-
-	triangle.A											= matrixViewport.Transform(triangle.A);
-	triangle.B											= matrixViewport.Transform(triangle.B);
-	triangle.C											= matrixViewport.Transform(triangle.C);
 
 	normal												= matrixTransform.TransformDirection(normal).Normalize();
 
@@ -325,7 +325,6 @@ int													ced::drawQuadTriangle
 	, int								iTriangle
 	, ::ced::SMatrix4<float>			& matrixTransform
 	, ::ced::SMatrix4<float>			& matrixView
-	, ::ced::SMatrix4<float>			& matrixViewport
 	, ::ced::SCoord3<float>				& lightVector
 	, ::ced::SColorBGRA						 color
 	, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
@@ -347,10 +346,6 @@ int													ced::drawQuadTriangle
 	if(triangle.B.z < 0 || triangle.B.z >= 1) return 0;
 	if(triangle.C.z < 0 || triangle.C.z >= 1) return 0;
 
-	triangle.A											= matrixViewport.Transform(triangle.A);
-	triangle.B											= matrixViewport.Transform(triangle.B);
-	triangle.C											= matrixViewport.Transform(triangle.C);
-
 	double													lightFactor			= normal.Dot(lightVector);
 
 	::ced::drawTriangle(targetPixels.metrics(), triangle, pixelCoords, pixelVertexWeights, depthBuffer);
@@ -370,7 +365,6 @@ int													ced::drawTriangle
 	, int								iTriangle
 	, ::ced::SMatrix4<float>			& matrixTransform
 	, ::ced::SMatrix4<float>			& matrixView
-	, ::ced::SMatrix4<float>			& matrixViewport
 	, ::ced::SCoord3<float>				& lightVector
 	, ::ced::SColorBGRA						 color
 	, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
@@ -390,9 +384,6 @@ int													ced::drawTriangle
 	if(triangle.B.z < 0 || triangle.B.z >= 1) return 0;
 	if(triangle.C.z < 0 || triangle.C.z >= 1) return 0;
 
-	triangle.A											= matrixViewport.Transform(triangle.A);
-	triangle.B											= matrixViewport.Transform(triangle.B);
-	triangle.C											= matrixViewport.Transform(triangle.C);
 	::ced::drawTriangle(targetPixels.metrics(), triangle, pixelCoords, pixelVertexWeights, depthBuffer);
 	for(uint32_t iPixelCoord = 0; iPixelCoord < pixelCoords.size(); ++iPixelCoord) {
 		::ced::SCoord2<int32_t>									pixelCoord				= pixelCoords		[iPixelCoord];
@@ -416,7 +407,6 @@ int													ced::drawTriangle
 	, int												iTriangle
 	, ::ced::SMatrix4<float>							& matrixTransform
 	, ::ced::SMatrix4<float>							& matrixView
-	, ::ced::SMatrix4<float>							& matrixViewport
 	, ::ced::SCoord3<float>								& lightVector
 	, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
 	, ::ced::container<::ced::STriangleWeights<double>>	& pixelVertexWeights
@@ -440,9 +430,6 @@ int													ced::drawTriangle
 	if(triangle.C.z < 0 || triangle.C.z >= 1)
 		return 0;
 
-	triangle.A											= matrixViewport.Transform(triangle.A);
-	triangle.B											= matrixViewport.Transform(triangle.B);
-	triangle.C											= matrixViewport.Transform(triangle.C);
 	::ced::drawTriangle(targetPixels.metrics(), triangle, pixelCoords, pixelVertexWeights, depthBuffer);
 
 	::ced::SCoord2<float>										imageUnit			= {textureImage.metrics().x - 1.0f, textureImage.metrics().y - 1.0f};

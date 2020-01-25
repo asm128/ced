@@ -14,8 +14,8 @@ int													ced::frameworkUpdate		(::ced::SFramework & framework)	{
 		framework.DepthBuffer.resize(pixelCount);
 	}
 	::ced::view_grid<::ced::SColorBGRA>							targetPixels		= {framework.Pixels, window.Size};
-	memset(targetPixels.begin(), 0, sizeof(::ced::SColorBGRA) * targetPixels.size());
-	memset(framework.DepthBuffer.begin(), 0, sizeof(::ced::SColorBGRA) * framework.DepthBuffer.size());
+	//memset(targetPixels.begin(), 0, sizeof(::ced::SColorBGRA) * targetPixels.size());
+	memset(framework.DepthBuffer.begin(), -1, sizeof(uint32_t) * framework.DepthBuffer.size());
 	return 0;
 }
 

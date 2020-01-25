@@ -165,7 +165,7 @@ int													update				(SApplication & app)	{
 
 	app.Scene.Models[0].Rotation.y							+= (float)lastFrameSeconds * .5f;
 	for(uint32_t iModel = 1; iModel < app.Scene.Models.size(); ++iModel)
-		app.Scene.Models[iModel].Rotation.y						+= (float)lastFrameSeconds * 10;
+		app.Scene.Models[iModel].Rotation.y						+= (float)lastFrameSeconds * 1;
 
 	app.Scene.LightVector										= app.Scene.LightVector.RotateY(lastFrameSeconds * 2);
 	if(framework.Window.Resized)

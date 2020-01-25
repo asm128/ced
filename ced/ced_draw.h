@@ -17,8 +17,8 @@ namespace ced
 	int								drawLine			(::ced::view_grid<::ced::SColorBGRA> pixels	, ::ced::SLine		<int32_t>	line		, ::ced::container<::ced::SCoord2<int32_t>> & pixelCoords);
 	int								drawLine
 		( ::ced::view_grid<::ced::SColorBGRA>			pixels
-		, ::ced::SLine3<int32_t>						line
-		, ::ced::container<::ced::SCoord2<int32_t>>		& pixelCoords
+		, const ::ced::SLine3<float>					& lineFloat
+		, ::ced::container<::ced::SCoord3<float>>		& pixelCoords
 		, ::ced::view_grid<uint32_t>					& depthBuffer
 		);
 	int								drawTriangle		(::ced::view_grid<::ced::SColorBGRA> pixels	, ::ced::STriangle	<int32_t>	triangle	, ::ced::SColorBGRA color);
@@ -29,7 +29,6 @@ namespace ced
 		, int												iTriangle
 		, ::ced::SMatrix4<float>							& matrixTransform
 		, ::ced::SMatrix4<float>							& matrixView
-		, ::ced::SMatrix4<float>							& matrixViewport
 		, ::ced::SCoord3<float>								& lightVector
 		, ::ced::SColorBGRA										color
 		, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
@@ -42,7 +41,6 @@ namespace ced
 		, int												iTriangle
 		, ::ced::SMatrix4<float>							& matrixTransform
 		, ::ced::SMatrix4<float>							& matrixView
-		, ::ced::SMatrix4<float>							& matrixViewport
 		, ::ced::SCoord3<float>								& lightVector
 		, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
 		, ::ced::container<::ced::STriangleWeights<double>>	& pixelVertexWeights
@@ -57,7 +55,6 @@ namespace ced
 		, int												iTriangle
 		, ::ced::SMatrix4<float>							& matrixTransform
 		, ::ced::SMatrix4<float>							& matrixView
-		, ::ced::SMatrix4<float>							& matrixViewport
 		, ::ced::SCoord3<float>								& lightVector
 		, ::ced::SColorBGRA										color
 		, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
@@ -71,7 +68,6 @@ namespace ced
 		, int												iTriangle
 		, ::ced::SMatrix4<float>							& matrixTransform
 		, ::ced::SMatrix4<float>							& matrixView
-		, ::ced::SMatrix4<float>							& matrixViewport
 		, ::ced::SCoord3<float>								& lightVector
 		, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
 		, ::ced::container<::ced::STriangleWeights<double>>	& pixelVertexWeights
