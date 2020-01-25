@@ -57,7 +57,7 @@ int													update				(SApplication & app)	{
 	::ced::SFramework										& framework			= app.Framework;
 	if(1 == ::ced::frameworkUpdate(app.Framework))
 		framework.Running = false;
-	//------------------------------------------- Handle input
+		//------------------------------------------- Handle input
 	double													speed				= 10;
 	double													lastFrameSeconds	= framework.Timer.ElapsedMicroseconds * .000001;
 
@@ -87,6 +87,7 @@ int													update				(SApplication & app)	{
 	lightVector											= lightVector.RotateY(lastFrameSeconds * 2);
 	//------------------------------------------- Transform and Draw
 	::ced::view_grid<::ced::SColorBGRA>							targetPixels		= {framework.Pixels, framework.Window.Size};
+	memset(targetPixels.begin(), 0, sizeof(::ced::SColorBGRA) * targetPixels.size());
 
 	lightVector.Normalize();
 
