@@ -1,5 +1,5 @@
 #include "ced_demo_09.h"
-
+#include <time.h>
 
 int													cleanup				(SApplication & app)	{ return ::ced::frameworkCleanup(app.Framework); }
 
@@ -11,7 +11,7 @@ int													setupStars			(SStars & stars, ::ced::SCoord2<uint32_t> targetSiz
 	stars.Position	.resize(128);
 	for(uint32_t iStar = 0; iStar < stars.Brightness.size(); ++iStar) {
 		stars.Speed			[iStar]						= float(16 + (rand() % 64));
-		stars.Brightness	[iStar]						= float(1.0 / 65535 * rand());
+		stars.Brightness	[iStar]						= float(1.0 / RAND_MAX * rand());
 		stars.Position		[iStar].y					= float(rand() % targetSize.y);
 		stars.Position		[iStar].x					= float(rand() % targetSize.x);
 	}
@@ -55,9 +55,16 @@ int													setup				(SApplication & app)	{
 	::ced::frameworkSetup(framework);
 	::setupStars(app.Stars, framework.Window.Size);
 
-	//::ced::geometryBuildCube(app.Geometry);
+	srand((uint32_t)time(0));
+
+
+ 	//::ced::geometryBuildCube(app.Geometry);
 	//::ced::geometryBuildGrid(app.Geometry, {2U, 2U}, {1U, 1U});
-	::ced::geometryBuildSphere(app.Scene.Geometry, 4U, 2U, 1, {0, 1});
+	app.Scene.Geometry.resize(4);
+	::ced::geometryBuildSphere(app.Scene.Geometry[0],  4U, 2U, 1, {0, 1});
+	::ced::geometryBuildSphere(app.Scene.Geometry[1],  4U, 3U, 1, {0, 1});
+	::ced::geometryBuildSphere(app.Scene.Geometry[2],  4U, 4U, 1, {0, 1});
+	::ced::geometryBuildSphere(app.Scene.Geometry[3],  5U, 5U, 1, {0, 1});
 	//::ced::geometryBuildFigure0(app.Geometry, 10U, 10U, 1, {});
 
 	app.Scene.Models[::modelCreate(app)].Position		= {-30};
@@ -65,25 +72,28 @@ int													setup				(SApplication & app)	{
 	app.Scene.Models[::modelCreate(app)].Position		= {+30};
 	app.Scene.Models[::modelCreate(app)].Position		= {+35};
 
-	app.Scene.Image.Metrics								= {32, 32};
-	app.Scene.Image.Pixels.resize(app.Scene.Image.Metrics.x * app.Scene.Image.Metrics.y);
-	for(uint32_t y = 0; y < app.Scene.Image.Metrics.y; ++y) {// Generate noise color for planet texture
-		//::ced::SColorFloat										baseColor					= {1.0f / 65535.0f * rand(), 1.0f / 65535.0f * rand(), 1.0f / 65535.0f * rand(), 0xFF};;
-		bool yAffect = 0 == ((rand() / 1024) % (y ? y : 1));
-		bool xAffect = 0 == ((rand() / 1024) % (y ? y : 1));
-		::ced::SColorFloat										baseColor
-			= yAffect
-			? xAffect
-			? ::ced::CYAN	* ::std::max(0.0f, (1.0f / RAND_MAX * rand()))
-			: ::ced::RED	* ::std::max(0.0f, (1.0f / RAND_MAX * rand()))
-			: ::ced::WHITE	* ::std::max(0.0f, (1.0f / RAND_MAX * rand()))
-			;
-		bool zAffect = 0 == y % 4;
-		for(uint32_t x = 0; x < app.Scene.Image.Metrics.x; ++x) {
-			if(zAffect)
-				app.Scene.Image.Pixels[y * app.Scene.Image.Metrics.x + x] = yAffect ? ::ced::DARKCYAN : baseColor * ::std::max(.5, sin(x));
-			else
-				app.Scene.Image.Pixels[y * app.Scene.Image.Metrics.x + x] = baseColor;
+	app.Scene.Image.resize(4);
+	for(uint32_t iImage = 0; iImage < app.Scene.Image.size(); ++iImage) {
+		app.Scene.Image[iImage].Metrics								= {32, 32};
+		app.Scene.Image[iImage].Pixels.resize(app.Scene.Image[iImage].Metrics.x * app.Scene.Image[iImage].Metrics.y);
+		for(uint32_t y = 0; y < app.Scene.Image[iImage].Metrics.y; ++y) {// Generate noise color for planet texture
+			//::ced::SColorFloat										baseColor					= {1.0f / 65535.0f * rand(), 1.0f / 65535.0f * rand(), 1.0f / 65535.0f * rand(), 0xFF};;
+			bool yAffect = 0 == ((rand() / (1024 * 16)) % (y ? y : 1));
+			bool xAffect = 0 == ((rand() / (1024 * 16)) % (y ? y : 1));
+			::ced::SColorFloat										baseColor
+				= yAffect
+				? xAffect
+				? ::ced::CYAN	* ::std::max(0.0f, (1.0f / RAND_MAX * rand()))
+				: ::ced::RED	* ::std::max(0.0f, (1.0f / RAND_MAX * rand()))
+				: ::ced::WHITE	* ::std::max(0.0f, (1.0f / RAND_MAX * rand()))
+				;
+			bool zAffect = 0 == y % 4;
+			for(uint32_t x = 0; x < app.Scene.Image[iImage].Metrics.x; ++x) {
+				if(zAffect)
+					app.Scene.Image[iImage].Pixels[y * app.Scene.Image[iImage].Metrics.x + x] = yAffect ? ::ced::DARKCYAN : baseColor * ::std::max(.5, sin(x));
+				else
+					app.Scene.Image[iImage].Pixels[y * app.Scene.Image[iImage].Metrics.x + x] = baseColor;
+			}
 		}
 	}
 
@@ -126,27 +136,50 @@ int													update				(SApplication & app)	{
 	lastFrameSeconds									= ::std::min(lastFrameSeconds, 0.200);
 
 	app.AnimationTime									+= lastFrameSeconds;
-	app.ShotsPlayer.Delay								+= lastFrameSeconds * 20;
+	//app.ShotsPlayer.Delay								+= lastFrameSeconds * 20;
+	::ced::SModelTransform									matricesParent;
 	::ced::SModel3D											& modelPlayer		= app.Scene.Models[0];
-	for(uint32_t iEnemy = 7; iEnemy < app.Scene.Models.size(); iEnemy += 7) {
+	for(uint32_t iEnemy = 7; iEnemy < app.Scene.Models.size(); ++iEnemy) {
+		const int32_t											indexParent				= app.Scene.Entities[iEnemy].Parent;
 		if(0 >= app.Health[iEnemy])
 			continue;
-		app.ShotsEnemy.Delay								+= lastFrameSeconds * 3;
 		::ced::SModel3D											& modelEnemy		= app.Scene.Models[iEnemy];
-		modelEnemy.Position.z								= (float)(sin(app.AnimationTime) * 30) * ((iEnemy % 2) ? -1 : 1);
-		if(1 < (modelPlayer.Position - modelEnemy.Position).Length()) {
-			::ced::SCoord3<float>									direction			= modelPlayer.Position - modelEnemy.Position;
-			direction.RotateY(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
-			app.ShotsEnemy.Spawn(modelEnemy.Position, direction.Normalize(), 20);
+		if(-1 == indexParent) {
+			modelEnemy.Position.z								= (float)(sin(app.AnimationTime) * 30) * ((iEnemy % 2) ? -1 : 1);
+		}
+		else {
+			matricesParent										= {};
+			app.ShotsEnemy.Delay								+= lastFrameSeconds * .3333333;
+			const ::ced::SModel3D									& modelParent			= app.Scene.Models[indexParent];
+			matricesParent.Scale	.Scale			(modelParent.Scale, true);
+			matricesParent.Rotation	.Rotation		(modelParent.Rotation);
+			matricesParent.Position	.SetTranslation	(modelParent.Position, true);
+			::ced::SCoord3<float>									positionGlobal			= (matricesParent.Scale * matricesParent.Rotation * matricesParent.Position).Transform(modelEnemy.Position);
+			if(1 < (modelPlayer.Position - positionGlobal).Length()) {
+				::ced::SCoord3<float>									direction			= modelPlayer.Position - positionGlobal;
+				direction.RotateY(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
+				app.ShotsEnemy.Spawn(positionGlobal, direction.Normalize(), 20);
+			}
 		}
 	}
 
-
 	if(GetAsyncKeyState(VK_SPACE)) {
-		::ced::SCoord3<float>									direction			= {1, 0, 0};
-		direction.RotateY(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
-		direction.RotateZ(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
-		app.ShotsPlayer.Spawn(modelPlayer.Position, direction, 200);
+		for(uint32_t iEnemy = 1; iEnemy < 7; ++iEnemy) {
+			matricesParent										= {};
+			const int32_t											indexParent				= app.Scene.Entities[iEnemy].Parent;
+			::ced::SModel3D											& modelEnemy			= app.Scene.Models[iEnemy];
+			const ::ced::SModel3D									& modelParent			= app.Scene.Models[indexParent];
+			matricesParent.Scale	.Scale			(modelParent.Scale, true);
+			matricesParent.Rotation	.Rotation		(modelParent.Rotation);
+			matricesParent.Position	.SetTranslation	(modelParent.Position, true);
+			::ced::SCoord3<float>									positionGlobal			= (matricesParent.Scale * matricesParent.Rotation * matricesParent.Position).Transform(modelEnemy.Position);
+			positionGlobal.x									+= 1.5;
+			app.ShotsPlayer.Delay								+= lastFrameSeconds * 5;
+			::ced::SCoord3<float>									direction			= {1, 0, 0};
+			//direction.RotateY(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
+			//direction.RotateZ(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
+			app.ShotsPlayer.Spawn(positionGlobal, direction, 200);
+		}
 	}
 
 	if(GetAsyncKeyState('Q')) app.Scene.Camera.Position.y			-= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
@@ -175,7 +208,6 @@ int													update				(SApplication & app)	{
 	app.Debris		.Update((float)lastFrameSeconds);
 	app.Stars		.Update(framework.Window.Size.y, (float)lastFrameSeconds);
 
-	::ced::SModelTransform									matricesParent;
 	for(uint32_t iShot = 0; iShot < app.ShotsPlayer.Position.size(); ++iShot) {
 		const ::ced::SLine3<float>								shotSegment			= {app.ShotsPlayer.PositionPrev[iShot], app.ShotsPlayer.Position[iShot]};
 		for(uint32_t iModel = 7; iModel < app.Scene.Models.size(); ++iModel) {
@@ -185,9 +217,10 @@ int													update				(SApplication & app)	{
 			if(app.Health[iModel] <= 0)
 				continue;
 			::ced::SCoord3<float>									sphereCenter		= app.Scene.Models[iModel].Position;
-			matricesParent.Scale	.Scale			(app.Scene.Models[app.Scene.Entities[iModel].Parent].Scale, true);
-			matricesParent.Rotation	.Rotation		(app.Scene.Models[app.Scene.Entities[iModel].Parent].Rotation);
-			matricesParent.Position	.SetTranslation	(app.Scene.Models[app.Scene.Entities[iModel].Parent].Position, true);
+			const ::ced::SModel3D									& modelParent			= app.Scene.Models[indexParent];
+			matricesParent.Scale	.Scale			(modelParent.Scale, true);
+			matricesParent.Rotation	.Rotation		(modelParent.Rotation);
+			matricesParent.Position	.SetTranslation	(modelParent.Position, true);
 
 			::ced::SMatrix4<float>									matrixTransformParent	= matricesParent.Scale * matricesParent.Rotation * matricesParent.Position;
 			sphereCenter										= matrixTransformParent.Transform(sphereCenter);

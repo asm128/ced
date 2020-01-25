@@ -12,7 +12,7 @@ int													drawStars			(SStars & stars, ::ced::view_grid<::ced::SColorBGRA>
 		::ced::SCoord2<float>									starPos			= stars.Position[iStar];
 		::ced::SColorBGRA											starFinalColor	= colors[iStar % ::std::size(colors)] * stars.Brightness[iStar];
 		::ced::setPixel(targetPixels, starPos.Cast<int32_t>(), starFinalColor);
-		const	int32_t											brightRadius	= 1 + (iStar % 2) + (rand() % 2);
+		const	int32_t											brightRadius	= 1 + (iStar % 5) + (rand() % 4);
 		double													brightUnit		= 1.0 / brightRadius;
 		for(int32_t y = -brightRadius; y < brightRadius; ++y)
 		for(int32_t x = -brightRadius; x < brightRadius; ++x) {
@@ -220,10 +220,10 @@ int													draw				(SApplication & app)	{
 			lightPoints[iOffset + iShot]						= app.Debris.Position[iShot];
 			lightColors[iOffset + iShot]						= {0x2F,0xAF, 0xFF};
 		}
-		for(uint32_t iTriangle = 0; iTriangle < app.Scene.Geometry.Triangles.size(); ++iTriangle) {
+		for(uint32_t iTriangle = 0; iTriangle < app.Scene.Geometry[iModel / 7].Triangles.size(); ++iTriangle) {
 			pixelCoords			.clear();
 			pixelVertexWeights	.clear();
-			::ced::drawQuadTriangle(targetPixels, app.Scene.Geometry, iTriangle, matrixTransform, matrixView, app.Scene.LightVector, pixelCoords, pixelVertexWeights, {app.Scene.Image.Pixels.begin(), app.Scene.Image.Metrics}, lightPoints, lightColors, framework.DepthBuffer);
+			::ced::drawQuadTriangle(targetPixels, app.Scene.Geometry[iModel / 7], iTriangle, matrixTransform, matrixView, app.Scene.LightVector, pixelCoords, pixelVertexWeights, {app.Scene.Image[iModel / 7].Pixels.begin(), app.Scene.Image[iModel / 7].Metrics}, lightPoints, lightColors, framework.DepthBuffer);
 		}
 	}
 
