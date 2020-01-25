@@ -108,7 +108,7 @@ int								ced::drawLine
 	if( line.A.x >= 0 && line.A.x < (int32_t)pixels.metrics().x
 	 && line.A.y >= 0 && line.A.y < (int32_t)pixels.metrics().y
 	) {
-		if( depthBuffer[line.A.y][line.A.x] <= intZ ) {
+		if( depthBuffer[line.A.y][line.A.x] >= intZ ) {
 			depthBuffer[line.A.y][line.A.x]	= intZ;
 			pixelCoords.push_back({line.A.x, line.A.y});
 		}
@@ -127,7 +127,7 @@ int								ced::drawLine
 				double							factor					= yAxis ? 1.0 / yDiff * line.A.y : 1.0 / xDiff * line.A.x;
 				double							finalZ					= line.B.z * factor - (line.A.z * (1.0 - factor));
 				intZ						= uint32_t((0xFFFFFFFFU) * (finalZ));
-				if(depthBuffer[line.A.y][line.A.x] > intZ)
+				if(depthBuffer[line.A.y][line.A.x] < intZ)
 					continue;
 
 				depthBuffer[line.A.y][line.A.x]	= intZ;
@@ -143,7 +143,7 @@ int								ced::drawLine
 				double							factor					= yAxis ? 1.0 / yDiff * line.A.y : 1.0 / xDiff * line.A.x;
 				double							finalZ					= line.B.z * factor - (line.A.z * (1.0 - factor));
 				intZ						= uint32_t((0xFFFFFFFFU) * (finalZ));
-				if(depthBuffer[line.A.y][line.A.x] > intZ)
+				if(depthBuffer[line.A.y][line.A.x] < intZ)
 					continue;
 
 				depthBuffer[line.A.y][line.A.x]	= intZ;

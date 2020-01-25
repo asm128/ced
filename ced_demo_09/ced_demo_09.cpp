@@ -129,7 +129,9 @@ int													update				(SApplication & app)	{
 	app.ShotsPlayer.Delay								+= lastFrameSeconds * 20;
 	::ced::SModel3D											& modelPlayer		= app.Scene.Models[0];
 	for(uint32_t iEnemy = 7; iEnemy < app.Scene.Models.size(); iEnemy += 7) {
-		app.ShotsEnemy.Delay								+= lastFrameSeconds * 2;
+		if(0 >= app.Health[iEnemy])
+			continue;
+		app.ShotsEnemy.Delay								+= lastFrameSeconds * 3;
 		::ced::SModel3D											& modelEnemy		= app.Scene.Models[iEnemy];
 		modelEnemy.Position.z								= (float)(sin(app.AnimationTime) * 30) * ((iEnemy % 2) ? -1 : 1);
 		if(1 < (modelPlayer.Position - modelEnemy.Position).Length()) {
@@ -150,10 +152,10 @@ int													update				(SApplication & app)	{
 	if(GetAsyncKeyState('Q')) app.Scene.Camera.Position.y			-= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
 	if(GetAsyncKeyState('E')) app.Scene.Camera.Position.y			+= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
 
-	if(GetAsyncKeyState('W')) app.Scene.Models[0].Position.x		+= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-	if(GetAsyncKeyState('S')) app.Scene.Models[0].Position.x		-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-	if(GetAsyncKeyState('A')) app.Scene.Models[0].Position.z		+= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-	if(GetAsyncKeyState('D')) app.Scene.Models[0].Position.z		-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+	if(GetAsyncKeyState('W')) app.Scene.Models[0].Position.x		+= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
+	if(GetAsyncKeyState('S')) app.Scene.Models[0].Position.x		-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
+	if(GetAsyncKeyState('A')) app.Scene.Models[0].Position.z		+= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
+	if(GetAsyncKeyState('D')) app.Scene.Models[0].Position.z		-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
 
 	if(GetAsyncKeyState(VK_NUMPAD8)) app.Scene.Models[0].Rotation.x	-= (float)(lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
 	if(GetAsyncKeyState(VK_NUMPAD2)) app.Scene.Models[0].Rotation.x	+= (float)(lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
@@ -177,7 +179,8 @@ int													update				(SApplication & app)	{
 	for(uint32_t iShot = 0; iShot < app.ShotsPlayer.Position.size(); ++iShot) {
 		const ::ced::SLine3<float>								shotSegment			= {app.ShotsPlayer.PositionPrev[iShot], app.ShotsPlayer.Position[iShot]};
 		for(uint32_t iModel = 7; iModel < app.Scene.Models.size(); ++iModel) {
-			if(-1 == app.Scene.Entities[iModel].Parent)
+			const int32_t											indexParent				= app.Scene.Entities[iModel].Parent;
+			if(-1 == indexParent)
 				continue;
 			if(app.Health[iModel] <= 0)
 				continue;
@@ -197,6 +200,7 @@ int													update				(SApplication & app)	{
 			) {
 				PlaySoundA((LPCSTR)SND_ALIAS_SYSTEMHAND, GetModuleHandle(0), SND_ALIAS_ID | SND_ASYNC);
 				app.Health[iModel]									-= 100;
+				app.Health[indexParent]								-= 100;
 				for(uint32_t i = 0; i < 10; ++i) {
 					::ced::SCoord3<float>			direction			= {0, 1, 0};
 					direction.RotateX(rand() * (::ced::MATH_2PI / 65535));
@@ -213,28 +217,31 @@ int													update				(SApplication & app)	{
 	}
 
 	for(uint32_t iShot = 0; iShot < app.ShotsEnemy.Position.size(); ++iShot) {
-		const ::ced::SLine3<float>								shotSegment			= {app.ShotsEnemy.PositionPrev[iShot], app.ShotsEnemy.Position[iShot]};
+		const ::ced::SLine3<float>								shotSegment				= {app.ShotsEnemy.PositionPrev[iShot], app.ShotsEnemy.Position[iShot]};
 		for(uint32_t iModel = 0; iModel < 7; ++iModel) {
-			if(-1 == app.Scene.Entities[iModel].Parent)
+			const int32_t											indexParent				= app.Scene.Entities[iModel].Parent;
+			if(-1 == indexParent)
 				continue;
 			if(app.Health[iModel] <= 0)
 				continue;
-			::ced::SCoord3<float>									sphereCenter		= app.Scene.Models[iModel].Position;
-			matricesParent.Scale	.Scale			(app.Scene.Models[app.Scene.Entities[iModel].Parent].Scale, true);
-			matricesParent.Rotation	.Rotation		(app.Scene.Models[app.Scene.Entities[iModel].Parent].Rotation);
-			matricesParent.Position	.SetTranslation	(app.Scene.Models[app.Scene.Entities[iModel].Parent].Position, true);
+			::ced::SCoord3<float>									sphereCenter			= app.Scene.Models[iModel].Position;
+			const ::ced::SModel3D									& modelParent			= app.Scene.Models[indexParent];
+			matricesParent.Scale	.Scale			(modelParent.Scale, true);
+			matricesParent.Rotation	.Rotation		(modelParent.Rotation);
+			matricesParent.Position	.SetTranslation	(modelParent.Position, true);
 
 			::ced::SMatrix4<float>									matrixTransformParent	= matricesParent.Scale * matricesParent.Rotation * matricesParent.Position;
 			sphereCenter										= matrixTransformParent.Transform(sphereCenter);
 
-			float													t				= 0;
-			::ced::SCoord3<float>									q				= {};
+			float													t						= 0;
+			::ced::SCoord3<float>									q						= {};
 
 			if( intersectRaySphere(shotSegment.A, (shotSegment.B - shotSegment.A).Normalize(), sphereCenter, 1, t, q)
 			 && t < 1
 			) {
 				PlaySoundA((LPCSTR)SND_ALIAS_SYSTEMEXCLAMATION, GetModuleHandle(0), SND_ALIAS_ID | SND_ASYNC);
 				app.Health[iModel]									-= 100;
+				app.Health[indexParent]								-= 100;
 				for(uint32_t i = 0; i < 10; ++i) {
 					::ced::SCoord3<float>									direction			= {0, 1, 0};
 					direction.RotateX(rand() * (::ced::MATH_2PI / 65535));
