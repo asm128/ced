@@ -30,7 +30,7 @@ int													modelCreate			(::SApplication & app)	{
 	app.Scene.Models		[indexModel]				= {};
 	app.Scene.Models		[indexModel].Scale			= {1, 1, 1};
 	if(0 == indexModel)
-		app.Scene.Models		[indexModel].Rotation.z		= (float)(-::ced::MATH_PI_2 / 2);
+		app.Scene.Models		[indexModel].Rotation.z		= (float)(-::ced::MATH_PI_2);
 	else
 		app.Scene.Models		[indexModel].Rotation.z		= (float)(::ced::MATH_PI_2);
 	app.Scene.Entities		[indexModel]				= {-1};
@@ -57,12 +57,10 @@ int													setup				(SApplication & app)	{
 
 	srand((uint32_t)time(0));
 
-
-
-		app.Scene.Geometry.resize(4);
+	app.Scene.Geometry.resize(4);
 	//::ced::geometryBuildGrid(app.Scene.Geometry[0], {2U, 2U}, {1U, 1U});
-	//::ced::geometryBuildSphere(app.Scene.Geometry[0],  12U, 8U, 1, {0, 1});
-	::ced::geometryBuildCube(app.Scene.Geometry[0]);
+	::ced::geometryBuildSphere(app.Scene.Geometry[0],  12U, 8U, 1, {0, 1});
+	//::ced::geometryBuildCube(app.Scene.Geometry[0]);
 
 	//::ced::geometryBuildSphere(app.Scene.Geometry[1],  4U, 3U, 1, {0, 1});
 	::ced::geometryBuildCube(app.Scene.Geometry[1]);
@@ -71,10 +69,10 @@ int													setup				(SApplication & app)	{
 	::ced::geometryBuildSphere(app.Scene.Geometry[3],  5U, 5U, 1, {0, 1});
 	//::ced::geometryBuildFigure0(app.Geometry, 10U, 10U, 1, {});
 
-	app.Scene.Models[::modelCreate(app)].Position		= {};//{-30};
-	//app.Scene.Models[::modelCreate(app)].Position		= {+25};
-	//app.Scene.Models[::modelCreate(app)].Position		= {+30};
-	//app.Scene.Models[::modelCreate(app)].Position		= {+35};
+	app.Scene.Models[::modelCreate(app)].Position		= {-30};
+	app.Scene.Models[::modelCreate(app)].Position		= {+25};
+	app.Scene.Models[::modelCreate(app)].Position		= {+30};
+	app.Scene.Models[::modelCreate(app)].Position		= {+35};
 
 	app.Scene.Image.resize(4);
 	for(uint32_t iImage = 0; iImage < app.Scene.Image.size(); ++iImage) {
@@ -99,11 +97,11 @@ int													setup				(SApplication & app)	{
 					app.Scene.Image[iImage].Pixels[y * app.Scene.Image[iImage].Metrics.x + x] = baseColor;
 			}
 		}
-		::ced::bmpFileLoad("../ced_data/cp437_12x12.bmp", app.Scene.Image[iImage]);
+		//::ced::bmpFileLoad("../ced_data/cp437_12x12.bmp", app.Scene.Image[iImage]);
 	}
 
 	app.Scene.Camera.Target				= {};
-	app.Scene.Camera.Position			= {-0.000001f, 7.5, 0};
+	app.Scene.Camera.Position			= {-0.000001f, 100, 0};
 	app.Scene.Camera.Up					= {0, 1, 0};
 
 
@@ -180,7 +178,7 @@ int													update				(SApplication & app)	{
 			matricesParent.Rotation	.Rotation		(modelParent.Rotation);
 			matricesParent.Position	.SetTranslation	(modelParent.Position, true);
 			::ced::SCoord3<float>									positionGlobal			= (matricesParent.Scale * matricesParent.Rotation * matricesParent.Position).Transform(modelEnemy.Position);
-			positionGlobal.x									+= 1.5;
+			//positionGlobal.x									+= 1.5;
 			app.ShotsPlayer.Delay								+= lastFrameSeconds * 5;
 			::ced::SCoord3<float>									direction			= {1, 0, 0};
 			//direction.RotateY(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
