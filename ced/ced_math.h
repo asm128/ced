@@ -271,6 +271,15 @@ namespace ced
 		SCoord2<_tValue>					A;
 		SCoord2<_tValue>					B;
 		SCoord2<_tValue>					C;
+
+		template<typename _tOther>
+		STriangle<_tOther>					Cast					()								const	noexcept		{
+			return
+				{ A.Cast<_tOther>()
+				, B.Cast<_tOther>()
+				, C.Cast<_tOther>()
+				};
+		}
 	};
 
 	template<typename _tValue>

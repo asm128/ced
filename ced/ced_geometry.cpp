@@ -2,24 +2,46 @@
 
 // Vertex coordinates for cube faces
 static constexpr const ::ced::STriangle3<int8_t>	geometryCube	[12]						=
-	{ {{1, 0, 0}, {0, 0, 0}, {0, 1, 0}}	// Right	- first
-	, {{1, 0, 0}, {0, 1, 0}, {1, 1, 0}}	// Right	- second
+	{ {{0, 0, 0}, {0, 1, 0}, {1, 0, 0}}	// Right	- first
+	, {{0, 1, 0}, {1, 1, 0}, {1, 0, 0}}	// Right	- second
 
-	, {{0, 0, 1}, {0, 1, 0}, {0, 0, 0}}	// Back		- first
-	, {{0, 0, 1}, {0, 1, 1}, {0, 1, 0}}	// Back		- second
+	, {{0, 1, 0}, {0, 0, 0}, {0, 0, 1}}	// Back		- first
+	, {{0, 1, 1}, {0, 1, 0}, {0, 0, 1}}	// Back		- second
 
-	, {{1, 0, 0}, {0, 0, 1}, {0, 0, 0}}	// Bottom	- first
-	, {{1, 0, 0}, {1, 0, 1}, {0, 0, 1}}	// Bottom	- second
+	, {{0, 0, 1}, {0, 0, 0}, {1, 0, 0}}	// Bottom	- first
+	, {{1, 0, 1}, {0, 0, 1}, {1, 0, 0}}	// Bottom	- second
 
-	, {{1, 0, 1}, {0, 1, 1}, {0, 0, 1}}	// Left		- first
-	, {{1, 0, 1}, {1, 1, 1}, {0, 1, 1}}	// Left		- second
+	, {{0, 1, 1}, {0, 0, 1}, {1, 0, 1}}	// Left		- first
+	, {{1, 1, 1}, {0, 1, 1}, {1, 0, 1}}	// Left		- second
 
-	, {{1, 0, 1}, {1, 1, 0}, {1, 1, 1}}	// Front	- first
-	, {{1, 0, 1}, {1, 0, 0}, {1, 1, 0}}	// Front	- second
+	, {{1, 1, 0}, {1, 1, 1}, {1, 0, 1}}	// Front	- first
+	, {{1, 0, 0}, {1, 1, 0}, {1, 0, 1}}	// Front	- second
 
-	, {{1, 1, 0}, {0, 1, 1}, {1, 1, 1}}	// Top		- first
-	, {{1, 1, 0}, {0, 1, 0}, {0, 1, 1}}	// Top		- second
+	, {{0, 1, 1}, {1, 1, 1}, {1, 1, 0}}	// Top		- first
+	, {{0, 1, 0}, {0, 1, 1}, {1, 1, 0}}	// Top		- second
 	};
+
+// Vertex coordinates for cube faces
+static constexpr const ::ced::STriangle<int8_t>	texCoordCube	[12]						=
+	{ {{0, 1}, {0, 0}, {1, 1}}	// Right	- first
+	, {{0, 0}, {1, 0}, {1, 1}}	// Right	- second
+	//{} //
+	, {{1, 0}, {1, 1}, {0, 1}}	// Back		- first
+	, {{0, 0}, {1, 0}, {0, 1}}	// Back		- second
+	//{} //
+	, {{0, 0}, {1, 0}, {1, 1}}	// Bottom	- first
+	, {{0, 1}, {0, 0}, {1, 1}}	// Bottom	- second
+	//{} //
+	, {{1, 0}, {1, 1}, {0, 1}}	// Left		- second
+	, {{0, 0}, {1, 0}, {0, 1}}	// Left		- first
+	//{} //
+	, {{0, 0}, {1, 0}, {1, 1}}	// Front	- first
+	, {{0, 1}, {0, 0}, {1, 1}}	// Front	- second
+	//{} //
+	, {{1, 1}, {0, 1}, {0, 0}}	// Top		- first
+	, {{1, 0}, {1, 1}, {0, 0}}	// Top		- second
+	};
+
 
 static constexpr const ::ced::SCoord3<int8_t>		geometryNormals	[6]		=
 	{ { 0, 0, 1} // Right
@@ -33,6 +55,7 @@ static constexpr const ::ced::SCoord3<int8_t>		geometryNormals	[6]		=
 int													ced::geometryBuildCube	(SGeometryQuads & geometry)	{
 	geometry.Triangles	.resize((uint32_t)::std::size(geometryCube));
 	geometry.Normals	.resize((uint32_t)::std::size(geometryNormals));
+	geometry.TextureCoords	.resize((uint32_t)::std::size(texCoordCube));
 
 	for(uint32_t iTriangle = 0; iTriangle < geometry.Triangles.size(); ++iTriangle) {
 		::ced::STriangle3<float>								& newTriangle		= geometry.Triangles[iTriangle];
@@ -40,6 +63,9 @@ int													ced::geometryBuildCube	(SGeometryQuads & geometry)	{
 		newTriangle.A										-= {.5, .5, .5};
 		newTriangle.B										-= {.5, .5, .5};
 		newTriangle.C										-= {.5, .5, .5};
+
+		::ced::STriangle<float>									& newTriangleTex	= geometry.TextureCoords[iTriangle];
+		newTriangleTex											= ::texCoordCube[iTriangle].Cast<float>();
 
 		::ced::SCoord3<float>									& newNormal			= geometry.Normals[iTriangle / 2];
 		newNormal											= geometryNormals[iTriangle / 2].Cast<float>();
@@ -56,6 +82,14 @@ int													ced::geometryBuildGrid	(SGeometryQuads & geometry, ::ced::SCoord
 			, {1, 0, 0}
 			, {1, 0, 1}
 			};
+		::ced::SCoord2<float>									texcoords	[4]			=
+			{ {0, 0}
+			, {0, 1}
+			, {1, 0}
+			, {1, 1}
+			};
+		::ced::STriangle<float>									triangleATex		= {texcoords[0], texcoords[1], texcoords[2]};
+		::ced::STriangle<float>									triangleBTex		= {texcoords[1], texcoords[3], texcoords[2]};
 		::ced::STriangle3<float>								triangleA			= {coords[0].Cast<float>(), coords[1].Cast<float>(), coords[2].Cast<float>()};
 		::ced::STriangle3<float>								triangleB			= {coords[1].Cast<float>(), coords[3].Cast<float>(), coords[2].Cast<float>()};
 		//::ced::STriangle3<float>								triangleA			= {{1, 0, 0}, {0, 0, 1}, {1, 0, 1}};
@@ -75,6 +109,8 @@ int													ced::geometryBuildGrid	(SGeometryQuads & geometry, ::ced::SCoord
 		triangleB.C											-= {(float)gridCenter.x, 0, (float)gridCenter.y};
 		geometry.Triangles	.push_back(triangleA);
 		geometry.Triangles	.push_back(triangleB);
+		geometry.TextureCoords	.push_back(triangleATex);
+		geometry.TextureCoords	.push_back(triangleBTex);
 		geometry.Normals	.push_back({0, 1, 0});
 	}
 	return 0;

@@ -202,7 +202,10 @@ int													draw				(SApplication & app)	{
 		lightPoints[0]									= app.Scene.Models[0].Position;
 		lightColors[0]									= colorLightPlayer;
 		for(uint32_t iEnemy = 1; iEnemy < 4; ++iEnemy) {
-			lightPoints[iEnemy]								= app.Scene.Models[7 * iEnemy].Position;
+			uint32_t iModelEnemy = 7 * iEnemy;
+			if(iModelEnemy >= app.Scene.Models.size())
+				continue;
+			lightPoints[iEnemy]								= app.Scene.Models[iModelEnemy].Position;
 			lightColors[iEnemy]								= colorLightEnemy;
 		}
 		uint32_t												iOffset					= 4;

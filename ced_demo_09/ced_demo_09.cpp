@@ -30,9 +30,9 @@ int													modelCreate			(::SApplication & app)	{
 	app.Scene.Models		[indexModel]				= {};
 	app.Scene.Models		[indexModel].Scale			= {1, 1, 1};
 	if(0 == indexModel)
-		app.Scene.Models		[indexModel].Rotation.z		= (float)(::ced::MATH_PI_2);
+		app.Scene.Models		[indexModel].Rotation.z		= (float)(-::ced::MATH_PI_2 / 2);
 	else
-		app.Scene.Models		[indexModel].Rotation.z		= (float)(-::ced::MATH_PI_2);
+		app.Scene.Models		[indexModel].Rotation.z		= (float)(::ced::MATH_PI_2);
 	app.Scene.Entities		[indexModel]				= {-1};
 	const uint32_t												partHealth			= 1000;
 	app.Health[indexModel]									= partHealth * countParts;
@@ -58,19 +58,23 @@ int													setup				(SApplication & app)	{
 	srand((uint32_t)time(0));
 
 
- 	//::ced::geometryBuildCube(app.Geometry);
-	//::ced::geometryBuildGrid(app.Geometry, {2U, 2U}, {1U, 1U});
-	app.Scene.Geometry.resize(4);
-	::ced::geometryBuildSphere(app.Scene.Geometry[0],  4U, 2U, 1, {0, 1});
-	::ced::geometryBuildSphere(app.Scene.Geometry[1],  4U, 3U, 1, {0, 1});
+
+		app.Scene.Geometry.resize(4);
+	//::ced::geometryBuildGrid(app.Scene.Geometry[0], {2U, 2U}, {1U, 1U});
+	//::ced::geometryBuildSphere(app.Scene.Geometry[0],  12U, 8U, 1, {0, 1});
+	::ced::geometryBuildCube(app.Scene.Geometry[0]);
+
+	//::ced::geometryBuildSphere(app.Scene.Geometry[1],  4U, 3U, 1, {0, 1});
+	::ced::geometryBuildCube(app.Scene.Geometry[1]);
+	//::ced::geometryBuildGrid(app.Scene.Geometry[1], {2U, 2U}, {1U, 1U});
 	::ced::geometryBuildSphere(app.Scene.Geometry[2],  4U, 4U, 1, {0, 1});
 	::ced::geometryBuildSphere(app.Scene.Geometry[3],  5U, 5U, 1, {0, 1});
 	//::ced::geometryBuildFigure0(app.Geometry, 10U, 10U, 1, {});
 
-	app.Scene.Models[::modelCreate(app)].Position		= {-30};
-	app.Scene.Models[::modelCreate(app)].Position		= {+25};
-	app.Scene.Models[::modelCreate(app)].Position		= {+30};
-	app.Scene.Models[::modelCreate(app)].Position		= {+35};
+	app.Scene.Models[::modelCreate(app)].Position		= {};//{-30};
+	//app.Scene.Models[::modelCreate(app)].Position		= {+25};
+	//app.Scene.Models[::modelCreate(app)].Position		= {+30};
+	//app.Scene.Models[::modelCreate(app)].Position		= {+35};
 
 	app.Scene.Image.resize(4);
 	for(uint32_t iImage = 0; iImage < app.Scene.Image.size(); ++iImage) {
@@ -95,10 +99,11 @@ int													setup				(SApplication & app)	{
 					app.Scene.Image[iImage].Pixels[y * app.Scene.Image[iImage].Metrics.x + x] = baseColor;
 			}
 		}
+		::ced::bmpFileLoad("../ced_data/cp437_12x12.bmp", app.Scene.Image[iImage]);
 	}
 
 	app.Scene.Camera.Target				= {};
-	app.Scene.Camera.Position			= {-0.000001f, 100, 0};
+	app.Scene.Camera.Position			= {-0.000001f, 7.5, 0};
 	app.Scene.Camera.Up					= {0, 1, 0};
 
 
@@ -165,6 +170,8 @@ int													update				(SApplication & app)	{
 
 	if(GetAsyncKeyState(VK_SPACE)) {
 		for(uint32_t iEnemy = 1; iEnemy < 7; ++iEnemy) {
+			if(0 >= app.Health[iEnemy])
+				continue;
 			matricesParent										= {};
 			const int32_t											indexParent				= app.Scene.Entities[iEnemy].Parent;
 			::ced::SModel3D											& modelEnemy			= app.Scene.Models[iEnemy];

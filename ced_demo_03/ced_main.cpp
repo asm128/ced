@@ -142,7 +142,7 @@ int													update				(SApplication & app)	{
 	}
 	::ced::view_grid<::ced::SColorBGRA>							targetPixels		= {app.Pixels, window.Size};
 	memset(targetPixels.begin(), 0, sizeof(::ced::SColorBGRA) * targetPixels.size());
-	memset(app.DepthBuffer.begin(), 0, sizeof(::ced::SColorBGRA) * app.DepthBuffer.size());
+	memset(app.DepthBuffer.begin(), -1, sizeof(::ced::SColorBGRA) * app.DepthBuffer.size());
 
 	//------------------------------------------- Handle input
 	::ced::SCoord3<float>									cameraTarget		= {};
