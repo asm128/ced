@@ -32,7 +32,7 @@ int													drawStars			(SStars & stars, ::ced::view_grid<::ced::SColorBGRA>
 
 
 int													drawDebris			(::ced::view_grid<::ced::SColorBGRA> targetPixels, SDebris & debris, const ::ced::SMatrix4<float> & matrixVPV, ::ced::view_grid<uint32_t> depthBuffer)	{
-	::ced::SColorBGRA											colors[]			=
+	::ced::SColorBGRA										colors[]			=
 		{ {0x80, 0xAF, 0xFF, }
 		, {0x40, 0x80, 0xFF, }
 		, {0x20, 0x80, 0xFF, }
@@ -41,7 +41,7 @@ int													drawDebris			(::ced::view_grid<::ced::SColorBGRA> targetPixels, 
 	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
 	for(uint32_t iParticle = 0; iParticle < debris.Brightness.size(); ++iParticle) {
 		::ced::SColorBGRA										colorShot			= colors[iParticle % ::std::size(colors)];
-		::ced::SCoord3<float>									starPos			= debris.Position[iParticle];
+		::ced::SCoord3<float>									starPos				= debris.Position[iParticle];
 		starPos												= matrixVPV.Transform(starPos);
 		const ::ced::SCoord2<int32_t>							pixelCoord		= {(int32_t)starPos.x, (int32_t)starPos.y};
 		if( pixelCoord.y < 0 || pixelCoord.y >= (int32_t)targetPixels.metrics().y
@@ -226,7 +226,7 @@ int													draw				(SApplication & app)	{
 		for(uint32_t iTriangle = 0; iTriangle < app.Scene.Geometry[iModel / 7].Triangles.size(); ++iTriangle) {
 			pixelCoords			.clear();
 			pixelVertexWeights	.clear();
-			::ced::drawQuadTriangle(targetPixels, app.Scene.Geometry[iModel / 7], iTriangle, matrixTransform, matrixView, app.Scene.LightVector, pixelCoords, pixelVertexWeights, {app.Scene.Image[iModel / 7].Pixels.begin(), app.Scene.Image[iModel / 7].Metrics}, lightPoints, lightColors, framework.DepthBuffer);
+			::ced::drawQuadTriangle(targetPixels, app.Scene.Geometry[iModel / 7], iTriangle, matrixTransform, matrixView, app.Scene.LightVector, pixelCoords, pixelVertexWeights, {app.Scene.Image[iModel / 7].Pixels.begin(), app.Scene.Image[iModel / 7].Metrics}, lightPoints, lightColors, {framework.DepthBuffer.begin(), framework.Window.Size});
 		}
 	}
 

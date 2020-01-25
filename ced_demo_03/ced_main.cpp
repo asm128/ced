@@ -203,7 +203,7 @@ int													update				(SApplication & app)	{
 			triangle.C											= matrixViewport.Transform(triangle.C);
 			double													lightFactor			= normal.Dot(lightVector);
 			uint32_t												colorIndex			= (uint32_t)iTriangle % ::std::size(app.Colors);
-			::ced::drawTriangle(targetPixels.metrics(), triangle, pixelCoords, pixelVertexWeights, app.DepthBuffer);
+			::ced::drawTriangle(targetPixels.metrics(), triangle, pixelCoords, pixelVertexWeights, {app.DepthBuffer.begin(), app.Window.Size});
 			for(uint32_t iPixelCoord = 0; iPixelCoord < pixelCoords.size(); ++iPixelCoord) {
 				::ced::SCoord2<int32_t>									pixelCoord			= pixelCoords[iPixelCoord];
 				::ced::SColorBGRA											pixelColor			= app.Colors[colorIndex];

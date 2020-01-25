@@ -22,7 +22,7 @@ static constexpr const ::ced::STriangle3<int8_t>	geometryCube	[12]						=
 	};
 
 // Vertex coordinates for cube faces
-static constexpr const ::ced::STriangle<int8_t>	texCoordCube	[12]						=
+static constexpr const ::ced::STriangle2<int8_t>	texCoordCube	[12]						=
 	{ {{0, 1}, {0, 0}, {1, 1}}	// Right	- first
 	, {{0, 0}, {1, 0}, {1, 1}}	// Right	- second
 	//{} //
@@ -64,7 +64,7 @@ int													ced::geometryBuildCube	(SGeometryQuads & geometry)	{
 		newTriangle.B										-= {.5, .5, .5};
 		newTriangle.C										-= {.5, .5, .5};
 
-		::ced::STriangle<float>									& newTriangleTex	= geometry.TextureCoords[iTriangle];
+		::ced::STriangle2<float>									& newTriangleTex	= geometry.TextureCoords[iTriangle];
 		newTriangleTex											= ::texCoordCube[iTriangle].Cast<float>();
 
 		::ced::SCoord3<float>									& newNormal			= geometry.Normals[iTriangle / 2];
@@ -88,8 +88,8 @@ int													ced::geometryBuildGrid	(SGeometryQuads & geometry, ::ced::SCoord
 			, {1, 0}
 			, {1, 1}
 			};
-		::ced::STriangle<float>									triangleATex		= {texcoords[0], texcoords[1], texcoords[2]};
-		::ced::STriangle<float>									triangleBTex		= {texcoords[1], texcoords[3], texcoords[2]};
+		::ced::STriangle2<float>									triangleATex		= {texcoords[0], texcoords[1], texcoords[2]};
+		::ced::STriangle2<float>									triangleBTex		= {texcoords[1], texcoords[3], texcoords[2]};
 		::ced::STriangle3<float>								triangleA			= {coords[0].Cast<float>(), coords[1].Cast<float>(), coords[2].Cast<float>()};
 		::ced::STriangle3<float>								triangleB			= {coords[1].Cast<float>(), coords[3].Cast<float>(), coords[2].Cast<float>()};
 		//::ced::STriangle3<float>								triangleA			= {{1, 0, 0}, {0, 0, 1}, {1, 0, 1}};

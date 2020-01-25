@@ -122,7 +122,7 @@ int												update				(SApplication & app)	{
 
 		double												lightFactor			= normal.Dot(lightVector);
 
-		::ced::STriangle<int32_t>							newTriangle			=
+		::ced::STriangle2<int32_t>							newTriangle			=
 			{ {(int32_t)triangle.A.x, (int32_t)triangle.A.y}
 			, {(int32_t)triangle.B.x, (int32_t)triangle.B.y}
 			, {(int32_t)triangle.C.x, (int32_t)triangle.C.y}

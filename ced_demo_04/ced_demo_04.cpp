@@ -111,7 +111,7 @@ int													update				(SApplication & app)	{
 			pixelVertexWeights	.clear();
 			uint32_t												colorIndex			= (uint32_t)iModel % ::std::size(app.Colors);
 			::ced::SColorBGRA											triangleColor		= app.Colors[colorIndex];
-			::ced::drawQuadTriangle(targetPixels, app.Geometry, iTriangle, matrixTransform, matrixView * matrixViewport, lightVector, triangleColor, pixelCoords, pixelVertexWeights, app.DepthBuffer);
+			::ced::drawQuadTriangle(targetPixels, app.Geometry, iTriangle, matrixTransform, matrixView * matrixViewport, lightVector, triangleColor, pixelCoords, pixelVertexWeights, {app.DepthBuffer.begin(), app.Window.Size});
 		}
 	}
 	return app.Running ? 0 : 1;

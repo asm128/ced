@@ -261,19 +261,19 @@ namespace ced
 	};
 
 	template<typename _tValue>
-	struct SLine {
+	struct SLine2 {
 		SCoord2<_tValue>					A;
 		SCoord2<_tValue>					B;
 	};
 
 	template<typename _tValue>
-	struct STriangle {
+	struct STriangle2 {
 		SCoord2<_tValue>					A;
 		SCoord2<_tValue>					B;
 		SCoord2<_tValue>					C;
 
 		template<typename _tOther>
-		STriangle<_tOther>					Cast					()								const	noexcept		{
+		STriangle2<_tOther>					Cast					()								const	noexcept		{
 			return
 				{ A.Cast<_tOther>()
 				, B.Cast<_tOther>()

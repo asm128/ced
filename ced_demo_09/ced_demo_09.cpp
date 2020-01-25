@@ -74,27 +74,24 @@ int													setup				(SApplication & app)	{
 	app.Scene.Models[::modelCreate(app)].Position		= {+30};
 	app.Scene.Models[::modelCreate(app)].Position		= {+35};
 
+	::ced::SColorFloat										baseColor	[4]	=
+		{ ::ced::GREEN
+		, ::ced::LIGHTBLUE
+		, ::ced::LIGHTRED
+		, ::ced::CYAN
+		};
+
 	app.Scene.Image.resize(4);
 	for(uint32_t iImage = 0; iImage < app.Scene.Image.size(); ++iImage) {
-		app.Scene.Image[iImage].Metrics								= {32, 32};
+		app.Scene.Image[iImage].Metrics								= {4, 4};
 		app.Scene.Image[iImage].Pixels.resize(app.Scene.Image[iImage].Metrics.x * app.Scene.Image[iImage].Metrics.y);
 		for(uint32_t y = 0; y < app.Scene.Image[iImage].Metrics.y; ++y) {// Generate noise color for planet texture
-			//::ced::SColorFloat										baseColor					= {1.0f / 65535.0f * rand(), 1.0f / 65535.0f * rand(), 1.0f / 65535.0f * rand(), 0xFF};;
-			bool yAffect = 0 == ((rand() / (1024 * 16)) % (y ? y : 1));
-			bool xAffect = 0 == ((rand() / (1024 * 16)) % (y ? y : 1));
-			::ced::SColorFloat										baseColor
-				= yAffect
-				? xAffect
-				? ::ced::CYAN	* ::std::max(0.0f, (1.0f / RAND_MAX * rand()))
-				: ::ced::RED	* ::std::max(0.0f, (1.0f / RAND_MAX * rand()))
-				: ::ced::WHITE	* ::std::max(0.0f, (1.0f / RAND_MAX * rand()))
-				;
-			bool zAffect = 0 == y % 4;
+			//bool yAffect = rand() % 3;
+			bool xAffect = 0 == (y % 2);
+			::ced::SColorFloat										lineColor					= baseColor[rand() % ::std::size(baseColor)];
+			//bool zAffect = 0 == y % 2;
 			for(uint32_t x = 0; x < app.Scene.Image[iImage].Metrics.x; ++x) {
-				if(zAffect)
-					app.Scene.Image[iImage].Pixels[y * app.Scene.Image[iImage].Metrics.x + x] = yAffect ? ::ced::DARKCYAN : baseColor * ::std::max(.5, sin(x));
-				else
-					app.Scene.Image[iImage].Pixels[y * app.Scene.Image[iImage].Metrics.x + x] = baseColor;
+				app.Scene.Image[iImage].Pixels[y * app.Scene.Image[iImage].Metrics.x + x] = lineColor * (xAffect ? ::std::max(.5, sin(x)) : 1);
 			}
 		}
 		//::ced::bmpFileLoad("../ced_data/cp437_12x12.bmp", app.Scene.Image[iImage]);
@@ -151,8 +148,9 @@ int													update				(SApplication & app)	{
 			modelEnemy.Position.z								= (float)(sin(app.AnimationTime) * 30) * ((iEnemy % 2) ? -1 : 1);
 		}
 		else {
+			app.Scene.Models[iEnemy].Rotation.y					+= (float)lastFrameSeconds * 1;
 			matricesParent										= {};
-			app.ShotsEnemy.Delay								+= lastFrameSeconds * .3333333;
+			app.ShotsEnemy.Delay								+= lastFrameSeconds;
 			const ::ced::SModel3D									& modelParent			= app.Scene.Models[indexParent];
 			matricesParent.Scale	.Scale			(modelParent.Scale, true);
 			matricesParent.Rotation	.Rotation		(modelParent.Rotation);
@@ -201,9 +199,7 @@ int													update				(SApplication & app)	{
 	if(GetAsyncKeyState(VK_NUMPAD4)) app.Scene.Models[0].Rotation.z	+= (float)(lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
 	if(GetAsyncKeyState(VK_NUMPAD5)) app.Scene.Models[0].Rotation	= {0, 0, (float)::ced::MATH_PI_2};
 
-	app.Scene.Models[0].Rotation.y							+= (float)lastFrameSeconds * .5f;
-	for(uint32_t iModel = 1; iModel < app.Scene.Models.size(); ++iModel)
-		app.Scene.Models[iModel].Rotation.y						+= (float)lastFrameSeconds * 1;
+	modelPlayer.Rotation.y							+= (float)lastFrameSeconds * .5f;
 
 	app.Scene.LightVector										= app.Scene.LightVector.RotateY(lastFrameSeconds * 2);
 	if(framework.Window.Resized)

@@ -13,7 +13,7 @@ struct SApplication {
 
 	::ced::SRectangle	<int32_t>	Rectangles	[4]		= {};
 	::ced::SCircle		<int32_t>	Circles		[4]		= {};
-	::ced::STriangle	<int32_t>	Triangles	[4]		= {};
+	::ced::STriangle2	<int32_t>	Triangles	[4]		= {};
 	::ced::SColorBGRA				Colors		[4]		= { {0xff, 0, 0}, {0, 0xFF, 0}, {0, 0, 0xFF} };
 };
 
@@ -37,7 +37,7 @@ int									setup				(SApplication & app)	{
 		circle.Position						= {rectangle.Position.x + rectangle.Size.x / 2, rectangle.Position.y + rectangle.Size.y / 2};
 		circle.Radius						= 10;
 
-		::ced::STriangle	<int32_t>			& triangle			= app.Triangles	[y * 2 + x];
+		::ced::STriangle2	<int32_t>			& triangle			= app.Triangles	[y * 2 + x];
 		triangle.A							= {0	, 32};
 		triangle.B							= {-32	, -32};
 		triangle.C							= {32	, -32};
@@ -73,8 +73,8 @@ int									update				(SApplication & app)	{
 		}
 	}
 	::ced::view_grid<::ced::SColorBGRA>			viewTarget			= {app.Pixels, window.Size};
-	::ced::SLine<int32_t>					lineA				= {{0, 0}, window.Size.Cast<int32_t>() / 2};
-	::ced::SLine<int32_t>					lineB				= {{(int32_t)window.Size.x / 2, 0}, {0, (int32_t)window.Size.y / 2}};
+	::ced::SLine2<int32_t>					lineA				= {{0, 0}, window.Size.Cast<int32_t>() / 2};
+	::ced::SLine2<int32_t>					lineB				= {{(int32_t)window.Size.x / 2, 0}, {0, (int32_t)window.Size.y / 2}};
 	static double							angle				= 0;
 	angle								+= lastFrameSeconds / 10;
 	for(uint32_t iRectangle = 0; iRectangle < ::std::size(app.Rectangles); ++iRectangle) {
@@ -82,8 +82,8 @@ int									update				(SApplication & app)	{
 		::ced::drawRectangle	(viewTarget, rectangle, app.Colors[iRectangle]);
 		::ced::drawTriangle		(viewTarget, app.Triangles	[iRectangle], app.Colors[(iRectangle + 1) % 4]);
 		::ced::drawCircle		(viewTarget, app.Circles	[iRectangle], app.Colors[(iRectangle + 3) % 4]);
-		::ced::SLine							finalLineA			= lineA;
-		::ced::SLine							finalLineB			= lineB;
+		::ced::SLine2							finalLineA			= lineA;
+		::ced::SLine2							finalLineB			= lineB;
 		finalLineA.A						= finalLineA.A.Rotated(angle);
 		finalLineA.B						= finalLineA.B.Rotated(angle);
 		finalLineB.A						= finalLineB.A.Rotated(angle);

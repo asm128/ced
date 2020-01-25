@@ -122,7 +122,7 @@ int													update				(SApplication & app)	{
 		for(uint32_t iTriangle = 0; iTriangle < app.Geometry.Triangles.size(); ++iTriangle) {
 			pixelCoords			.clear();
 			pixelVertexWeights	.clear();
-			::ced::drawTriangle(targetPixels, app.Geometry, iTriangle, matrixTransform, matrixView * matrixViewport, lightVector, pixelCoords, pixelVertexWeights, {app.Image.Pixels.begin(), app.Image.Metrics}, framework.DepthBuffer);
+			::ced::drawTriangle(targetPixels, app.Geometry, iTriangle, matrixTransform, matrixView * matrixViewport, lightVector, pixelCoords, pixelVertexWeights, {app.Image.Pixels.begin(), app.Image.Metrics}, {framework.DepthBuffer.begin(), framework.Window.Size});
 		}
 	}
 	return framework.Running ? 0 : 1;

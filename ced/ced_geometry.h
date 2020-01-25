@@ -8,13 +8,13 @@ namespace ced
 	struct SGeometryQuads {
 		::ced::container<::ced::STriangle3	<float>>		Triangles;
 		::ced::container<::ced::SCoord3		<float>>		Normals;
-		::ced::container<::ced::STriangle<float>>			TextureCoords;
+		::ced::container<::ced::STriangle2<float>>			TextureCoords;
 	};
 
 	struct SGeometryTriangles {
 		::ced::container<::ced::STriangle3<float>>			Triangles;
 		::ced::container<::ced::STriangle3<float>>			Normals;
-		::ced::container<::ced::STriangle<float>>			TextureCoords;
+		::ced::container<::ced::STriangle2<float>>			TextureCoords;
 	};
 
 	int													geometryBuildCube		(SGeometryQuads & geometry);

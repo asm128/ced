@@ -14,7 +14,7 @@ struct SApplication {
 	double											TotalTime			= 0;
 	::ced::SColorBGRA								Colors		[4]		= { {0xff}, {0, 0xFF, 0}, {0, 0, 0xFF}, {0xFF, 0xC0, 0x40} };
 
-	::ced::container<::ced::STriangle<int32_t>>		Triangles;
+	::ced::container<::ced::STriangle2<int32_t>>		Triangles;
 };
 
 int												cleanup				(SApplication & app)	{
@@ -26,7 +26,7 @@ int												cleanup				(SApplication & app)	{
 int												setupTriangles		(SApplication & app)	{
 	::ced::SWindow										& window			= app.Window;
 	for(uint32_t iTriangle = 0; iTriangle < app.Triangles.size(); ++iTriangle) {
-		::ced::STriangle<int32_t>							& newTriangle		= app.Triangles[iTriangle];
+		::ced::STriangle2<int32_t>							& newTriangle		= app.Triangles[iTriangle];
 		newTriangle										= {};
 		newTriangle.A									= {0, 128};
 		newTriangle.B									= newTriangle.A.Rotated(::ced::MATH_2PI / 3);
@@ -71,7 +71,7 @@ int												update				(SApplication & app)	{
 	::ced::view_grid<::ced::SColorBGRA>						targetPixels		= {app.Pixels, window.Size};
 	memset(targetPixels.begin(), 0, sizeof(::ced::SColorBGRA) * targetPixels.size());
 	for(uint32_t iTriangle = 0; iTriangle < app.Triangles.size(); ++iTriangle) {
-		::ced::STriangle<int32_t>							newTriangle			= app.Triangles[iTriangle];
+		::ced::STriangle2<int32_t>							newTriangle			= app.Triangles[iTriangle];
 		::ced::SCoord2<int32_t>								halfScreen			= window.Size.Cast<int32_t>() / 2;
 
 		newTriangle.A									-= halfScreen;

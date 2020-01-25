@@ -27,7 +27,7 @@ int								ced::drawCircle			(::ced::view_grid<::ced::SColorBGRA> pixels, ::ced:
 }
 
 // https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
-int								ced::drawLine       	(::ced::view_grid<::ced::SColorBGRA> pixels, ::ced::SLine<int32_t> line, ::ced::SColorBGRA color)	{
+int								ced::drawLine       	(::ced::view_grid<::ced::SColorBGRA> pixels, ::ced::SLine2<int32_t> line, ::ced::SColorBGRA color)	{
 	int32_t								dx						= (int32_t)abs(line.B.x - line.A.x);
 	int32_t								sx						= (int32_t)line.A.x < line.B.x ? 1 : -1;
 	int32_t								dy						= (int32_t)-abs(line.B.y - line.A.y );
@@ -54,7 +54,7 @@ int								ced::drawLine       	(::ced::view_grid<::ced::SColorBGRA> pixels, ::c
 
 
 // https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
-int								ced::drawLine       	(::ced::view_grid<::ced::SColorBGRA> pixels, ::ced::SLine<int32_t> line, ::ced::container<::ced::SCoord2<int32_t>> & pixelCoords)	{
+int								ced::drawLine       	(::ced::view_grid<::ced::SColorBGRA> pixels, ::ced::SLine2<int32_t> line, ::ced::container<::ced::SCoord2<int32_t>> & pixelCoords)	{
 	int32_t								dx						= (int32_t)abs(line.B.x - line.A.x);
 	int32_t								sx						= (int32_t)line.A.x < line.B.x ? 1 : -1;
 	int32_t								dy						= (int32_t)-abs(line.B.y - line.A.y );
@@ -93,9 +93,9 @@ int								ced::drawLine
 	( ::ced::view_grid<::ced::SColorBGRA>			pixels
 	, const ::ced::SLine3<float>					& lineFloat
 	, ::ced::container<::ced::SCoord3<float>>		& pixelCoords
-	, ::ced::view_grid<uint32_t>					& depthBuffer
+	, ::ced::view_grid<uint32_t>						depthBuffer
 	) {
-	::ced::SLine<int32_t>				line					= {{(int32_t)lineFloat.A.x, (int32_t)lineFloat.A.y}, {(int32_t)lineFloat.B.x, (int32_t)lineFloat.B.y}};
+	::ced::SLine2<int32_t>				line					= {{(int32_t)lineFloat.A.x, (int32_t)lineFloat.A.y}, {(int32_t)lineFloat.B.x, (int32_t)lineFloat.B.y}};
 	int32_t								dx						= (int32_t)abs(line.B.x - line.A.x);
 	int32_t								sx						= (int32_t)line.A.x < line.B.x ? 1 : -1;
 	int32_t								dy						= (int32_t)-abs(line.B.y - line.A.y );
@@ -161,14 +161,14 @@ int								ced::drawLine
 }
 
 //https://fgiesen.wordpress.com/2013/02/08/triangle-rasterization-in-practice/
-double									orient2d				(const ::ced::SLine<int32_t>	& segment, const ::ced::SCoord2<int32_t>& point)		{ return (segment.B.x - segment.A.x) * (point.y - segment.A.y) - (segment.B.y - segment.A.y) * (point.x - segment.A.x); }
+double									orient2d				(const ::ced::SLine2<int32_t>	& segment, const ::ced::SCoord2<int32_t>& point)		{ return (segment.B.x - segment.A.x) * (point.y - segment.A.y) - (segment.B.y - segment.A.y) * (point.x - segment.A.x); }
 double									orient2d				(const ::ced::SLine3<int32_t>	& segment, const ::ced::SCoord2<int32_t>& point)		{ return (segment.B.x - segment.A.x) * (point.y - segment.A.y) - (segment.B.y - segment.A.y) * (point.x - segment.A.x); }
 double									orient2d				(const ::ced::SLine3<float>		& segment, const ::ced::SCoord2<int32_t>& point)		{ return (segment.B.x - segment.A.x) * (point.y - segment.A.y) - (segment.B.y - segment.A.y) * (point.x - segment.A.x); }
 
 template <typename _tValue>	_tValue 	max3					(_tValue & a, _tValue & b, _tValue & c)			{ return ::std::max(::std::max(a, b), c); }
 template <typename _tValue>	_tValue 	min3					(_tValue & a, _tValue & b, _tValue & c)			{ return ::std::min(::std::min(a, b), c); }
 
-int								ced::drawTriangle		(::ced::view_grid<::ced::SColorBGRA> pixels, ::ced::STriangle<int32_t> triangle, ::ced::SColorBGRA color){
+int								ced::drawTriangle		(::ced::view_grid<::ced::SColorBGRA> pixels, ::ced::STriangle2<int32_t> triangle, ::ced::SColorBGRA color){
 	// Compute triangle bounding box
 	int32_t								minX					= ::min3(triangle.A.x, triangle.B.x, triangle.C.x);
 	int32_t								minY					= ::min3(triangle.A.y, triangle.B.y, triangle.C.y);
@@ -203,7 +203,7 @@ int								ced::drawTriangle
 	, const ::ced::STriangle3<float>					triangle
 	, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
 	, ::ced::container<::ced::STriangleWeights<double>> & proportions
-	, ::ced::container<uint32_t>						& depthBuffer
+	, ::ced::view_grid<uint32_t>						depthBuffer
 	)	{
 	// Compute triangle bounding box
 	int32_t								minX					= (int32_t)::min3(triangle.A.x, triangle.B.x, triangle.C.x);
@@ -244,10 +244,10 @@ int								ced::drawTriangle
 			continue;
 
 		uint32_t							intZ					= uint32_t(0xFFFFFFFFU * finalZ);
-		if(depthBuffer[p.y * targetSize.x + p.x] < intZ)
+		if(depthBuffer[p.y][p.x] < intZ)
 			continue;
 
-		depthBuffer[p.y * targetSize.x + p.x] = intZ;
+		depthBuffer[p.y][p.x] = intZ;
 		pixelCoords.push_back(p);
 		proportions.push_back({proportionA, proportionB, proportionC});
 
@@ -267,7 +267,7 @@ int													ced::drawQuadTriangle
 	, ::ced::view_grid<::ced::SColorBGRA>				textureImage
 	, ::ced::container<::ced::SCoord3<float>>			& lightPoints
 	, ::ced::container<::ced::SColorBGRA>				& lightColors
-	, ::ced::container<uint32_t>						& depthBuffer
+	, ::ced::view_grid<uint32_t>						depthBuffer
 	) {
 	::ced::STriangle3	<float>								triangleWorld		= geometry.Triangles	[iTriangle];
 	::ced::STriangle3	<float>								triangle			= triangleWorld;
@@ -289,7 +289,7 @@ int													ced::drawQuadTriangle
 
 	::ced::drawTriangle(targetPixels.metrics(), triangle, pixelCoords, pixelVertexWeights, depthBuffer);
 	::ced::SCoord2<float>										imageUnit				= {textureImage.metrics().x - 1.0f, textureImage.metrics().y - 1.0f};
-	const ::ced::STriangle	<float>								& triangleTexCoords		= geometry.TextureCoords	[iTriangle];
+	const ::ced::STriangle2	<float>								& triangleTexCoords		= geometry.TextureCoords	[iTriangle];
 	double														lightFactorDirectional	= normal.Dot(lightVector);
 	(void)lightFactorDirectional;
 	for(uint32_t iPixelCoord = 0; iPixelCoord < pixelCoords.size(); ++iPixelCoord) {
@@ -329,7 +329,7 @@ int													ced::drawQuadTriangle
 	, const ::ced::SColorBGRA							color
 	, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
 	, ::ced::container<::ced::STriangleWeights<double>>	& pixelVertexWeights
-	, ::ced::container<uint32_t>						& depthBuffer
+	, ::ced::view_grid<uint32_t>						depthBuffer
 	) {
 	::ced::STriangle3	<float>								triangle			= geometry.Triangles	[iTriangle];
 	::ced::SCoord3		<float>								normal				= geometry.Normals		[iTriangle / 2];
@@ -369,7 +369,7 @@ int													ced::drawTriangle
 	, const ::ced::SColorBGRA							color
 	, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
 	, ::ced::container<::ced::STriangleWeights<double>>	& pixelVertexWeights
-	, ::ced::container<uint32_t>						& depthBuffer
+	, ::ced::view_grid<uint32_t>						depthBuffer
 	) {
 	::ced::STriangle3		<float>								triangle			= geometry.Triangles	[iTriangle];
 	const ::ced::STriangle3	<float>								& triangleNormals	= geometry.Normals		[iTriangle];
@@ -411,11 +411,11 @@ int													ced::drawTriangle
 	, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
 	, ::ced::container<::ced::STriangleWeights<double>>	& pixelVertexWeights
 	, ::ced::view_grid<::ced::SColorBGRA>				textureImage
-	, ::ced::container<uint32_t>						& depthBuffer
+	, ::ced::view_grid<uint32_t>						depthBuffer
 	) {
 	::ced::STriangle3		<float>								triangle			= geometry.Triangles		[iTriangle];
 	const ::ced::STriangle3	<float>								& triangleNormals	= geometry.Normals			[iTriangle];
-	const ::ced::STriangle	<float>								& triangleTexCoords	= geometry.TextureCoords	[iTriangle];
+	const ::ced::STriangle2	<float>								& triangleTexCoords	= geometry.TextureCoords	[iTriangle];
 	triangle.A											= matrixTransform.Transform(triangle.A);
 	triangle.B											= matrixTransform.Transform(triangle.B);
 	triangle.C											= matrixTransform.Transform(triangle.C);
