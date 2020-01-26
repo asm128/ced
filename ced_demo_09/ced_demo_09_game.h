@@ -38,7 +38,7 @@ struct SDebris	{
 	}
 	int											Update				(float lastFrameSeconds)	{
 		for(uint32_t iShot = 0; iShot < Position.size(); ++iShot) {
-			Position	[iShot]							+= Direction[iShot] * (Speed[iShot] * lastFrameSeconds);
+			Position	[iShot]							+= Direction[iShot] * (Speed[iShot] * (double)lastFrameSeconds);
 			Brightness 	[iShot]							-= lastFrameSeconds;
 			if(Position[iShot].Length() > 50) {
 				Direction	[iShot]							= Direction	[Position.size() - 1];
@@ -78,7 +78,7 @@ struct SShots	{
 	int											Update				(float lastFrameSeconds)	{
 		for(uint32_t iShot = 0; iShot < Position.size(); ++iShot) {
 			PositionPrev[iShot]							= Position	[iShot];
-			Position	[iShot]							+= Direction[iShot] * (Speed[iShot] * lastFrameSeconds);
+			Position	[iShot]							+= Direction[iShot] * (Speed[iShot] * (double)lastFrameSeconds);
 			if (Position[iShot].Length() > 100)
 				Remove(iShot);
 		}

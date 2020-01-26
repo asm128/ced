@@ -55,7 +55,7 @@ int													setup				(SApplication & app)	{
 	::ced::frameworkSetup(framework);
 	::setupStars(app.Stars, framework.Window.Size);
 
-	srand((uint32_t)time(0));
+	//srand((uint32_t)time(0));
 
 	app.Scene.Geometry.resize(4);
 	//::ced::geometryBuildGrid(app.Scene.Geometry[0], {2U, 2U}, {1U, 1U});
@@ -65,8 +65,8 @@ int													setup				(SApplication & app)	{
 	//::ced::geometryBuildSphere(app.Scene.Geometry[1],  4U, 3U, 1, {0, 1});
 	::ced::geometryBuildCube(app.Scene.Geometry[1]);
 	//::ced::geometryBuildGrid(app.Scene.Geometry[1], {2U, 2U}, {1U, 1U});
-	::ced::geometryBuildSphere(app.Scene.Geometry[2],  4U, 4U, 1, {0, 1});
-	::ced::geometryBuildSphere(app.Scene.Geometry[3],  5U, 5U, 1, {0, 1});
+	::ced::geometryBuildSphere(app.Scene.Geometry[2], 3U, 2U, 1, {0, 1});
+	::ced::geometryBuildSphere(app.Scene.Geometry[3], 24U, 2U, 1, {0, 1});
 	//::ced::geometryBuildFigure0(app.Geometry, 10U, 10U, 1, {});
 
 	app.Scene.Models[::modelCreate(app)].Position		= {-30};
@@ -83,11 +83,11 @@ int													setup				(SApplication & app)	{
 
 	app.Scene.Image.resize(4);
 	for(uint32_t iImage = 0; iImage < app.Scene.Image.size(); ++iImage) {
-		app.Scene.Image[iImage].Metrics								= {4, 4};
+		app.Scene.Image[iImage].Metrics								= {24, 8};
 		app.Scene.Image[iImage].Pixels.resize(app.Scene.Image[iImage].Metrics.x * app.Scene.Image[iImage].Metrics.y);
 		for(uint32_t y = 0; y < app.Scene.Image[iImage].Metrics.y; ++y) {// Generate noise color for planet texture
 			//bool yAffect = rand() % 3;
-			bool xAffect = 0 == (y % 2);
+			bool xAffect = (y % 2);
 			::ced::SColorFloat										lineColor					= baseColor[rand() % ::std::size(baseColor)];
 			//bool zAffect = 0 == y % 2;
 			for(uint32_t x = 0; x < app.Scene.Image[iImage].Metrics.x; ++x) {
@@ -145,7 +145,7 @@ int													update				(SApplication & app)	{
 			continue;
 		::ced::SModel3D											& modelEnemy		= app.Scene.Models[iEnemy];
 		if(-1 == indexParent) {
-			modelEnemy.Position.z								= (float)(sin(app.AnimationTime) * 30) * ((iEnemy % 2) ? -1 : 1);
+			modelEnemy.Position.z								= (float)(sin(app.AnimationTime) * iEnemy * 3) * ((iEnemy % 2) ? -1 : 1);
 		}
 		else {
 			app.Scene.Models[iEnemy].Rotation.y					+= (float)lastFrameSeconds * 1;
@@ -200,6 +200,8 @@ int													update				(SApplication & app)	{
 	if(GetAsyncKeyState(VK_NUMPAD5)) app.Scene.Models[0].Rotation	= {0, 0, (float)::ced::MATH_PI_2};
 
 	modelPlayer.Rotation.y							+= (float)lastFrameSeconds * .5f;
+	for(uint32_t iEnemy = 1; iEnemy < app.Scene.Models.size(); ++iEnemy)
+		app.Scene.Models[iEnemy].Rotation.y					+= (float)lastFrameSeconds * (.1f * iEnemy);
 
 	app.Scene.LightVector										= app.Scene.LightVector.RotateY(lastFrameSeconds * 2);
 	if(framework.Window.Resized)
@@ -235,13 +237,14 @@ int													update				(SApplication & app)	{
 				PlaySoundA((LPCSTR)SND_ALIAS_SYSTEMHAND, GetModuleHandle(0), SND_ALIAS_ID | SND_ASYNC);
 				app.Health[iModel]									-= 100;
 				app.Health[indexParent]								-= 100;
-				for(uint32_t i = 0; i < 10; ++i) {
+				float													speedDebris				= float((0 >= app.Health[iModel]) ? (0 >= app.Health[indexParent]) ? 75 : 25 : 50);
+				for(uint32_t iDebris = 0, countDebris = (0 >= app.Health[iModel]) ? (0 >= app.Health[indexParent]) ? 200 : 100 : 10; iDebris < countDebris; ++iDebris) {
 					::ced::SCoord3<float>			direction			= {0, 1, 0};
-					direction.RotateX(rand() * (::ced::MATH_2PI / 65535));
-					direction.RotateY(rand() * (::ced::MATH_2PI / 65535));
-					direction.RotateZ(rand() * (::ced::MATH_2PI / 65535));
+					direction.RotateX(rand() * (::ced::MATH_2PI / RAND_MAX));
+					direction.RotateY(rand() * (::ced::MATH_2PI / RAND_MAX));
+					direction.RotateZ(rand() * (::ced::MATH_2PI / RAND_MAX));
 					direction.Normalize();
-					app.Debris.Spawn(q, direction, 50);
+					app.Debris.Spawn(q, direction, speedDebris);
 				}
 				app.ShotsPlayer.Remove(iShot);
 				--iShot;
@@ -276,13 +279,14 @@ int													update				(SApplication & app)	{
 				PlaySoundA((LPCSTR)SND_ALIAS_SYSTEMEXCLAMATION, GetModuleHandle(0), SND_ALIAS_ID | SND_ASYNC);
 				app.Health[iModel]									-= 100;
 				app.Health[indexParent]								-= 100;
-				for(uint32_t i = 0; i < 10; ++i) {
-					::ced::SCoord3<float>									direction			= {0, 1, 0};
-					direction.RotateX(rand() * (::ced::MATH_2PI / 65535));
-					direction.RotateY(rand() * (::ced::MATH_2PI / 65535));
-					direction.RotateZ(rand() * (::ced::MATH_2PI / 65535));
+				float													speedDebris				= float((0 >= app.Health[iModel]) ? (0 >= app.Health[indexParent]) ? 75 : 25 : 50);
+				for(uint32_t iDebris = 0, countDebris = (0 >= app.Health[iModel]) ? (0 >= app.Health[indexParent]) ? 200 : 100 : 10; iDebris < countDebris; ++iDebris) {
+					::ced::SCoord3<float>			direction			= {0, 1, 0};
+					direction.RotateX(rand() * (::ced::MATH_2PI / RAND_MAX));
+					direction.RotateY(rand() * (::ced::MATH_2PI / RAND_MAX));
+					direction.RotateZ(rand() * (::ced::MATH_2PI / RAND_MAX));
 					direction.Normalize();
-					app.Debris.Spawn(q, direction, 50);
+					app.Debris.Spawn(q, direction, speedDebris);
 				}
 				app.ShotsEnemy.Remove(iShot);
 				--iShot;

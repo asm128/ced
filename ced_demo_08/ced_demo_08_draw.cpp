@@ -49,7 +49,7 @@ int													drawDebris			(::ced::view_grid<::ced::SColorBGRA> targetPixels, 
 			continue;
 		if(starPos.z > 1 || starPos.z < 0)
 			continue;
-		uint32_t												depth				= uint32_t((1.0 - starPos.z) * 0xFFFFFFFFU);
+		uint32_t												depth				= uint32_t(starPos.z * 0xFFFFFFFFU);
 		if(depth >= depthBuffer[pixelCoord.y][pixelCoord.x])
 			continue;
 		depthBuffer[pixelCoord.y][pixelCoord.x]				= depth;
@@ -97,7 +97,7 @@ int													drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixels, S
 				continue;
 			if(raySegment.B.z < 0 || raySegment.B.z > 1)
 				continue;
-			uint32_t												depth				= uint32_t((1.0 - raySegment.B.z) * 0xFFFFFFFFU);
+			uint32_t												depth				= uint32_t(raySegment.B.z * 0xFFFFFFFFU);
 			if(depth >= depthBuffer[pixelCoord.y][pixelCoord.x])
 				continue;
 

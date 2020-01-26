@@ -50,7 +50,7 @@ int													drawDebris			(::ced::view_grid<::ced::SColorBGRA> targetPixels, 
 			continue;
 		if(starPos.z > 1 || starPos.z < 0)
 			continue;
-		uint32_t												depth				= uint32_t((1.0 - starPos.z) * 0xFFFFFFFFU);
+		uint32_t												depth				= uint32_t(starPos.z * 0xFFFFFFFFU);
 		if(depth > depthBuffer[pixelCoord.y][pixelCoord.x])
 			continue;
 		::ced::SColorFloat											starFinalColor	= colorShot * debris.Brightness[iParticle];
@@ -96,10 +96,6 @@ int													drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixels, S
 		raySegment.B										= matrixVPV.Transform(raySegment.B);
 
 		::ced::drawLine(targetPixels, raySegment, pixelCoords, depthBuffer);
-		//::ced::drawLine(targetPixels, {{int32_t(raySegment.A.x), int32_t(raySegment.A.y)}, {int32_t(raySegment.B.x), int32_t(raySegment.B.y)}}, pixelCoords);//, depthBuffer);{int32_t(raySegment.A.x), int32_t(raySegment.A.y + 1)}
-		//if(2 > pixelCoords.size()) {
-		//	pixelCoords.push_back({int32_t(raySegment.A.x), int32_t(raySegment.A.y + 1)});
-		//}
 		for(uint32_t iPixelCoord = 0; iPixelCoord < pixelCoords.size(); ++iPixelCoord) {
 			const ::ced::SCoord3<float>							& pixelCoord		= pixelCoords[iPixelCoord];
 			if( pixelCoord.y < 0 || pixelCoord.y >= (int32_t)targetPixels.metrics().y
