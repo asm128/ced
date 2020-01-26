@@ -62,7 +62,7 @@ struct SDebris	{
 			float											& brightness 					= Brightness[iShot];
 			position									+= direction * (speed * (double)lastFrameSeconds);
 			brightness									-= lastFrameSeconds;
-			 speed										-= lastFrameSeconds *  (rand() % 16);
+			speed										-= lastFrameSeconds *  (rand() % 16);
 			if(brightness < 0) {
 				direction									= Direction	[Position.size() - 1];
 				position									= Position	[Position.size() - 1];

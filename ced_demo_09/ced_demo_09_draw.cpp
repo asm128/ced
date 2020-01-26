@@ -50,7 +50,7 @@ int													drawDebris			(::ced::view_grid<::ced::SColorBGRA> targetPixels, 
 		::ced::SColorFloat											starFinalColor	= colorShot * debris.Brightness[iParticle];
 		starFinalColor.g										= ::std::max(0.0f, starFinalColor.g - (1.0f - ::std::min(1.0f, debris.Brightness[iParticle] * 2.5f * (1.0f / debris.Brightness.size() * iParticle * 2))));
 		starFinalColor.b										= ::std::max(0.0f, starFinalColor.b - (1.0f - ::std::min(1.0f, debris.Brightness[iParticle] * 2.5f * (1.0f / debris.Brightness.size() * iParticle * 1))));
-		::ced::setPixel(targetPixels, pixelCoord, starFinalColor);
+		//::ced::setPixel(targetPixels, pixelCoord, starFinalColor);
 		const	double											brightRadius		= 3.0;
 		double													brightUnit			= 1.0 / brightRadius;
 		for(int32_t y = (int32_t)-brightRadius; y < (int32_t)brightRadius; ++y)

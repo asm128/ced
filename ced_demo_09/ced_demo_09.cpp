@@ -141,7 +141,7 @@ int													handleShotCollision	(const ::ced::SCoord3<float> & collisionPoin
 			debrisBright				= 3	;
 		}
 		else {
-			debrisSpeed					= 75	;
+			debrisSpeed					= 60	;
 			debrisCount					= 150	;
 			debrisBright				= 2		;
 		}
@@ -216,11 +216,14 @@ int													update				(SApplication & app)	{
 	if(GetAsyncKeyState('A')) app.Scene.Models[0].Position.z		+= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
 	if(GetAsyncKeyState('D')) app.Scene.Models[0].Position.z		-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
 
-	if(GetAsyncKeyState(VK_NUMPAD8)) app.Scene.Models[0].Rotation.x	-= (float)(lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-	if(GetAsyncKeyState(VK_NUMPAD2)) app.Scene.Models[0].Rotation.x	+= (float)(lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-	if(GetAsyncKeyState(VK_NUMPAD6)) app.Scene.Models[0].Rotation.z	-= (float)(lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-	if(GetAsyncKeyState(VK_NUMPAD4)) app.Scene.Models[0].Rotation.z	+= (float)(lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-	if(GetAsyncKeyState(VK_NUMPAD5)) app.Scene.Models[0].Rotation	= {0, 0, (float)::ced::MATH_PI_2};
+	if(GetAsyncKeyState(VK_NUMPAD5))
+		app.Scene.Models[0].Rotation	= {0, 0, (float)-::ced::MATH_PI_2};
+	else {
+		if(GetAsyncKeyState(VK_NUMPAD8)) app.Scene.Models[0].Rotation.z	-= (float)(lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+		if(GetAsyncKeyState(VK_NUMPAD2)) app.Scene.Models[0].Rotation.z	+= (float)(lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+		if(GetAsyncKeyState(VK_NUMPAD6)) app.Scene.Models[0].Rotation.x -= (float)(lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+		if(GetAsyncKeyState(VK_NUMPAD4)) app.Scene.Models[0].Rotation.x += (float)(lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+	}
 
 	modelPlayer.Rotation.y							+= (float)lastFrameSeconds * .5f;
 	for(uint32_t iEnemy = 1; iEnemy < app.Scene.Models.size(); ++iEnemy)
