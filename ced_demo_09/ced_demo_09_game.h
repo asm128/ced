@@ -1,4 +1,5 @@
 #include "ced_view.h"
+#include "ced_color.h"
 
 #ifndef CED_DEMO_08_GAME_H_293874239874
 #define CED_DEMO_08_GAME_H_293874239874
@@ -24,6 +25,12 @@ struct SStars	{
 };
 
 struct SDebris	{
+	::ced::SColorBGRA							Colors[4]			=
+		{ {0x80, 0xAF, 0xFF, }
+		, {0x40, 0x80, 0xFF, }
+		, {0x20, 0x80, 0xFF, }
+		, {0x00, 0x00, 0xFF, }
+		};
 	::ced::container<::ced::SCoord3<float>>		Position			= {};
 	::ced::container<::ced::SCoord3<float>>		Direction			= {};
 	::ced::container<float>						Speed				= {};
@@ -48,7 +55,6 @@ struct SDebris	{
 		return 0;
 	}
 	int											Update				(float lastFrameSeconds)	{
-		static constexpr	const uint32_t				maxFar				= 50;
 		for(uint32_t iShot = 0; iShot < Position.size(); ++iShot) {
 			::ced::SCoord3<float>							& direction						= Direction	[iShot];
 			::ced::SCoord3<float>							& position						= Position	[iShot];
@@ -57,7 +63,7 @@ struct SDebris	{
 			position									+= direction * (speed * (double)lastFrameSeconds);
 			brightness									-= lastFrameSeconds;
 			 speed										-= lastFrameSeconds *  (rand() % 16);
-			if(position.Length() > maxFar || brightness < 0) {
+			if(brightness < 0) {
 				direction									= Direction	[Position.size() - 1];
 				position									= Position	[Position.size() - 1];
 				speed										= Speed		[Position.size() - 1];

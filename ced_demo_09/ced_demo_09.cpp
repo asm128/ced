@@ -55,7 +55,7 @@ int													setup				(SApplication & app)	{
 	::ced::frameworkSetup(framework);
 	::setupStars(app.Stars, framework.Window.Size);
 
-	//srand((uint32_t)time(0));
+	srand((uint32_t)time(0));
 
 	app.Scene.Geometry.resize(4);
 	//::ced::geometryBuildGrid(app.Scene.Geometry[0], {2U, 2U}, {1U, 1U});
@@ -126,6 +126,29 @@ int													intersectRaySphere		(const ::ced::SCoord3<float> & p, const ::ce
 	q					= p + d * t;
 	return 1;
 }
+
+int													handleShotCollision	(const ::ced::SCoord3<float> & collisionPoint, int32_t & healthParth, int32_t & healthParent, ::SDebris & debris, void * soundAlias)	{
+	PlaySoundA((LPCSTR)soundAlias, GetModuleHandle(0), SND_ALIAS_ID | SND_ASYNC);
+	healthParth									-= 100;
+	healthParent								-= 100;
+	float													debrisSpeed					= 50;
+	float													debrisBright				= 1;
+	uint32_t												debrisCount					= 10;
+	if(0 >= healthParth)
+		if(0 >= healthParent) {
+			debrisSpeed					= 10	;
+			debrisCount					= 100	;
+			debrisBright				= 3	;
+		}
+		else {
+			debrisSpeed					= 75	;
+			debrisCount					= 150	;
+			debrisBright				= 2		;
+		}
+	debris.SpawnSpherical(debrisCount, collisionPoint, debrisSpeed, debrisBright);
+	return 0;
+}
+
 int													update				(SApplication & app)	{
 	::ced::SFramework										& framework			= app.Framework;
 	if(1 == ::ced::frameworkUpdate(app.Framework))
@@ -234,27 +257,9 @@ int													update				(SApplication & app)	{
 			if( intersectRaySphere(shotSegment.A, (shotSegment.B - shotSegment.A).Normalize(), sphereCenter, 1, t, collisionPoint)
 			 && t < 1
 			) {
-				PlaySoundA((LPCSTR)SND_ALIAS_SYSTEMHAND, GetModuleHandle(0), SND_ALIAS_ID | SND_ASYNC);
-				app.Health[iModel]									-= 100;
-				app.Health[indexParent]								-= 100;
-				float													debrisSpeed					= 50;
-				float													debrisBright				= 1;
-				uint32_t												debrisCount					= 10;
-				if(0 >= app.Health[iModel])
-					if(0 >= app.Health[indexParent]) {
-						debrisSpeed					= 10	;
-						debrisCount					= 100	;
-						debrisBright				= 3	;
-					}
-					else {
-						debrisSpeed					= 75	;
-						debrisCount					= 150	;
-						debrisBright				= 2		;
-					}
-				app.Debris.SpawnSpherical(debrisCount, collisionPoint, debrisSpeed, debrisBright);
+				::handleShotCollision(collisionPoint, app.Health[iModel], app.Health[indexParent], app.Debris, (void*)SND_ALIAS_SYSTEMHAND);
 				app.ShotsPlayer.Remove(iShot);
 				--iShot;
-				break;
 			}
 		}
 	}
@@ -282,24 +287,7 @@ int													update				(SApplication & app)	{
 			if( intersectRaySphere(shotSegment.A, (shotSegment.B - shotSegment.A).Normalize(), sphereCenter, 1, t, collisionPoint)
 			 && t < 1
 			) {
-				PlaySoundA((LPCSTR)SND_ALIAS_SYSTEMEXCLAMATION, GetModuleHandle(0), SND_ALIAS_ID | SND_ASYNC);
-				app.Health[iModel]									-= 100;
-				app.Health[indexParent]								-= 100;
-				float													debrisSpeed					= 50;
-				float													debrisBright				= 1;
-				uint32_t												debrisCount					= 10;
-				if(0 >= app.Health[iModel])
-					if(0 >= app.Health[indexParent]) {
-						debrisSpeed					= 10	;
-						debrisCount					= 100	;
-						debrisBright				= 3	;
-					}
-					else {
-						debrisSpeed					= 75	;
-						debrisCount					= 150	;
-						debrisBright				= 2	;
-					}
-				app.Debris.SpawnSpherical(debrisCount, collisionPoint, debrisSpeed, debrisBright);
+				::handleShotCollision(collisionPoint, app.Health[iModel], app.Health[indexParent], app.Debris, (void*)SND_ALIAS_SYSTEMEXCLAMATION);
 				app.ShotsEnemy.Remove(iShot);
 				--iShot;
 				break;

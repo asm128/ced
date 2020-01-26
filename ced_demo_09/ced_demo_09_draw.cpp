@@ -32,15 +32,9 @@ int													drawStars			(SStars & stars, ::ced::view_grid<::ced::SColorBGRA>
 
 
 int													drawDebris			(::ced::view_grid<::ced::SColorBGRA> targetPixels, SDebris & debris, const ::ced::SMatrix4<float> & matrixVPV, ::ced::view_grid<uint32_t> depthBuffer)	{
-	::ced::SColorBGRA										colors[]			=
-		{ {0x80, 0xAF, 0xFF, }
-		, {0x40, 0x80, 0xFF, }
-		, {0x20, 0x80, 0xFF, }
-		, {0x00, 0x00, 0xFF, }
-		};
 	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
 	for(uint32_t iParticle = 0; iParticle < debris.Brightness.size(); ++iParticle) {
-		::ced::SColorBGRA										colorShot			= colors[iParticle % ::std::size(colors)];
+		::ced::SColorFloat										colorShot			= debris.Colors[iParticle % ::std::size(debris.Colors)];
 		::ced::SCoord3<float>									starPos				= debris.Position[iParticle];
 		starPos												= matrixVPV.Transform(starPos);
 		const ::ced::SCoord2<int32_t>							pixelCoord		= {(int32_t)starPos.x, (int32_t)starPos.y};
@@ -215,9 +209,10 @@ int													draw				(SApplication & app)	{
 			lightColors[iOffset + iShot]						= colorShotPlayer;
 		}
 		iOffset												+= app.ShotsPlayer.Position.size();
-		for(uint32_t iShot = 0; iShot < app.Debris.Position.size(); ++iShot) {
-			lightPoints[iOffset + iShot]						= app.Debris.Position[iShot];
-			lightColors[iOffset + iShot]						= {0x2F,0xAF, 0xFF};
+		for(uint32_t iParticle = 0; iParticle < app.Debris.Position.size(); ++iParticle) {
+			lightPoints[iOffset + iParticle]						= app.Debris.Position[iParticle];
+			::ced::SColorFloat									colorShot			= app.Debris.Colors[iParticle % ::std::size(app.Debris.Colors)];
+			lightColors[iOffset + iParticle]						= colorShot * app.Debris.Brightness[iParticle];
 		}
 		for(uint32_t iTriangle = 0; iTriangle < app.Scene.Geometry[iModel / 7].Triangles.size(); ++iTriangle) {
 			pixelCoords			.clear();
