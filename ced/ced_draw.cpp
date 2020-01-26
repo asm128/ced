@@ -96,15 +96,13 @@ int								ced::drawLine
 	, ::ced::view_grid<uint32_t>						depthBuffer
 	) {
 	::ced::SLine2<int32_t>				line					= {{(int32_t)lineFloat.A.x, (int32_t)lineFloat.A.y}, {(int32_t)lineFloat.B.x, (int32_t)lineFloat.B.y}};
-	int32_t								dx						= (int32_t)abs(line.B.x - line.A.x);
+	int32_t								xDiff					= (int32_t)abs(line.B.x - line.A.x);
+	int32_t								yDiff					= (int32_t)-abs(line.B.y - line.A.y);
 	int32_t								sx						= (int32_t)line.A.x < line.B.x ? 1 : -1;
-	int32_t								dy						= (int32_t)-abs(line.B.y - line.A.y );
 	int32_t								sy						= (int32_t)line.A.y < line.B.y ? 1 : -1;
-	int32_t								err						= dx + dy;  /* error value e_xy */
+	int32_t								err						= xDiff + yDiff;  /* error value e_xy */
 
-	double								xDiff					= (line.B.x - line.A.x);
-	double								yDiff					= (line.B.y - line.A.y);
-	bool								yAxis					= yDiff > xDiff;
+	bool								yAxis					= abs(yDiff) > xDiff;
 	uint32_t							intZ					= uint32_t(0xFFFFFFFFU * lineFloat.A.z);
 	if( line.A.x >= 0 && line.A.x < (int32_t)pixels.metrics().x
 	 && line.A.y >= 0 && line.A.y < (int32_t)pixels.metrics().y
@@ -120,8 +118,8 @@ int								ced::drawLine
 		if (line.A.x == line.B.x && line.A.y == line.B.y)
 			break;
 		int32_t								e2						= 2 * err;
-		if (e2 >= dy) {
-			err								+= dy; /* e_xy+e_x > 0 */
+		if (e2 >= yDiff) {
+			err								+= yDiff; /* e_xy+e_x > 0 */
 			line.A.x						+= sx;
 			if( line.A.x >= 0 && line.A.x < (int32_t)pixels.metrics().x
 			 && line.A.y >= 0 && line.A.y < (int32_t)pixels.metrics().y
@@ -137,8 +135,8 @@ int								ced::drawLine
 				pixelCoords.push_back({(float)line.A.x, (float)line.A.y, (float)finalZ});
 			}
 		}
-		if (e2 <= dx) { /* e_xy+e_y < 0 */
-			err								+= dx;
+		if (e2 <= xDiff) { /* e_xy+e_y < 0 */
+			err								+= xDiff;
 			line.A.y						+= sy;
 			if( line.A.x >= 0 && line.A.x < (int32_t)pixels.metrics().x
 			 && line.A.y >= 0 && line.A.y < (int32_t)pixels.metrics().y
