@@ -70,9 +70,9 @@ int													setup				(SApplication & app)	{
 	//::ced::geometryBuildFigure0(app.Geometry, 10U, 10U, 1, {});
 
 	app.Scene.Models[::modelCreate(app)].Position		= {-30};
-	//app.Scene.Models[::modelCreate(app)].Position		= {+25};
-	//app.Scene.Models[::modelCreate(app)].Position		= {+30};
-	//app.Scene.Models[::modelCreate(app)].Position		= {+35};
+	app.Scene.Models[::modelCreate(app)].Position		= {+25};
+	app.Scene.Models[::modelCreate(app)].Position		= {+30};
+	app.Scene.Models[::modelCreate(app)].Position		= {+35};
 
 	::ced::SColorFloat										baseColor	[4]	=
 		{ ::ced::LIGHTGREEN
