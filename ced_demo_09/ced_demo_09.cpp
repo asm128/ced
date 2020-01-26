@@ -57,7 +57,7 @@ int													setup				(SApplication & app)	{
 
 	srand((uint32_t)time(0));
 
-	app.Scene.Geometry.resize(4);
+	app.Scene.Geometry.resize(5);
 	//::ced::geometryBuildGrid(app.Scene.Geometry[0], {2U, 2U}, {1U, 1U});
 	::ced::geometryBuildSphere(app.Scene.Geometry[0],  12U, 8U, 1, {0, 1});
 	//::ced::geometryBuildCube(app.Scene.Geometry[0]);
@@ -66,10 +66,12 @@ int													setup				(SApplication & app)	{
 	::ced::geometryBuildCube(app.Scene.Geometry[1]);
 	//::ced::geometryBuildGrid(app.Scene.Geometry[1], {2U, 2U}, {1U, 1U});
 	::ced::geometryBuildSphere(app.Scene.Geometry[2], 3U, 2U, 1, {0, 1});
-	::ced::geometryBuildSphere(app.Scene.Geometry[3], 24U, 2U, 1, {0, 1});
+	::ced::geometryBuildSphere(app.Scene.Geometry[3], 4U, 2U, 1, {0, 1});
+	::ced::geometryBuildSphere(app.Scene.Geometry[4], 16U, 2U, 1, {0, 1});
 	//::ced::geometryBuildFigure0(app.Geometry, 10U, 10U, 1, {});
 
 	app.Scene.Models[::modelCreate(app)].Position		= {-30};
+	app.Scene.Models[::modelCreate(app)].Position		= {+20};
 	app.Scene.Models[::modelCreate(app)].Position		= {+25};
 	app.Scene.Models[::modelCreate(app)].Position		= {+30};
 	app.Scene.Models[::modelCreate(app)].Position		= {+35};
@@ -81,7 +83,7 @@ int													setup				(SApplication & app)	{
 		, ::ced::LIGHTCYAN
 		};
 
-	app.Scene.Image.resize(4);
+	app.Scene.Image.resize(5);
 	for(uint32_t iImage = 0; iImage < app.Scene.Image.size(); ++iImage) {
 		app.Scene.Image[iImage].Metrics								= {24, 8};
 		app.Scene.Image[iImage].Pixels.resize(app.Scene.Image[iImage].Metrics.x * app.Scene.Image[iImage].Metrics.y);
@@ -173,7 +175,7 @@ int													update				(SApplication & app)	{
 		else {
 			app.Scene.Models[iEnemy].Rotation.y					+= (float)lastFrameSeconds * 1;
 			matricesParent										= {};
-			app.ShotsEnemy.Delay								+= lastFrameSeconds;
+			app.ShotsEnemy.Delay								+= lastFrameSeconds * .5;
 			const ::ced::SModel3D									& modelParent			= app.Scene.Models[indexParent];
 			matricesParent.Scale	.Scale			(modelParent.Scale, true);
 			matricesParent.Rotation	.Rotation		(modelParent.Rotation);
