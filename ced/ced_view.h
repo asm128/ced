@@ -47,7 +47,6 @@ namespace ced
 		using	view<_tValue>				::Count;
 		uint32_t							Size				= 0;
 
-
 											~container			()									{
 			for(uint32_t iElement = 0; iElement < Count; ++iElement)
 				Data[iElement].~_tValue();

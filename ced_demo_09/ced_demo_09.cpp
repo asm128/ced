@@ -229,23 +229,29 @@ int													update				(SApplication & app)	{
 			sphereCenter										= matrixTransformParent.Transform(sphereCenter);
 
 			float													t				= 0;
-			::ced::SCoord3<float>									q				= {};
+			::ced::SCoord3<float>									collisionPoint	= {};
 
-			if( intersectRaySphere(shotSegment.A, (shotSegment.B - shotSegment.A).Normalize(), sphereCenter, 1, t, q)
+			if( intersectRaySphere(shotSegment.A, (shotSegment.B - shotSegment.A).Normalize(), sphereCenter, 1, t, collisionPoint)
 			 && t < 1
 			) {
 				PlaySoundA((LPCSTR)SND_ALIAS_SYSTEMHAND, GetModuleHandle(0), SND_ALIAS_ID | SND_ASYNC);
 				app.Health[iModel]									-= 100;
 				app.Health[indexParent]								-= 100;
-				float													speedDebris				= float((0 >= app.Health[iModel]) ? (0 >= app.Health[indexParent]) ? 75 : 25 : 50);
-				for(uint32_t iDebris = 0, countDebris = (0 >= app.Health[iModel]) ? (0 >= app.Health[indexParent]) ? 200 : 100 : 10; iDebris < countDebris; ++iDebris) {
-					::ced::SCoord3<float>			direction			= {0, 1, 0};
-					direction.RotateX(rand() * (::ced::MATH_2PI / RAND_MAX));
-					direction.RotateY(rand() * (::ced::MATH_2PI / RAND_MAX));
-					direction.RotateZ(rand() * (::ced::MATH_2PI / RAND_MAX));
-					direction.Normalize();
-					app.Debris.Spawn(q, direction, speedDebris);
-				}
+				float													debrisSpeed					= 50;
+				float													debrisBright				= 1;
+				uint32_t												debrisCount					= 10;
+				if(0 >= app.Health[iModel])
+					if(0 >= app.Health[indexParent]) {
+						debrisSpeed					= 10	;
+						debrisCount					= 100	;
+						debrisBright				= 3	;
+					}
+					else {
+						debrisSpeed					= 75	;
+						debrisCount					= 150	;
+						debrisBright				= 2		;
+					}
+				app.Debris.SpawnSpherical(debrisCount, collisionPoint, debrisSpeed, debrisBright);
 				app.ShotsPlayer.Remove(iShot);
 				--iShot;
 				break;
@@ -271,23 +277,29 @@ int													update				(SApplication & app)	{
 			sphereCenter										= matrixTransformParent.Transform(sphereCenter);
 
 			float													t						= 0;
-			::ced::SCoord3<float>									q						= {};
+			::ced::SCoord3<float>									collisionPoint			= {};
 
-			if( intersectRaySphere(shotSegment.A, (shotSegment.B - shotSegment.A).Normalize(), sphereCenter, 1, t, q)
+			if( intersectRaySphere(shotSegment.A, (shotSegment.B - shotSegment.A).Normalize(), sphereCenter, 1, t, collisionPoint)
 			 && t < 1
 			) {
 				PlaySoundA((LPCSTR)SND_ALIAS_SYSTEMEXCLAMATION, GetModuleHandle(0), SND_ALIAS_ID | SND_ASYNC);
 				app.Health[iModel]									-= 100;
 				app.Health[indexParent]								-= 100;
-				float													speedDebris				= float((0 >= app.Health[iModel]) ? (0 >= app.Health[indexParent]) ? 75 : 25 : 50);
-				for(uint32_t iDebris = 0, countDebris = (0 >= app.Health[iModel]) ? (0 >= app.Health[indexParent]) ? 200 : 100 : 10; iDebris < countDebris; ++iDebris) {
-					::ced::SCoord3<float>			direction			= {0, 1, 0};
-					direction.RotateX(rand() * (::ced::MATH_2PI / RAND_MAX));
-					direction.RotateY(rand() * (::ced::MATH_2PI / RAND_MAX));
-					direction.RotateZ(rand() * (::ced::MATH_2PI / RAND_MAX));
-					direction.Normalize();
-					app.Debris.Spawn(q, direction, speedDebris);
-				}
+				float													debrisSpeed					= 50;
+				float													debrisBright				= 1;
+				uint32_t												debrisCount					= 10;
+				if(0 >= app.Health[iModel])
+					if(0 >= app.Health[indexParent]) {
+						debrisSpeed					= 10	;
+						debrisCount					= 100	;
+						debrisBright				= 3	;
+					}
+					else {
+						debrisSpeed					= 75	;
+						debrisCount					= 150	;
+						debrisBright				= 2	;
+					}
+				app.Debris.SpawnSpherical(debrisCount, collisionPoint, debrisSpeed, debrisBright);
 				app.ShotsEnemy.Remove(iShot);
 				--iShot;
 				break;
