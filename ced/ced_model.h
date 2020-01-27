@@ -28,6 +28,8 @@ namespace ced
 		::ced::SCoord3<float>								Position			= {-0.000001f, 100, 0};
 		::ced::SCoord3<float>								Up					= {0, 1, 0};
 	};
+
+
 } // namespace
 
 #endif // CED_MODEL_H_2983472398

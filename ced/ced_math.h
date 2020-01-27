@@ -34,7 +34,7 @@ namespace ced
 		SCoord2<_tValue>&				operator*=				(double scalar)					noexcept		{ x = (_tValue)(x * scalar); y = (_tValue)(y * scalar); return *this; }
 
 		template<typename _tOther>
-		SCoord2<_tOther>				Cast					()								const			{ return {(_tOther)x, (_tOther)y}; }
+		constexpr	SCoord2<_tOther>	Cast					()								const			{ return {(_tOther)x, (_tOther)y}; }
 
 		// https://matthew-brett.github.io/teaching/rotation_2d.html
 		SCoord2<_tValue>				Rotated					(double theta)									{
@@ -43,8 +43,9 @@ namespace ced
 			return {(int)(dcos * x - dsin * y), (int)(dsin * x + dcos * y)};
 		}
 
+		constexpr	_tValue				LengthSquared			()								const noexcept	{ return x * x + y * y; }
 		double							Length					()								const noexcept	{
-			_tValue								lengthSquared			= x * x + y * y;
+			_tValue								lengthSquared			= LengthSquared();
 			return (0 == lengthSquared) ? 0 : sqrt(lengthSquared);
 		}
 	};

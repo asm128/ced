@@ -1,7 +1,9 @@
 #include "ced_demo_09.h"
 #include <algorithm>
 
-int													drawStars			(SStars & stars, ::ced::view_grid<::ced::SColorBGRA> targetPixels)	{
+static constexpr	const uint32_t					MAX_LIGHT_RANGE				= 10;
+
+static	int											drawStars			(SStars & stars, ::ced::view_grid<::ced::SColorBGRA> targetPixels)	{
 	::ced::SColorBGRA											colors[]			=
 		{ {0xfF, 0xfF, 0xfF, }
 		, {0x40, 0x80, 0xfF, }
@@ -12,13 +14,14 @@ int													drawStars			(SStars & stars, ::ced::view_grid<::ced::SColorBGRA>
 		::ced::SCoord2<float>									starPos			= stars.Position[iStar];
 		::ced::SColorBGRA											starFinalColor	= colors[iStar % ::std::size(colors)] * stars.Brightness[iStar];
 		::ced::setPixel(targetPixels, starPos.Cast<int32_t>(), starFinalColor);
-		const	int32_t											brightRadius	= 1 + (iStar % 5) + (rand() % 4);
-		double													brightUnit		= 1.0 / brightRadius;
+		const	int32_t											brightRadius		= 1 + (iStar % 5) + (rand() % 4);
+		const	double											brightRadiusSquared	= brightRadius * brightRadius;
+		double													brightUnit			= 1.0 / brightRadiusSquared;
 		for(int32_t y = -brightRadius; y < brightRadius; ++y)
 		for(int32_t x = -brightRadius; x < brightRadius; ++x) {
 			::ced::SCoord2<float>									brightPos		= {(float)x, (float)y};
-			const double											brightDistance	= brightPos.Length();
-			if(brightDistance <= brightRadius) {
+			const double											brightDistance	= brightPos.LengthSquared();
+			if(brightDistance <= brightRadiusSquared) {
 				::ced::SCoord2<int32_t>									pixelPos		= (starPos + brightPos).Cast<int32_t>();
 				if( pixelPos.y >= 0 && pixelPos.y < (int32_t)targetPixels.metrics().y
 				 && pixelPos.x >= 0 && pixelPos.x < (int32_t)targetPixels.metrics().x
@@ -31,7 +34,7 @@ int													drawStars			(SStars & stars, ::ced::view_grid<::ced::SColorBGRA>
 }
 
 
-int													drawDebris			(::ced::view_grid<::ced::SColorBGRA> targetPixels, SDebris & debris, const ::ced::SMatrix4<float> & matrixVPV, ::ced::view_grid<uint32_t> depthBuffer)	{
+static	int											drawDebris			(::ced::view_grid<::ced::SColorBGRA> targetPixels, SDebris & debris, const ::ced::SMatrix4<float> & matrixVPV, ::ced::view_grid<uint32_t> depthBuffer)	{
 	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
 	for(uint32_t iParticle = 0; iParticle < debris.Brightness.size(); ++iParticle) {
 		::ced::SColorFloat										colorShot			= debris.Colors[iParticle % ::std::size(debris.Colors)];
@@ -52,12 +55,13 @@ int													drawDebris			(::ced::view_grid<::ced::SColorBGRA> targetPixels, 
 		starFinalColor.b										= ::std::max(0.0f, starFinalColor.b - (1.0f - ::std::min(1.0f, debris.Brightness[iParticle] * 2.5f * (1.0f / debris.Brightness.size() * iParticle * 1))));
 		//::ced::setPixel(targetPixels, pixelCoord, starFinalColor);
 		const	double											brightRadius		= 3.0;
-		double													brightUnit			= 1.0 / brightRadius;
+		const	double											brightRadiusSquared	= brightRadius * brightRadius;
+		double													brightUnit			= 1.0 / brightRadiusSquared;
 		for(int32_t y = (int32_t)-brightRadius; y < (int32_t)brightRadius; ++y)
 		for(int32_t x = (int32_t)-brightRadius; x < (int32_t)brightRadius; ++x) {
 			::ced::SCoord2<float>									brightPos			= {(float)x, (float)y};
-			const double											brightDistance		= brightPos.Length();
-			if(brightDistance <= brightRadius) {
+			const double											brightDistance		= brightPos.LengthSquared();
+			if(brightDistance <= brightRadiusSquared) {
 				::ced::SCoord2<int32_t>									blendPos			= pixelCoord + (brightPos).Cast<int32_t>();
 				if( blendPos.y >= 0 && blendPos.y < (int32_t)targetPixels.metrics().y
 				 && blendPos.x >= 0 && blendPos.x < (int32_t)targetPixels.metrics().x
@@ -74,7 +78,7 @@ int													drawDebris			(::ced::view_grid<::ced::SColorBGRA> targetPixels, 
 	return 0;
 }
 
-int													drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixels, SShots & shots
+static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixels, SShots & shots
 	, const ::ced::SMatrix4<float> & matrixVPV
 	, ::ced::SColorFloat colorShot, ::ced::view_grid<uint32_t> depthBuffer)	{
 	::ced::container<::ced::SCoord3<float>>					pixelCoords;
@@ -100,12 +104,13 @@ int													drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixels, S
 			::ced::setPixel(targetPixels, {(int32_t)pixelCoord.x, (int32_t)pixelCoord.y}, starFinalColor);
 
 			const	double											brightRadius		= 7.5;
-			double													brightUnit			= 1.0 / brightRadius;
+			const	double											brightRadiusSquared	= brightRadius * brightRadius;
+			double													brightUnit			= 1.0 / brightRadiusSquared;
 			for(int32_t y = (int32_t)-brightRadius; y < (int32_t)brightRadius; ++y)
 			for(int32_t x = (int32_t)-brightRadius; x < (int32_t)brightRadius; ++x) {
 				::ced::SCoord2<float>									brightPos			= {(float)x, (float)y};
-				const double											brightDistance		= brightPos.Length();
-				if(brightDistance <= brightRadius) {
+				const double											brightDistance		= brightPos.LengthSquared();
+				if(brightDistance <= brightRadiusSquared) {
 					::ced::SCoord2<int32_t>									blendPos			= ::ced::SCoord2<int32_t>{(int32_t)pixelCoord.x, (int32_t)pixelCoord.y} + (brightPos).Cast<int32_t>();
 					if( blendPos.y >= 0 && blendPos.y < (int32_t)targetPixels.metrics().y
 					 && blendPos.x >= 0 && blendPos.x < (int32_t)targetPixels.metrics().x
@@ -121,6 +126,65 @@ int													drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixels, S
 			}
 		}
 
+	}
+	return 0;
+}
+
+static constexpr	const ::ced::SColorBGRA			colorShotPlayer			= ::ced::SColorBGRA{0x40, 0xfF, 0x80};// *.2;
+static constexpr	const ::ced::SColorBGRA			colorShotEnemy			= ::ced::SColorBGRA{0x00, 0x00, 0xfF};// *.2;
+
+
+static	int											getLightArrays
+	( const ::SApplication									& app
+	, ::ced::container<::ced::SCoord3<float>>				& lightPoints
+	, ::ced::container<::ced::SColorBGRA>					& lightColors
+	)						{
+	::ced::SColorBGRA										colorLightPlayer		= ::ced::SColorBGRA{0xFF, 0xFF, 0xFF}  * .2;
+	::ced::SColorBGRA										colorLightEnemy			= ::ced::SColorBGRA{0xFF, 0xFF, 0xFF}  * .2;
+	lightPoints.resize(app.ShotsEnemy.Particles.Position.size() + app.ShotsPlayer.Particles.Position.size() + app.Debris.Particles.Position.size() + 4);
+	lightColors.resize(app.ShotsEnemy.Particles.Position.size() + app.ShotsPlayer.Particles.Position.size() + app.Debris.Particles.Position.size() + 4);
+	lightPoints[0]									= app.Scene.Models[0].Position;
+	lightColors[0]									= colorLightPlayer;
+	for(uint32_t iEnemy = 1; iEnemy < 4; ++iEnemy) {
+		uint32_t iModelEnemy = 7 * iEnemy;
+		if(iModelEnemy >= app.Scene.Models.size())
+			continue;
+		lightPoints[iEnemy]								= app.Scene.Models[iModelEnemy].Position;
+		lightColors[iEnemy]								= colorLightEnemy;
+	}
+	uint32_t												iOffset					= 4;
+	for(uint32_t iShot = 0; iShot < app.ShotsEnemy.Particles.Position.size(); ++iShot) {
+		lightPoints[iOffset + iShot]						= app.ShotsEnemy.Particles.Position[iShot];
+		lightColors[iOffset + iShot]						= colorShotEnemy;
+	}
+	iOffset												+= app.ShotsEnemy.Particles.Position.size();
+	for(uint32_t iShot = 0; iShot < app.ShotsPlayer.Particles.Position.size(); ++iShot) {
+		lightPoints[iOffset + iShot]						= app.ShotsPlayer.Particles.Position[iShot];
+		lightColors[iOffset + iShot]						= colorShotPlayer;
+	}
+	iOffset												+= app.ShotsPlayer.Particles.Position.size();
+	for(uint32_t iParticle = 0; iParticle < app.Debris.Particles.Position.size(); ++iParticle) {
+		lightPoints[iOffset + iParticle]						= app.Debris.Particles.Position[iParticle];
+		::ced::SColorFloat									colorShot			= app.Debris.Colors[iParticle % ::std::size(app.Debris.Colors)];
+		lightColors[iOffset + iParticle]						= colorShot * app.Debris.Brightness[iParticle];
+	}
+	return 0;
+}
+
+static	int											getLightArrays
+	( const ::ced::SCoord3<float>							& modelPosition
+	, const ::ced::container<::ced::SCoord3<float>>			& lightPointsWorld
+	, const ::ced::container<::ced::SColorBGRA>				& lightColorsWorld
+	, ::ced::container<::ced::SCoord3<float>>				& lightPointsModel
+	, ::ced::container<::ced::SColorBGRA>					& lightColorsModel
+	) {
+	lightPointsModel.clear();
+	lightColorsModel.clear();
+	for(uint32_t iLightPoint = 0; iLightPoint < lightPointsWorld.size(); ++iLightPoint) {
+		if((lightPointsWorld[iLightPoint] - modelPosition).LengthSquared() < (MAX_LIGHT_RANGE * MAX_LIGHT_RANGE)) {
+			lightPointsModel.push_back(lightPointsWorld[iLightPoint]);
+			lightColorsModel.push_back(lightColorsWorld[iLightPoint]);
+		}
 	}
 	return 0;
 }
@@ -157,21 +221,14 @@ int													draw				(SApplication & app)	{
 		matrixView											*= matrixViewport;
 	}
 
-	::ced::SColorBGRA										colorShotPlayer			= ::ced::SColorBGRA{0x40, 0xfF, 0x80};// *.2;
-	::ced::SColorBGRA										colorShotEnemy			= ::ced::SColorBGRA{0x00, 0x00, 0xfF};// *.2;
 	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
 	::ced::container<::ced::STriangleWeights<double>>		pixelVertexWeights;
-	::ced::SModelTransform									matrices;
-	::ced::SColorBGRA										colorLightPlayer		= ::ced::SColorBGRA{0xFF, 0xFF, 0xFF}  * .2;
-	::ced::SColorBGRA										colorLightEnemy			= ::ced::SColorBGRA{0xFF, 0xFF, 0xFF}  * .2;
-	app.Scene.ModelMatricesLocal.resize(app.Scene.Models.size());
-	for(uint32_t iModel = 0; iModel < app.Scene.Models.size(); ++iModel) {
-		::ced::SModel3D											& model			= app.Scene.Models[iModel];
-		matrices.Scale		.Scale			(model.Scale	, true);
-		matrices.Rotation	.Rotation		(model.Rotation);
-		matrices.Position	.SetTranslation	(model.Position, true);
-		app.Scene.ModelMatricesLocal[iModel]				= matrices.Scale * matrices.Rotation * matrices.Position;
-	}
+
+	::ced::container<::ced::SCoord3<float>>					lightPointsWorld			= {};
+	::ced::container<::ced::SColorBGRA>						lightColorsWorld			= {};
+	::ced::container<::ced::SCoord3<float>>					lightPointsModel			= {};
+	::ced::container<::ced::SColorBGRA>						lightColorsModel			= {};
+	::getLightArrays(app, lightPointsWorld, lightColorsWorld);
 
 	for(uint32_t iModel = 0; iModel < app.Scene.Models.size(); ++iModel) {
 		if(app.Health[iModel] <= 0)
@@ -182,39 +239,11 @@ int													draw				(SApplication & app)	{
 		::ced::SMatrix4<float>									matrixTransform			= app.Scene.ModelMatricesLocal[iModel];
 		const ::ced::SMatrix4<float>							& matrixTransformParent	= app.Scene.ModelMatricesLocal[entity.Parent];
 		matrixTransform										= matrixTransform  * matrixTransformParent ;
-		::ced::container<::ced::SCoord3<float>>					lightPoints				= {};
-		::ced::container<::ced::SColorBGRA>						lightColors				= {};
-		lightPoints.resize(app.ShotsEnemy.Particles.Position.size() + app.ShotsPlayer.Particles.Position.size() + app.Debris.Particles.Position.size() + 4);
-		lightColors.resize(app.ShotsEnemy.Particles.Position.size() + app.ShotsPlayer.Particles.Position.size() + app.Debris.Particles.Position.size() + 4);
-		lightPoints[0]									= app.Scene.Models[0].Position;
-		lightColors[0]									= colorLightPlayer;
-		for(uint32_t iEnemy = 1; iEnemy < 4; ++iEnemy) {
-			uint32_t iModelEnemy = 7 * iEnemy;
-			if(iModelEnemy >= app.Scene.Models.size())
-				continue;
-			lightPoints[iEnemy]								= app.Scene.Models[iModelEnemy].Position;
-			lightColors[iEnemy]								= colorLightEnemy;
-		}
-		uint32_t												iOffset					= 4;
-		for(uint32_t iShot = 0; iShot < app.ShotsEnemy.Particles.Position.size(); ++iShot) {
-			lightPoints[iOffset + iShot]						= app.ShotsEnemy.Particles.Position[iShot];
-			lightColors[iOffset + iShot]						= colorShotEnemy;
-		}
-		iOffset												+= app.ShotsEnemy.Particles.Position.size();
-		for(uint32_t iShot = 0; iShot < app.ShotsPlayer.Particles.Position.size(); ++iShot) {
-			lightPoints[iOffset + iShot]						= app.ShotsPlayer.Particles.Position[iShot];
-			lightColors[iOffset + iShot]						= colorShotPlayer;
-		}
-		iOffset												+= app.ShotsPlayer.Particles.Position.size();
-		for(uint32_t iParticle = 0; iParticle < app.Debris.Particles.Position.size(); ++iParticle) {
-			lightPoints[iOffset + iParticle]						= app.Debris.Particles.Position[iParticle];
-			::ced::SColorFloat									colorShot			= app.Debris.Colors[iParticle % ::std::size(app.Debris.Colors)];
-			lightColors[iOffset + iParticle]						= colorShot * app.Debris.Brightness[iParticle];
-		}
+		::getLightArrays(matrixTransform.GetTranslation(), lightPointsWorld, lightColorsWorld, lightPointsModel, lightColorsModel);
 		for(uint32_t iTriangle = 0; iTriangle < app.Scene.Geometry[iModel / 7].Triangles.size(); ++iTriangle) {
 			pixelCoords			.clear();
 			pixelVertexWeights	.clear();
-			::ced::drawQuadTriangle(targetPixels, app.Scene.Geometry[iModel / 7], iTriangle, matrixTransform, matrixView, app.Scene.LightVector, pixelCoords, pixelVertexWeights, {app.Scene.Image[iModel / 7].Pixels.begin(), app.Scene.Image[iModel / 7].Metrics}, lightPoints, lightColors, {framework.DepthBuffer.begin(), framework.Window.Size});
+			::ced::drawQuadTriangle(targetPixels, app.Scene.Geometry[iModel / 7], iTriangle, matrixTransform, matrixView, app.Scene.LightVector, pixelCoords, pixelVertexWeights, {app.Scene.Image[iModel / 7].Pixels.begin(), app.Scene.Image[iModel / 7].Metrics}, lightPointsModel, lightColorsModel, {framework.DepthBuffer.begin(), framework.Window.Size});
 		}
 	}
 
@@ -223,60 +252,30 @@ int													draw				(SApplication & app)	{
 		::ced::SEntity								& entity				= app.Scene.Entities[explosion.IndexEntity];
 		if(-1 == entity.Parent)
 			continue;
-		::ced::SMatrix4<float>						matrixTransform			= app.Scene.ModelMatricesLocal[explosion.IndexEntity];
-		const ::ced::SMatrix4<float>				& matrixTransformParent	= app.Scene.ModelMatricesLocal[entity.Parent];
-		matrixTransform							= matrixTransform  * matrixTransformParent ;
-
-		::ced::container<::ced::SCoord3<float>>					lightPoints				= {};
-		::ced::container<::ced::SColorBGRA>						lightColors				= {};
-		lightPoints.resize(app.ShotsEnemy.Particles.Position.size() + app.ShotsPlayer.Particles.Position.size() + app.Debris.Particles.Position.size() + 4);
-		lightColors.resize(app.ShotsEnemy.Particles.Position.size() + app.ShotsPlayer.Particles.Position.size() + app.Debris.Particles.Position.size() + 4);
-		lightPoints[0]									= app.Scene.Models[0].Position;
-		lightColors[0]									= colorLightPlayer;
-		for(uint32_t iEnemy = 1; iEnemy < 4; ++iEnemy) {
-			uint32_t iModelEnemy = 7 * iEnemy;
-			if(iModelEnemy >= app.Scene.Models.size())
-				continue;
-			lightPoints[iEnemy]								= app.Scene.Models[iModelEnemy].Position;
-			lightColors[iEnemy]								= colorLightEnemy;
-		}
-		uint32_t												iOffset					= 4;
-		for(uint32_t iShot = 0; iShot < app.ShotsEnemy.Particles.Position.size(); ++iShot) {
-			lightPoints[iOffset + iShot]						= app.ShotsEnemy.Particles.Position[iShot];
-			lightColors[iOffset + iShot]						= colorShotEnemy;
-		}
-		iOffset												+= app.ShotsEnemy.Particles.Position.size();
-		for(uint32_t iShot = 0; iShot < app.ShotsPlayer.Particles.Position.size(); ++iShot) {
-			lightPoints[iOffset + iShot]						= app.ShotsPlayer.Particles.Position[iShot];
-			lightColors[iOffset + iShot]						= colorShotPlayer;
-		}
-		iOffset												+= app.ShotsPlayer.Particles.Position.size();
-		for(uint32_t iParticle = 0; iParticle < app.Debris.Particles.Position.size(); ++iParticle) {
-			lightPoints[iOffset + iParticle]						= app.Debris.Particles.Position[iParticle];
-			::ced::SColorFloat									colorShot			= app.Debris.Colors[iParticle % ::std::size(app.Debris.Colors)];
-			lightColors[iOffset + iParticle]						= colorShot * app.Debris.Brightness[iParticle];
-		}
 
 		for(uint32_t iExplosionPart = 0; iExplosionPart < explosion.Particles.Position.size(); ++iExplosionPart) {
-			const SSlice & sliceMesh = explosion.Slices[iExplosionPart];
+			const SSlice								& sliceMesh				= explosion.Slices[iExplosionPart];
+			::ced::SMatrix4<float>						matrixPart				= {};
+			matrixPart.Identity();
+			matrixPart.RotationX(app.AnimationTime * 2);
+			matrixPart.SetTranslation(explosion.Particles.Position[iExplosionPart], false);
+			::getLightArrays(matrixPart.GetTranslation(), lightPointsWorld, lightColorsWorld, lightPointsModel, lightColorsModel);
 			for(uint32_t iTriangle = 0, countTriangles = sliceMesh.Count; iTriangle < countTriangles; ++iTriangle) {
 				pixelCoords			.clear();
 				pixelVertexWeights	.clear();
-				::ced::SMatrix4<float>						matrixPart			= {};
-				matrixPart.Identity();
-				matrixPart._41							= explosion.Particles.Position[iExplosionPart].x;
-				matrixPart._42							= explosion.Particles.Position[iExplosionPart].y;
-				matrixPart._43							= explosion.Particles.Position[iExplosionPart].z;
+				const uint32_t											iActualTriangle		= sliceMesh.Offset + iTriangle;
 				const ::ced::SGeometryQuads								& geometry			= app.Scene.Geometry[explosion.IndexMesh];
-				::ced::STriangle3	<float>								triangle			= geometry.Triangles	[(sliceMesh.Offset + iTriangle)];
-				::ced::SCoord3		<float>								normal				= geometry.Normals		[(sliceMesh.Offset + iTriangle) / 2];
-				::ced::STriangle2	<float>								triangleTexCoords	= geometry.TextureCoords[(sliceMesh.Offset + iTriangle)];
-  				::ced::drawQuadTriangle(targetPixels, triangle, normal, triangleTexCoords, matrixPart, matrixView, app.Scene.LightVector, pixelCoords, pixelVertexWeights, {app.Scene.Image[explosion.IndexMesh].Pixels.begin(), app.Scene.Image[explosion.IndexMesh].Metrics}, lightPoints, lightColors, {framework.DepthBuffer.begin(), framework.Window.Size});
+				::ced::STriangle3	<float>								triangle			= geometry.Triangles	[iActualTriangle];
+				::ced::SCoord3		<float>								normal				= geometry.Normals		[iActualTriangle / 2];
+				::ced::STriangle2	<float>								triangleTexCoords	= geometry.TextureCoords[iActualTriangle];
+  				::ced::drawQuadTriangle(targetPixels, triangle, normal, triangleTexCoords, matrixPart, matrixView, app.Scene.LightVector, pixelCoords, pixelVertexWeights, {app.Scene.Image[explosion.IndexMesh].Pixels.begin(), app.Scene.Image[explosion.IndexMesh].Metrics}, lightPointsModel, lightColorsModel, {framework.DepthBuffer.begin(), framework.Window.Size});
+				pixelCoords			.clear();
+				pixelVertexWeights	.clear();
 				triangle											= {triangle.A, triangle.C, triangle.B};
 				triangleTexCoords									= {triangleTexCoords.A, triangleTexCoords.C, triangleTexCoords.B};
 				normal.x											*= -1;
 				normal.y											*= -1;
-				::ced::drawQuadTriangle(targetPixels, triangle, normal, triangleTexCoords, matrixPart, matrixView, app.Scene.LightVector, pixelCoords, pixelVertexWeights, {app.Scene.Image[explosion.IndexMesh].Pixels.begin(), app.Scene.Image[explosion.IndexMesh].Metrics}, lightPoints, lightColors, {framework.DepthBuffer.begin(), framework.Window.Size});
+				::ced::drawQuadTriangle(targetPixels, triangle, normal, triangleTexCoords, matrixPart, matrixView, app.Scene.LightVector, pixelCoords, pixelVertexWeights, {app.Scene.Image[explosion.IndexMesh].Pixels.begin(), app.Scene.Image[explosion.IndexMesh].Metrics}, lightPointsModel, lightColorsModel, {framework.DepthBuffer.begin(), framework.Window.Size});
 			}
 		}
 	}

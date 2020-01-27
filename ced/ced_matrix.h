@@ -446,6 +446,13 @@ namespace ced
 		}
 	};	// struct
 
+	template<typename _tElement>
+	::ced::STriangle3<_tElement>&						transform				(::ced::STriangle3<_tElement>& triangle, const ::ced::SMatrix4<_tElement>& transform)									{
+		triangle.A											= transform.Transform(triangle.A);
+		triangle.B											= transform.Transform(triangle.B);
+		triangle.C											= transform.Transform(triangle.C);
+		return triangle;
+	}
 #pragma pack(pop)
 }
 

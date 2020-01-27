@@ -270,14 +270,10 @@ int													ced::drawQuadTriangle
 	, ::ced::view_grid<uint32_t>						depthBuffer
 	) {
 	::ced::STriangle3	<float>								triangleWorld		= triangle;
-	triangleWorld.A										= matrixTransform.Transform(triangleWorld.A);
-	triangleWorld.B										= matrixTransform.Transform(triangleWorld.B);
-	triangleWorld.C										= matrixTransform.Transform(triangleWorld.C);
+	::ced::transform(triangleWorld, matrixTransform);
 
 	triangle											= triangleWorld;
-	triangle.A											= matrixView.Transform(triangle.A);
-	triangle.B											= matrixView.Transform(triangle.B);
-	triangle.C											= matrixView.Transform(triangle.C);
+	::ced::transform(triangle, matrixView);
 	if(triangle.A.z < 0 || triangle.A.z >= 1) return 0;
 	if(triangle.B.z < 0 || triangle.B.z >= 1) return 0;
 	if(triangle.C.z < 0 || triangle.C.z >= 1) return 0;
@@ -297,16 +293,16 @@ int													ced::drawQuadTriangle
 		::ced::SCoord3<float>										position				= triangleWorld.A * vertexWeights.A;
 		position												+= triangleWorld.B * vertexWeights.B;
 		position												+= triangleWorld.C * vertexWeights.C;
-		::ced::SColorFloat												texelColor				= textureImage[(uint32_t)(texCoord.y * imageUnit.y)][(uint32_t)(texCoord.x * imageUnit.x)];
-		::ced::SColorFloat												fragmentColor			= {};
+		::ced::SColorFloat											texelColor				= textureImage[(uint32_t)(texCoord.y * imageUnit.y) % textureImage.Metrics.y][(uint32_t)(texCoord.x * imageUnit.x) % textureImage.Metrics.x];
+		::ced::SColorFloat											fragmentColor			= {};
+		double														rangeLight				= 10;
 		for(uint32_t iLight = 0; iLight < lightPoints.size(); ++iLight) {
 			::ced::SCoord3<float>										lightToPoint		= lightPoints[iLight] - position;
 			::ced::SCoord3<float>										vectorToLight		= lightToPoint;
 			double														lightFactor			= vectorToLight.Dot(normal.Normalize());
-			if(lightToPoint.Length() > 5 || lightFactor <= 0)
+			if(lightToPoint.Length() > rangeLight || lightFactor <= 0)
 				continue;
-			double														range				= 10;
-			double														invAttenuation		= ::std::max(0.0, 1.0 - (lightToPoint.Length() / range));
+			double														invAttenuation		= ::std::max(0.0, 1.0 - (lightToPoint.Length() / rangeLight));
 			fragmentColor											+= ::ced::SColorFloat{texelColor * lightColors[iLight] * invAttenuation * .5};
 		}
 		::ced::setPixel(targetPixels, pixelCoord, texelColor *.5 + fragmentColor);
@@ -350,14 +346,8 @@ int													ced::drawQuadTriangle
 	::ced::STriangle3	<float>								triangle			= geometry.Triangles	[iTriangle];
 	::ced::SCoord3		<float>								normal				= geometry.Normals		[iTriangle / 2];
 	normal												= matrixTransform.TransformDirection(normal).Normalize();
-
-	triangle.A											= matrixTransform.Transform(triangle.A);
-	triangle.B											= matrixTransform.Transform(triangle.B);
-	triangle.C											= matrixTransform.Transform(triangle.C);
-
-	triangle.A											= matrixView.Transform(triangle.A);
-	triangle.B											= matrixView.Transform(triangle.B);
-	triangle.C											= matrixView.Transform(triangle.C);
+	::ced::transform(triangle, matrixTransform);
+	::ced::transform(triangle, matrixView);
 	if(triangle.A.z < 0 || triangle.A.z >= 1) return 0;
 	if(triangle.B.z < 0 || triangle.B.z >= 1) return 0;
 	if(triangle.C.z < 0 || triangle.C.z >= 1) return 0;
@@ -367,9 +357,6 @@ int													ced::drawQuadTriangle
 	::ced::drawTriangle(targetPixels.metrics(), triangle, pixelCoords, pixelVertexWeights, depthBuffer);
 	for(uint32_t iPixelCoord = 0; iPixelCoord < pixelCoords.size(); ++iPixelCoord) {
 		::ced::SCoord2<int32_t>									pixelCoord			= pixelCoords[iPixelCoord];
-		//color.r										= (uint8_t)(0xFF * pixelVertexWeights[iPixelCoord].A);
-		//color.g										= (uint8_t)(0xFF * pixelVertexWeights[iPixelCoord].B);
-		//color.b										= (uint8_t)(0xFF * pixelVertexWeights[iPixelCoord].C);
 		::ced::setPixel(targetPixels, pixelCoord, (color * 0.1) + color * lightFactor);
 	}
 	return 0;
@@ -389,29 +376,21 @@ int													ced::drawTriangle
 	) {
 	::ced::STriangle3		<float>								triangle			= geometry.Triangles	[iTriangle];
 	const ::ced::STriangle3	<float>								& triangleNormals	= geometry.Normals		[iTriangle];
-	triangle.A											= matrixTransform.Transform(triangle.A);
-	triangle.B											= matrixTransform.Transform(triangle.B);
-	triangle.C											= matrixTransform.Transform(triangle.C);
-
-	triangle.A											= matrixView.Transform(triangle.A);
-	triangle.B											= matrixView.Transform(triangle.B);
-	triangle.C											= matrixView.Transform(triangle.C);
+	::ced::transform(triangle, matrixTransform);
+	::ced::transform(triangle, matrixView);
 	if(triangle.A.z < 0 || triangle.A.z >= 1) return 0;
 	if(triangle.B.z < 0 || triangle.B.z >= 1) return 0;
 	if(triangle.C.z < 0 || triangle.C.z >= 1) return 0;
 
 	::ced::drawTriangle(targetPixels.metrics(), triangle, pixelCoords, pixelVertexWeights, depthBuffer);
 	for(uint32_t iPixelCoord = 0; iPixelCoord < pixelCoords.size(); ++iPixelCoord) {
-		::ced::SCoord2<int32_t>									pixelCoord				= pixelCoords		[iPixelCoord];
+		const ::ced::SCoord2<int32_t>							pixelCoord				= pixelCoords		[iPixelCoord];
 		const ::ced::STriangleWeights<double>					& vertexWeights			= pixelVertexWeights[iPixelCoord];
 		::ced::SCoord3<float>									normal					= triangleNormals.A * vertexWeights.A;
 		normal												+= triangleNormals.B * vertexWeights.B;
 		normal												+= triangleNormals.C * vertexWeights.C;
 		normal												= matrixTransform.TransformDirection(normal).Normalize();
 		double													lightFactor			= normal.Dot(lightVector);
-		//color.r										= (uint8_t)(0xFF * pixelVertexWeights[iPixelCoord].A);
-		//color.g										= (uint8_t)(0xFF * pixelVertexWeights[iPixelCoord].B);
-		//color.b										= (uint8_t)(0xFF * pixelVertexWeights[iPixelCoord].C);
 		::ced::setPixel(targetPixels, pixelCoord, color * lightFactor);
 	}
 	return 0;
@@ -432,13 +411,8 @@ int													ced::drawTriangle
 	::ced::STriangle3		<float>								triangle			= geometry.Triangles		[iTriangle];
 	const ::ced::STriangle3	<float>								& triangleNormals	= geometry.Normals			[iTriangle];
 	const ::ced::STriangle2	<float>								& triangleTexCoords	= geometry.TextureCoords	[iTriangle];
-	triangle.A											= matrixTransform.Transform(triangle.A);
-	triangle.B											= matrixTransform.Transform(triangle.B);
-	triangle.C											= matrixTransform.Transform(triangle.C);
-
-	triangle.A											= matrixView.Transform(triangle.A);
-	triangle.B											= matrixView.Transform(triangle.B);
-	triangle.C											= matrixView.Transform(triangle.C);
+	::ced::transform(triangle, matrixTransform);
+	::ced::transform(triangle, matrixView);
 	if(triangle.A.z < 0 || triangle.A.z >= 1)
 		return 0;
 	if(triangle.B.z < 0 || triangle.B.z >= 1)
@@ -450,7 +424,7 @@ int													ced::drawTriangle
 
 	::ced::SCoord2<float>										imageUnit			= {textureImage.metrics().x - 1.0f, textureImage.metrics().y - 1.0f};
 	for(uint32_t iPixelCoord = 0; iPixelCoord < pixelCoords.size(); ++iPixelCoord) {
-		::ced::SCoord2<int32_t>										pixelCoord				= pixelCoords		[iPixelCoord];
+		const ::ced::SCoord2<int32_t>								pixelCoord				= pixelCoords		[iPixelCoord];
 		const ::ced::STriangleWeights<double>						& vertexWeights			= pixelVertexWeights[iPixelCoord];
 		::ced::SCoord3<float>										normal					= triangleNormals.A * vertexWeights.A;
 		normal													+= triangleNormals.B * vertexWeights.B;

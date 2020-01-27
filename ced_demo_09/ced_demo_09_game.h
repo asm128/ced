@@ -112,7 +112,7 @@ struct SShots	{
 		memcpy(PositionPrev.begin(), Particles.Position.begin(), Particles.Position.size() * sizeof(::ced::SCoord3<float>));
 		Particles.IntegrateSpeed(lastFrameSeconds);
 		for(uint32_t iShot = 0; iShot < Particles.Position.size(); ++iShot) {
-			if (Particles.Position[iShot].Length() > 100)
+			if (Particles.Position[iShot].LengthSquared() > (100 * 100))
 				Remove(iShot--);
 		}
 		return 0;
@@ -151,7 +151,6 @@ struct SExplosion {
 		Particles		.Remove(iSlice);
 		return Slices.size();
 	}
-
 };
 
 #endif // CED_DEMO_08_GAME_H_293874239874
