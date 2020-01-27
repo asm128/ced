@@ -89,6 +89,7 @@ namespace ced
 			resize(Count - 1);
 			return Count - 1;
 		}
+		int32_t								remove_unordered	(uint32_t indexToRemove)		{ return this->pop_back(&this->operator[](indexToRemove)); }
 	};
 
 } // namespace

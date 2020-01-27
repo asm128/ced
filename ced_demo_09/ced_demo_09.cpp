@@ -184,7 +184,7 @@ int													update				(SApplication & app)	{
 			if(1 < (modelPlayer.Position - positionGlobal).Length()) {
 				::ced::SCoord3<float>									direction			= modelPlayer.Position - positionGlobal;
 				direction.RotateY(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
-				app.ShotsEnemy.Spawn(positionGlobal, direction.Normalize(), 20);
+				app.ShotsEnemy.Spawn(positionGlobal, direction.Normalize(), 20, 1);
 			}
 		}
 	}
@@ -202,11 +202,11 @@ int													update				(SApplication & app)	{
 			matricesParent.Position	.SetTranslation	(modelParent.Position, true);
 			::ced::SCoord3<float>									positionGlobal			= (matricesParent.Scale * matricesParent.Rotation * matricesParent.Position).Transform(modelEnemy.Position);
 			//positionGlobal.x									+= 1.5;
-			app.ShotsPlayer.Delay								+= lastFrameSeconds * 5;
+			app.ShotsPlayer.Delay								+= lastFrameSeconds * 10;
 			::ced::SCoord3<float>									direction			= {1, 0, 0};
 			//direction.RotateY(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
 			//direction.RotateZ(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
-			app.ShotsPlayer.Spawn(positionGlobal, direction, 200);
+			app.ShotsPlayer.Spawn(positionGlobal, direction, 200, .2f);
 		}
 	}
 
@@ -239,8 +239,8 @@ int													update				(SApplication & app)	{
 	app.Debris		.Update((float)lastFrameSeconds);
 	app.Stars		.Update(framework.Window.Size.y, (float)lastFrameSeconds);
 
-	for(uint32_t iShot = 0; iShot < app.ShotsPlayer.Position.size(); ++iShot) {
-		const ::ced::SLine3<float>								shotSegment			= {app.ShotsPlayer.PositionPrev[iShot], app.ShotsPlayer.Position[iShot]};
+	for(uint32_t iShot = 0; iShot < app.ShotsPlayer.Particles.Position.size(); ++iShot) {
+		const ::ced::SLine3<float>								shotSegment			= {app.ShotsPlayer.PositionPrev[iShot], app.ShotsPlayer.Particles.Position[iShot]};
 		for(uint32_t iModel = 7; iModel < app.Scene.Models.size(); ++iModel) {
 			const int32_t											indexParent				= app.Scene.Entities[iModel].Parent;
 			if(-1 == indexParent)
@@ -269,8 +269,8 @@ int													update				(SApplication & app)	{
 		}
 	}
 
-	for(uint32_t iShot = 0; iShot < app.ShotsEnemy.Position.size(); ++iShot) {
-		const ::ced::SLine3<float>								shotSegment				= {app.ShotsEnemy.PositionPrev[iShot], app.ShotsEnemy.Position[iShot]};
+	for(uint32_t iShot = 0; iShot < app.ShotsEnemy.Particles.Position.size(); ++iShot) {
+		const ::ced::SLine3<float>								shotSegment				= {app.ShotsEnemy.PositionPrev[iShot], app.ShotsEnemy.Particles.Position[iShot]};
 		for(uint32_t iModel = 0; iModel < 7; ++iModel) {
 			const int32_t											indexParent				= app.Scene.Entities[iModel].Parent;
 			if(-1 == indexParent)

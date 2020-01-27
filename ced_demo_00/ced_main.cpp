@@ -7,7 +7,7 @@
 
 struct SApplication {
 	::ced::SWindow					Window				= {};
-	::ced::SColorBGRA					* Pixels			= 0;
+	::ced::SColorBGRA				* Pixels			= 0;
 	::ced::STimer					Timer				= {};
 	bool							Running				= true;
 

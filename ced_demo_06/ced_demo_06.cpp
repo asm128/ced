@@ -35,11 +35,19 @@ int													setup				(SApplication & app)	{
 		model.Position.RotateY(::ced::MATH_2PI / app.Models.size() * iModel);
 	}
 
-	app.Image.Metrics										= {256, 256};
+	::ced::SColorFloat			colors []		=
+	{ ::ced::DARKRED
+	, ::ced::ORANGE + ::ced::WHITE * .7
+	, ::ced::GREEN
+	, ::ced::BLUE
+	, ::ced::ORANGE
+	};
+
+	app.Image.Metrics										= {24, 12};
 	app.Image.Pixels.resize(app.Image.Metrics.x * app.Image.Metrics.y);
 	for(uint32_t y = 0; y < app.Image.Metrics.y; ++y) // Generate noise color for planet texture
 	for(uint32_t x = 0; x < app.Image.Metrics.x; ++x) {
-		app.Image.Pixels[y * app.Image.Metrics.x + x] = {(uint8_t)rand(), (uint8_t)rand(), (uint8_t)rand(), 0xFF};
+		app.Image.Pixels[y * app.Image.Metrics.x + x] = colors[x % ::std::size(colors)];//{(uint8_t)(rand() % 32), (uint8_t)rand(), (uint8_t)(rand() % 32), 0xFF};
 	}
 
 	return 0;
@@ -48,7 +56,7 @@ int													setup				(SApplication & app)	{
 int													update				(SApplication & app)	{
 	::ced::SFramework										& framework			= app.Framework;
 	if(1 == ::ced::frameworkUpdate(app.Framework))
-		framework.Running = false;
+		framework.Running									= false;
 	//------------------------------------------- Handle input
 	double													lastFrameSeconds	= framework.Timer.ElapsedMicroseconds * .000001;
 

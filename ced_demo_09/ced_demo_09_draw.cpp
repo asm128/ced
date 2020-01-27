@@ -35,7 +35,7 @@ int													drawDebris			(::ced::view_grid<::ced::SColorBGRA> targetPixels, 
 	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
 	for(uint32_t iParticle = 0; iParticle < debris.Brightness.size(); ++iParticle) {
 		::ced::SColorFloat										colorShot			= debris.Colors[iParticle % ::std::size(debris.Colors)];
-		::ced::SCoord3<float>									starPos				= debris.Position[iParticle];
+		::ced::SCoord3<float>									starPos				= debris.Particles.Position[iParticle];
 		starPos												= matrixVPV.Transform(starPos);
 		const ::ced::SCoord2<int32_t>							pixelCoord		= {(int32_t)starPos.x, (int32_t)starPos.y};
 		if( pixelCoord.y < 0 || pixelCoord.y >= (int32_t)targetPixels.metrics().y
@@ -82,7 +82,7 @@ int													drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixels, S
 	for(uint32_t iShot = 0; iShot < shots.Brightness.size(); ++iShot) {
 		pixelCoords.clear();
 		::ced::SCoord3<float>									starPosPrev		= shots.PositionPrev[iShot];
-		::ced::SCoord3<float>									starPos			= shots.Position[iShot];
+		::ced::SCoord3<float>									starPos			= shots.Particles.Position[iShot];
 		::ced::SLine3<float>									raySegmentWorld	= {starPosPrev, starPos};
 
 		::ced::SLine3<float>									raySegment		= raySegmentWorld;
@@ -187,8 +187,8 @@ int													draw				(SApplication & app)	{
 		matrixTransform										= matrixTransform  * matrixTransformParent ;
 		::ced::container<::ced::SCoord3<float>>					lightPoints				= {};
 		::ced::container<::ced::SColorBGRA>						lightColors				= {};
-		lightPoints.resize(app.ShotsEnemy.Position.size() + app.ShotsPlayer.Position.size() + app.Debris.Position.size() + 4);
-		lightColors.resize(app.ShotsEnemy.Position.size() + app.ShotsPlayer.Position.size() + app.Debris.Position.size() + 4);
+		lightPoints.resize(app.ShotsEnemy.Particles.Position.size() + app.ShotsPlayer.Particles.Position.size() + app.Debris.Particles.Position.size() + 4);
+		lightColors.resize(app.ShotsEnemy.Particles.Position.size() + app.ShotsPlayer.Particles.Position.size() + app.Debris.Particles.Position.size() + 4);
 		lightPoints[0]									= app.Scene.Models[0].Position;
 		lightColors[0]									= colorLightPlayer;
 		for(uint32_t iEnemy = 1; iEnemy < 4; ++iEnemy) {
@@ -199,18 +199,18 @@ int													draw				(SApplication & app)	{
 			lightColors[iEnemy]								= colorLightEnemy;
 		}
 		uint32_t												iOffset					= 4;
-		for(uint32_t iShot = 0; iShot < app.ShotsEnemy.Position.size(); ++iShot) {
-			lightPoints[iOffset + iShot]						= app.ShotsEnemy.Position[iShot];
+		for(uint32_t iShot = 0; iShot < app.ShotsEnemy.Particles.Position.size(); ++iShot) {
+			lightPoints[iOffset + iShot]						= app.ShotsEnemy.Particles.Position[iShot];
 			lightColors[iOffset + iShot]						= colorShotEnemy;
 		}
-		iOffset												+= app.ShotsEnemy.Position.size();
-		for(uint32_t iShot = 0; iShot < app.ShotsPlayer.Position.size(); ++iShot) {
-			lightPoints[iOffset + iShot]						= app.ShotsPlayer.Position[iShot];
+		iOffset												+= app.ShotsEnemy.Particles.Position.size();
+		for(uint32_t iShot = 0; iShot < app.ShotsPlayer.Particles.Position.size(); ++iShot) {
+			lightPoints[iOffset + iShot]						= app.ShotsPlayer.Particles.Position[iShot];
 			lightColors[iOffset + iShot]						= colorShotPlayer;
 		}
-		iOffset												+= app.ShotsPlayer.Position.size();
-		for(uint32_t iParticle = 0; iParticle < app.Debris.Position.size(); ++iParticle) {
-			lightPoints[iOffset + iParticle]						= app.Debris.Position[iParticle];
+		iOffset												+= app.ShotsPlayer.Particles.Position.size();
+		for(uint32_t iParticle = 0; iParticle < app.Debris.Particles.Position.size(); ++iParticle) {
+			lightPoints[iOffset + iParticle]						= app.Debris.Particles.Position[iParticle];
 			::ced::SColorFloat									colorShot			= app.Debris.Colors[iParticle % ::std::size(app.Debris.Colors)];
 			lightColors[iOffset + iParticle]						= colorShot * app.Debris.Brightness[iParticle];
 		}
