@@ -4,25 +4,25 @@
 static constexpr	const uint32_t					MAX_LIGHT_RANGE				= 10;
 
 static	int											drawStars			(SStars & stars, ::ced::view_grid<::ced::SColorBGRA> targetPixels)	{
-	::ced::SColorBGRA											colors[]			=
+	::ced::SColorBGRA										colors[]			=
 		{ {0xfF, 0xfF, 0xfF, }
 		, {0x40, 0x80, 0xfF, }
 		, {0xfF, 0x80, 0x40, }
 		, {0x80, 0x80, 0x40, }
 		};
 	for(uint32_t iStar = 0; iStar < stars.Brightness.size(); ++iStar) {
-		::ced::SCoord2<float>									starPos			= stars.Position[iStar];
-		::ced::SColorBGRA											starFinalColor	= colors[iStar % ::std::size(colors)] * stars.Brightness[iStar];
+		::ced::SCoord2<float>									starPos				= stars.Position[iStar];
+		::ced::SColorBGRA										starFinalColor		= colors[iStar % ::std::size(colors)] * stars.Brightness[iStar];
 		::ced::setPixel(targetPixels, starPos.Cast<int32_t>(), starFinalColor);
 		const	int32_t											brightRadius		= 1 + (iStar % 5) + (rand() % 4);
 		const	double											brightRadiusSquared	= brightRadius * brightRadius;
 		double													brightUnit			= 1.0 / brightRadiusSquared;
 		for(int32_t y = -brightRadius; y < brightRadius; ++y)
 		for(int32_t x = -brightRadius; x < brightRadius; ++x) {
-			::ced::SCoord2<float>									brightPos		= {(float)x, (float)y};
-			const double											brightDistance	= brightPos.LengthSquared();
+			::ced::SCoord2<float>									brightPos			= {(float)x, (float)y};
+			const double											brightDistance		= brightPos.LengthSquared();
 			if(brightDistance <= brightRadiusSquared) {
-				::ced::SCoord2<int32_t>									pixelPos		= (starPos + brightPos).Cast<int32_t>();
+				::ced::SCoord2<int32_t>									pixelPos			= (starPos + brightPos).Cast<int32_t>();
 				if( pixelPos.y >= 0 && pixelPos.y < (int32_t)targetPixels.metrics().y
 				 && pixelPos.x >= 0 && pixelPos.x < (int32_t)targetPixels.metrics().x
  				)
@@ -40,7 +40,7 @@ static	int											drawDebris			(::ced::view_grid<::ced::SColorBGRA> targetPix
 		::ced::SColorFloat										colorShot			= debris.Colors[iParticle % ::std::size(debris.Colors)];
 		::ced::SCoord3<float>									starPos				= debris.Particles.Position[iParticle];
 		starPos												= matrixVPV.Transform(starPos);
-		const ::ced::SCoord2<int32_t>							pixelCoord		= {(int32_t)starPos.x, (int32_t)starPos.y};
+		const ::ced::SCoord2<int32_t>							pixelCoord			= {(int32_t)starPos.x, (int32_t)starPos.y};
 		if( pixelCoord.y < 0 || pixelCoord.y >= (int32_t)targetPixels.metrics().y
 		 || pixelCoord.x < 0 || pixelCoord.x >= (int32_t)targetPixels.metrics().x
 		)
