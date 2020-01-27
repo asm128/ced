@@ -64,6 +64,32 @@ namespace ced
 			Data								= newData;
 			Count								= newCount;
 		}
+		container<_tValue>&					operator=			(const container<_tValue>& other)			{
+			const uint32_t							newCount			= other.size();
+			for(uint32_t iElement = 0; iElement < Count; ++iElement)
+				Data[iElement].~_tValue();
+
+			if(newCount <= Count) {
+				for(uint32_t iElement = 0; iElement < newCount; ++iElement)
+					Data[iElement]					= other.Data[iElement];
+			}
+			else if(newCount > Size) {
+				uint32_t								newSize				= ::std::max(4U, newCount + (newCount / 4));
+				_tValue									* newData			= (_tValue*)malloc(newSize * sizeof(_tValue));
+				for(uint32_t iElement = 0; iElement < newCount; ++iElement)
+					new (&newData[iElement]) _tValue(other.Data[iElement]);
+				_tValue									* oldData			= Data;
+				Size								= newSize;
+				Data								= newData;
+				free(oldData);
+			}
+			else if(newCount > Count) {
+				for(uint32_t iElement = 0; iElement < newCount; ++iElement)
+					new (&Data[iElement]) _tValue(other.Data[iElement]);
+			}
+			Count							= newCount;
+			return *this;
+		}
 		int32_t								clear				()												{ return resize(0); }
 		int32_t								resize				(uint32_t newCount)								{ return resize(newCount, {}); }
 		int32_t								resize				(uint32_t newCount, const _tValue & newValue)	{
@@ -82,6 +108,8 @@ namespace ced
 				_tValue									* oldData			= Data;
 				Size								= newSize;
 				Data								= newData;
+				for(uint32_t iElement = 0; iElement < Count; ++iElement)
+					oldData[iElement].~_tValue();
 				free(oldData);
 			}
 			else if(newCount > Count) {

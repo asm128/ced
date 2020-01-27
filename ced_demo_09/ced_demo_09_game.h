@@ -31,9 +31,9 @@ struct SParticles3 {
 
 	int											IntegrateSpeed		(double lastFrameSeconds)	{
 		for(uint32_t iShot = 0; iShot < Position.size(); ++iShot) {
-			::ced::SCoord3<float>							& direction						= Direction	[iShot];
-			::ced::SCoord3<float>							& position						= Position	[iShot];
-			float											& speed							= Speed		[iShot];
+			::ced::SCoord3<float>							& direction			= Direction	[iShot];
+			::ced::SCoord3<float>							& position			= Position	[iShot];
+			float											& speed				= Speed		[iShot];
 			position									+= direction * speed * lastFrameSeconds;
 		}
 		return 0;
@@ -65,7 +65,7 @@ struct SDebris	{
 		Brightness	.push_back(brightness);
 		return 0;
 	}
-	int											SpawnSpherical			(uint32_t countDebris, const ::ced::SCoord3<float> & position, float speedDebris, float brightness)	{
+	int											SpawnSpherical		(uint32_t countDebris, const ::ced::SCoord3<float> & position, float speedDebris, float brightness)	{
 		for(uint32_t iDebris = 0; iDebris < countDebris; ++iDebris) {
 			::ced::SCoord3<float>									direction				= {0, 1, 0};
 			direction.RotateX(rand() * (::ced::MATH_2PI / RAND_MAX));
@@ -79,13 +79,13 @@ struct SDebris	{
 	int											Update				(float lastFrameSeconds)	{
 		Particles.IntegrateSpeed(lastFrameSeconds);
 		for(uint32_t iShot = 0; iShot < Particles.Position.size(); ++iShot) {
-			float											& speed							= Particles.Speed		[iShot];
-			float											& brightness 					= Brightness			[iShot];
+			float											& speed				= Particles.Speed		[iShot];
+			float											& brightness 		= Brightness			[iShot];
 			brightness									-= lastFrameSeconds;
 			speed										-= lastFrameSeconds * (rand() % 16);
 			if(brightness < 0) {
 				Particles.Remove(iShot);
-				Brightness.remove_unordered(iShot);
+				Brightness.remove_unordered(iShot--);
 			}
 		}
 		return 0;
@@ -117,7 +117,7 @@ struct SShots	{
 		}
 		return 0;
 	}
-	int											Remove			(uint32_t iShot) {
+	int											Remove				(uint32_t iShot)			{
 		Particles.Remove(iShot);
 		PositionPrev	.remove_unordered(iShot);
 		Brightness		.remove_unordered(iShot);
@@ -139,14 +139,14 @@ struct SExplosion {
 	int											Update				(float lastFrameSeconds)	{
 		Particles.IntegrateSpeed(lastFrameSeconds);
 		for(uint32_t iShot = 0; iShot < Particles.Speed.size(); ++iShot) {
-			float											& speed							= Particles.Speed		[iShot];
+			float											& speed				= Particles.Speed		[iShot];
 			speed										-= lastFrameSeconds * (rand() % 16);
 			if (speed < -10)
 				Remove(iShot--);
 		}
 		return 0;
 	}
-	int											Remove			(uint32_t iSlice) {
+	int											Remove				(uint32_t iSlice)			{
 		Slices			.remove_unordered(iSlice);
 		Particles		.Remove(iSlice);
 		return Slices.size();

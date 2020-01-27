@@ -67,9 +67,9 @@ int													setup				(SApplication & app)	{
 	//::ced::geometryBuildCube(app.Scene.Geometry[3]);
 	::ced::geometryBuildCube(app.Scene.Geometry[4]);
 	::ced::geometryBuildGrid(app.Scene.Geometry[1], {2U, 2U}, {1U, 1U});
-	::ced::geometryBuildSphere(app.Scene.Geometry[2], 3U, 2U, 1, {0, 1});
-	::ced::geometryBuildSphere(app.Scene.Geometry[3], 4U, 2U, 1, {0, 1});
-	::ced::geometryBuildSphere(app.Scene.Geometry[4], 16U, 2U, 1, {0, 1});
+	::ced::geometryBuildSphere(app.Scene.Geometry[2], 3U, 2U, 1, {0, 0});
+	::ced::geometryBuildSphere(app.Scene.Geometry[3], 4U, 2U, 1, {0, 0});
+	::ced::geometryBuildSphere(app.Scene.Geometry[4], 16U, 2U, 1, {0, 0});
 	//::ced::geometryBuildFigure0(app.Geometry, 10U, 10U, 1, {});
 
 	const uint32_t												partHealthPlayer		= 200;
@@ -77,8 +77,8 @@ int													setup				(SApplication & app)	{
 	app.Scene.Models[::modelCreate(app, partHealthPlayer)].Position		= {-30};
 	app.Scene.Models[::modelCreate(app, partHealthEnemy )].Position		= {+20};
 	app.Scene.Models[::modelCreate(app, partHealthEnemy )].Position		= {+25};
-	app.Scene.Models[::modelCreate(app, partHealthEnemy )].Position		= {+30};
-	app.Scene.Models[::modelCreate(app, partHealthEnemy )].Position		= {+35};
+	//app.Scene.Models[::modelCreate(app, partHealthEnemy )].Position		= {+30};
+	//app.Scene.Models[::modelCreate(app, partHealthEnemy )].Position		= {+35};
 
 	::ced::SColorFloat										baseColor	[4]	=
 		{ ::ced::LIGHTGREEN
@@ -179,7 +179,17 @@ static	int											handleShotCollision
 			direction.Normalize();
 			newExplosion.Particles.Spawn(collisionPoint, direction, debrisSpeed);
 		}
-		explosions.push_back(newExplosion);
+		bool													add							= true;
+		for(uint32_t iExplosion = 0; iExplosion < explosions.size(); ++iExplosion) {
+			SExplosion												& explosion					= explosions[iExplosion];
+			if(0 == explosion.Slices.size()) {
+				explosion										= newExplosion;
+				add												= false;
+				break;
+			}
+		}
+		if(add)
+			explosions.push_back(newExplosion);
 	}
 	return exploded ? 1 : 0;
 }
@@ -242,7 +252,7 @@ int													update				(SApplication & app)	{
 			if(1 < (modelPlayer.Position - positionGlobal).LengthSquared()) {
 				::ced::SCoord3<float>									direction			= modelPlayer.Position - positionGlobal;
 				direction.RotateY(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
-				app.ShotsEnemy.Spawn(positionGlobal, direction.Normalize(), 20, 1);
+				app.ShotsEnemy.Spawn(positionGlobal, direction.Normalize(), 25, 1);
 			}
 		}
 	}
@@ -264,8 +274,8 @@ int													update				(SApplication & app)	{
 		}
 	}
 
-	if(GetAsyncKeyState('Q')) app.Scene.Camera.Position.y			-= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
-	if(GetAsyncKeyState('E')) app.Scene.Camera.Position.y			+= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
+	if(GetAsyncKeyState('Q')) app.Scene.Camera.Position.y	-= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
+	if(GetAsyncKeyState('E')) app.Scene.Camera.Position.y	+= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
 
 	if(GetAsyncKeyState('W')) modelPlayer.Position.x		+= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
 	if(GetAsyncKeyState('S')) modelPlayer.Position.x		-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
@@ -273,7 +283,7 @@ int													update				(SApplication & app)	{
 	if(GetAsyncKeyState('D')) modelPlayer.Position.z		-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
 
 	if(GetAsyncKeyState(VK_NUMPAD5))
-		modelPlayer.Rotation	= {0, 0, (float)-::ced::MATH_PI_2};
+		modelPlayer.Rotation								= {0, 0, (float)-::ced::MATH_PI_2};
 	else {
 		if(GetAsyncKeyState(VK_NUMPAD8)) modelPlayer.Rotation.z	-= (float)(lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
 		if(GetAsyncKeyState(VK_NUMPAD2)) modelPlayer.Rotation.z	+= (float)(lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
@@ -321,6 +331,7 @@ int													update				(SApplication & app)	{
 	}
 
 	::draw(app);
+	Sleep(1);
 	return framework.Running ? 0 : 1;
 }
 
