@@ -15,7 +15,7 @@ struct SModel3D {
 
 struct SApplication {
 	::ced::SWindow										Window				= {};
-	::ced::SColorBGRA										* Pixels			= 0;
+	::ced::SColorBGRA									* Pixels			= 0;
 	::ced::STimer										Timer				= {};
 	bool												Running				= true;
 	double												TotalTime			= 0;
@@ -40,7 +40,7 @@ int													setup				(SApplication & app)	{
 	app.DepthBuffer.resize(pixelCount);
 	//::ced::geometryBuildCube(app.Geometry);
 	//::ced::geometryBuildGrid(app.Geometry, {2U, 2U}, {1U, 1U});
-	::ced::geometryBuildSphere(app.Geometry, 12U, 8U, 1, {});
+	::ced::geometryBuildSphere(app.Geometry, 12U, 7U, 1, {});
 	//::ced::geometryBuildFigure0(app.Geometry, 10U, 10U, 1, {});
 	app.Models.resize(6);
 	for(uint32_t iModel = 0; iModel < app.Models.size(); ++iModel) {

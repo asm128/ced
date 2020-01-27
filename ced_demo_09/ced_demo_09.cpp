@@ -201,25 +201,25 @@ int													update				(SApplication & app)	{
 		const int32_t											indexParent				= app.Scene.Entities[iEnemy].Parent;
 		if(0 >= app.Health[iEnemy])
 			continue;
-		//::ced::SModel3D											& modelEnemy		= app.Scene.Models[iEnemy];
-		//if(-1 == indexParent) {
-		//	modelEnemy.Position.z								= (float)(sin(app.AnimationTime) * iEnemy * 3) * ((iEnemy % 2) ? -1 : 1);
-		//}
-		//else {
-		//	app.Scene.Models[iEnemy].Rotation.y					+= (float)lastFrameSeconds * 1;
-		//	matricesParent										= {};
-		//	app.ShotsEnemy.Delay								+= lastFrameSeconds * .5;
-		//	const ::ced::SModel3D									& modelParent			= app.Scene.Models[indexParent];
-		//	matricesParent.Scale	.Scale			(modelParent.Scale, true);
-		//	matricesParent.Rotation	.Rotation		(modelParent.Rotation);
-		//	matricesParent.Position	.SetTranslation	(modelParent.Position, true);
-		//	::ced::SCoord3<float>									positionGlobal			= (matricesParent.Scale * matricesParent.Rotation * matricesParent.Position).Transform(modelEnemy.Position);
-		//	if(1 < (modelPlayer.Position - positionGlobal).Length()) {
-		//		::ced::SCoord3<float>									direction			= modelPlayer.Position - positionGlobal;
-		//		direction.RotateY(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
-		//		app.ShotsEnemy.Spawn(positionGlobal, direction.Normalize(), 20, 1);
-		//	}
-		//}
+		::ced::SModel3D											& modelEnemy		= app.Scene.Models[iEnemy];
+		if(-1 == indexParent) {
+			modelEnemy.Position.z								= (float)(sin(app.AnimationTime) * iEnemy * 3) * ((iEnemy % 2) ? -1 : 1);
+		}
+		else {
+			app.Scene.Models[iEnemy].Rotation.y					+= (float)lastFrameSeconds * 1;
+			matricesParent										= {};
+			app.ShotsEnemy.Delay								+= lastFrameSeconds * .5;
+			const ::ced::SModel3D									& modelParent			= app.Scene.Models[indexParent];
+			matricesParent.Scale	.Scale			(modelParent.Scale, true);
+			matricesParent.Rotation	.Rotation		(modelParent.Rotation);
+			matricesParent.Position	.SetTranslation	(modelParent.Position, true);
+			::ced::SCoord3<float>									positionGlobal			= (matricesParent.Scale * matricesParent.Rotation * matricesParent.Position).Transform(modelEnemy.Position);
+			if(1 < (modelPlayer.Position - positionGlobal).Length()) {
+				::ced::SCoord3<float>									direction			= modelPlayer.Position - positionGlobal;
+				direction.RotateY(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
+				app.ShotsEnemy.Spawn(positionGlobal, direction.Normalize(), 20, 1);
+			}
+		}
 	}
 
 	if(GetAsyncKeyState(VK_SPACE)) {
