@@ -30,6 +30,8 @@ struct SApplication {
 	::SShots											ShotsEnemy				;
 	::SDebris											Debris					;
 
+	::ced::container<SExplosion>						Explosions;
+
 	double												AnimationTime			= 0;
 };
 

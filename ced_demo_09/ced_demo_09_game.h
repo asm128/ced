@@ -43,6 +43,11 @@ struct SParticles3 {
 		Direction	.remove_unordered(iParticle);
 		return Speed.remove_unordered(iParticle);
 	}
+	int											Spawn				(const ::ced::SCoord3<float> & position, const ::ced::SCoord3<float> & direction, float speed)	{
+		Position	.push_back(position);
+		Direction	.push_back(direction);
+		return Speed.push_back(speed);
+	}
 };
 
 struct SDebris	{
@@ -56,10 +61,8 @@ struct SDebris	{
 	::SParticles3								Particles			= {};
 
 	int											Spawn				(const ::ced::SCoord3<float> & position, const ::ced::SCoord3<float> & direction, float speed, float brightness)	{
-		Particles.Position	.push_back(position);
-		Particles.Direction	.push_back(direction);
-		Particles.Speed		.push_back(speed);
-		Brightness			.push_back(brightness);
+		Particles	.Spawn(position, direction, speed);
+		Brightness	.push_back(brightness);
 		return 0;
 	}
 	int											SpawnSpherical			(uint32_t countDebris, const ::ced::SCoord3<float> & position, float speedDebris, float brightness)	{
@@ -79,7 +82,7 @@ struct SDebris	{
 			float											& speed							= Particles.Speed		[iShot];
 			float											& brightness 					= Brightness			[iShot];
 			brightness									-= lastFrameSeconds;
-			speed										-= lastFrameSeconds *  (rand() % 16);
+			speed										-= lastFrameSeconds * (rand() % 16);
 			if(brightness < 0) {
 				Particles.Remove(iShot);
 				Brightness.remove_unordered(iShot);
@@ -98,12 +101,10 @@ struct SShots	{
 	int											Spawn				(const ::ced::SCoord3<float> & position, const ::ced::SCoord3<float> & direction, float speed, float brightness)	{
 		if(Delay < 1)
 			return 0;
-		PositionPrev			.push_back(position);
-		Particles.Position		.push_back(position);
-		Particles.Direction		.push_back(direction);
-		Particles.Speed			.push_back(speed);
-		Brightness				.push_back(brightness);
 		Delay										= 0;
+		Particles	.Spawn(position, direction, speed);
+		Brightness	.push_back(brightness);
+		PositionPrev.push_back(position);
 		return 0;
 	}
 
@@ -112,7 +113,7 @@ struct SShots	{
 		Particles.IntegrateSpeed(lastFrameSeconds);
 		for(uint32_t iShot = 0; iShot < Particles.Position.size(); ++iShot) {
 			if (Particles.Position[iShot].Length() > 100)
-				Remove(iShot);
+				Remove(iShot--);
 		}
 		return 0;
 	}
@@ -122,6 +123,35 @@ struct SShots	{
 		Brightness		.remove_unordered(iShot);
 		return Brightness.size();
 	}
+};
+
+struct SSlice {
+	uint16_t									Offset;
+	uint16_t									Count;
+};
+
+struct SExplosion {
+	int32_t										IndexMesh;
+	int32_t										IndexEntity;
+	::ced::container<SSlice>					Slices;
+	::SParticles3								Particles;
+
+	int											Update				(float lastFrameSeconds)	{
+		Particles.IntegrateSpeed(lastFrameSeconds);
+		for(uint32_t iShot = 0; iShot < Particles.Speed.size(); ++iShot) {
+			float											& speed							= Particles.Speed		[iShot];
+			speed										-= lastFrameSeconds * (rand() % 16);
+			if (speed < -10)
+				Remove(iShot--);
+		}
+		return 0;
+	}
+	int											Remove			(uint32_t iSlice) {
+		Slices			.remove_unordered(iSlice);
+		Particles		.Remove(iSlice);
+		return Slices.size();
+	}
+
 };
 
 #endif // CED_DEMO_08_GAME_H_293874239874

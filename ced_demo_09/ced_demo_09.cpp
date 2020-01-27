@@ -18,7 +18,7 @@ int													setupStars			(SStars & stars, ::ced::SCoord2<uint32_t> targetSiz
 	return 0;
 }
 
-int													modelCreate			(::SApplication & app)	{
+int													modelCreate			(::SApplication & app, uint32_t partHealth)	{
 	int32_t													indexModel			= app.Scene.ModelMatricesLocal.size();
 	uint32_t												countParts			= 6;
 	app.Health						.resize(indexModel + 1 + countParts);
@@ -34,7 +34,6 @@ int													modelCreate			(::SApplication & app)	{
 	else
 		app.Scene.Models		[indexModel].Rotation.z		= (float)(::ced::MATH_PI_2);
 	app.Scene.Entities		[indexModel]				= {-1};
-	const uint32_t												partHealth			= 1000;
 	app.Health[indexModel]									= partHealth * countParts;
 	for(uint32_t iModel = indexModel + 1; iModel < app.Scene.Models.size(); ++iModel) {
 		::ced::SModel3D											& model			= app.Scene.Models[iModel];
@@ -64,17 +63,22 @@ int													setup				(SApplication & app)	{
 
 	//::ced::geometryBuildSphere(app.Scene.Geometry[1],  4U, 3U, 1, {0, 1});
 	::ced::geometryBuildCube(app.Scene.Geometry[1]);
+	//::ced::geometryBuildCube(app.Scene.Geometry[2]);
+	//::ced::geometryBuildCube(app.Scene.Geometry[3]);
+	//::ced::geometryBuildCube(app.Scene.Geometry[4]);
 	//::ced::geometryBuildGrid(app.Scene.Geometry[1], {2U, 2U}, {1U, 1U});
 	::ced::geometryBuildSphere(app.Scene.Geometry[2], 3U, 2U, 1, {0, 1});
 	::ced::geometryBuildSphere(app.Scene.Geometry[3], 4U, 2U, 1, {0, 1});
 	::ced::geometryBuildSphere(app.Scene.Geometry[4], 16U, 2U, 1, {0, 1});
 	//::ced::geometryBuildFigure0(app.Geometry, 10U, 10U, 1, {});
 
-	app.Scene.Models[::modelCreate(app)].Position		= {-30};
-	app.Scene.Models[::modelCreate(app)].Position		= {+20};
-	app.Scene.Models[::modelCreate(app)].Position		= {+25};
-	app.Scene.Models[::modelCreate(app)].Position		= {+30};
-	app.Scene.Models[::modelCreate(app)].Position		= {+35};
+	const uint32_t												partHealthPlayer		= 200;
+	const uint32_t												partHealthEnemy			= 1000;
+	app.Scene.Models[::modelCreate(app, partHealthPlayer)].Position		= {-30};
+	app.Scene.Models[::modelCreate(app, partHealthEnemy )].Position		= {+20};
+	app.Scene.Models[::modelCreate(app, partHealthEnemy )].Position		= {+25};
+	app.Scene.Models[::modelCreate(app, partHealthEnemy )].Position		= {+30};
+	app.Scene.Models[::modelCreate(app, partHealthEnemy )].Position		= {+35};
 
 	::ced::SColorFloat										baseColor	[4]	=
 		{ ::ced::LIGHTGREEN
@@ -129,26 +133,55 @@ int													intersectRaySphere		(const ::ced::SCoord3<float> & p, const ::ce
 	return 1;
 }
 
-int													handleShotCollision	(const ::ced::SCoord3<float> & collisionPoint, int32_t & healthParth, int32_t & healthParent, ::SDebris & debris, void * soundAlias)	{
+int													handleShotCollision
+	( ::ced::SGeometryQuads				& meshShip
+	, int32_t							indexShip
+	, int32_t							indexEntityPart
+	, const ::ced::SCoord3<float>		& collisionPoint
+	, int32_t							& healthParth
+	, int32_t							& healthParent
+	, ::SDebris							& debris
+	, ::ced::container<::SExplosion>	& explosions
+	, void * soundAlias
+	) {
 	PlaySoundA((LPCSTR)soundAlias, GetModuleHandle(0), SND_ALIAS_ID | SND_ASYNC);
-	healthParth									-= 100;
-	healthParent								-= 100;
+	healthParth											-= 100;
+	healthParent										-= 100;
 	float													debrisSpeed					= 50;
 	float													debrisBright				= 1;
 	uint32_t												debrisCount					= 10;
-	if(0 >= healthParth)
+	bool													exploded					= false;
+	if(0 >= healthParth) {
+		exploded											= true	;
 		if(0 >= healthParent) {
-			debrisSpeed					= 10	;
-			debrisCount					= 100	;
-			debrisBright				= 3	;
+			debrisSpeed											= 10	;
+			debrisCount											= 100	;
+			debrisBright										= 3		;
 		}
 		else {
-			debrisSpeed					= 60	;
-			debrisCount					= 150	;
-			debrisBright				= 2		;
+			debrisSpeed											= 60	;
+			debrisCount											= 150	;
+			debrisBright										= 2		;
 		}
+	}
 	debris.SpawnSpherical(debrisCount, collisionPoint, debrisSpeed, debrisBright);
-	return 0;
+
+	if(exploded) {
+		::SExplosion											newExplosion				= {};
+		newExplosion.IndexMesh								= indexShip;
+		newExplosion.IndexEntity							= indexEntityPart;
+		for(uint32_t iQuad = 0, countQuads = meshShip.Triangles.size() / 2; iQuad < countQuads; ++iQuad) {
+			newExplosion.Slices.push_back({(uint16_t)(iQuad * 2), 2});
+			::ced::SCoord3<float>									direction					= {0, 1, 0};
+			direction.RotateX(rand() * (::ced::MATH_2PI / RAND_MAX));
+			direction.RotateY(rand() * (::ced::MATH_2PI / RAND_MAX));
+			direction.RotateZ(rand() * (::ced::MATH_2PI / RAND_MAX));
+			direction.Normalize();
+			newExplosion.Particles.Spawn(collisionPoint, direction, debrisSpeed);
+		}
+		explosions.push_back(newExplosion);
+	}
+	return exploded ? 1 : 0;
 }
 
 int													update				(SApplication & app)	{
@@ -168,25 +201,25 @@ int													update				(SApplication & app)	{
 		const int32_t											indexParent				= app.Scene.Entities[iEnemy].Parent;
 		if(0 >= app.Health[iEnemy])
 			continue;
-		::ced::SModel3D											& modelEnemy		= app.Scene.Models[iEnemy];
-		if(-1 == indexParent) {
-			modelEnemy.Position.z								= (float)(sin(app.AnimationTime) * iEnemy * 3) * ((iEnemy % 2) ? -1 : 1);
-		}
-		else {
-			app.Scene.Models[iEnemy].Rotation.y					+= (float)lastFrameSeconds * 1;
-			matricesParent										= {};
-			app.ShotsEnemy.Delay								+= lastFrameSeconds * .5;
-			const ::ced::SModel3D									& modelParent			= app.Scene.Models[indexParent];
-			matricesParent.Scale	.Scale			(modelParent.Scale, true);
-			matricesParent.Rotation	.Rotation		(modelParent.Rotation);
-			matricesParent.Position	.SetTranslation	(modelParent.Position, true);
-			::ced::SCoord3<float>									positionGlobal			= (matricesParent.Scale * matricesParent.Rotation * matricesParent.Position).Transform(modelEnemy.Position);
-			if(1 < (modelPlayer.Position - positionGlobal).Length()) {
-				::ced::SCoord3<float>									direction			= modelPlayer.Position - positionGlobal;
-				direction.RotateY(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
-				app.ShotsEnemy.Spawn(positionGlobal, direction.Normalize(), 20, 1);
-			}
-		}
+		//::ced::SModel3D											& modelEnemy		= app.Scene.Models[iEnemy];
+		//if(-1 == indexParent) {
+		//	modelEnemy.Position.z								= (float)(sin(app.AnimationTime) * iEnemy * 3) * ((iEnemy % 2) ? -1 : 1);
+		//}
+		//else {
+		//	app.Scene.Models[iEnemy].Rotation.y					+= (float)lastFrameSeconds * 1;
+		//	matricesParent										= {};
+		//	app.ShotsEnemy.Delay								+= lastFrameSeconds * .5;
+		//	const ::ced::SModel3D									& modelParent			= app.Scene.Models[indexParent];
+		//	matricesParent.Scale	.Scale			(modelParent.Scale, true);
+		//	matricesParent.Rotation	.Rotation		(modelParent.Rotation);
+		//	matricesParent.Position	.SetTranslation	(modelParent.Position, true);
+		//	::ced::SCoord3<float>									positionGlobal			= (matricesParent.Scale * matricesParent.Rotation * matricesParent.Position).Transform(modelEnemy.Position);
+		//	if(1 < (modelPlayer.Position - positionGlobal).Length()) {
+		//		::ced::SCoord3<float>									direction			= modelPlayer.Position - positionGlobal;
+		//		direction.RotateY(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
+		//		app.ShotsEnemy.Spawn(positionGlobal, direction.Normalize(), 20, 1);
+		//	}
+		//}
 	}
 
 	if(GetAsyncKeyState(VK_SPACE)) {
@@ -227,9 +260,13 @@ int													update				(SApplication & app)	{
 		if(GetAsyncKeyState(VK_NUMPAD4)) app.Scene.Models[0].Rotation.x += (float)(lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
 	}
 
-	modelPlayer.Rotation.y							+= (float)lastFrameSeconds * .5f;
-	for(uint32_t iEnemy = 1; iEnemy < app.Scene.Models.size(); ++iEnemy)
+	if(app.Health[0])
+		modelPlayer.Rotation.y							+= (float)lastFrameSeconds * .5f;
+	for(uint32_t iEnemy = 1; iEnemy < app.Scene.Models.size(); ++iEnemy) {
+		if(0 == app.Health[iEnemy])
+			continue;
 		app.Scene.Models[iEnemy].Rotation.y					+= (float)lastFrameSeconds * (.1f * iEnemy);
+	}
 
 	app.Scene.LightVector										= app.Scene.LightVector.RotateY(lastFrameSeconds * 2);
 	if(framework.Window.Resized)
@@ -238,6 +275,8 @@ int													update				(SApplication & app)	{
 	app.ShotsEnemy	.Update((float)lastFrameSeconds);
 	app.Debris		.Update((float)lastFrameSeconds);
 	app.Stars		.Update(framework.Window.Size.y, (float)lastFrameSeconds);
+	for(uint32_t iExplosion = 0; iExplosion < app.Explosions.size(); ++iExplosion)
+		app.Explosions[iExplosion].Update((float)lastFrameSeconds);
 
 	for(uint32_t iShot = 0; iShot < app.ShotsPlayer.Particles.Position.size(); ++iShot) {
 		const ::ced::SLine3<float>								shotSegment			= {app.ShotsPlayer.PositionPrev[iShot], app.ShotsPlayer.Particles.Position[iShot]};
@@ -262,7 +301,7 @@ int													update				(SApplication & app)	{
 			if( intersectRaySphere(shotSegment.A, (shotSegment.B - shotSegment.A).Normalize(), sphereCenter, 1, t, collisionPoint)
 			 && t < 1
 			) {
-				::handleShotCollision(collisionPoint, app.Health[iModel], app.Health[indexParent], app.Debris, (void*)SND_ALIAS_SYSTEMHAND);
+				::handleShotCollision(app.Scene.Geometry[indexParent / 7], indexParent / 7, iModel, collisionPoint, app.Health[iModel], app.Health[indexParent], app.Debris, app.Explosions, (void*)SND_ALIAS_SYSTEMHAND);
 				app.ShotsPlayer.Remove(iShot);
 				--iShot;
 			}
@@ -292,7 +331,7 @@ int													update				(SApplication & app)	{
 			if( intersectRaySphere(shotSegment.A, (shotSegment.B - shotSegment.A).Normalize(), sphereCenter, 1, t, collisionPoint)
 			 && t < 1
 			) {
-				::handleShotCollision(collisionPoint, app.Health[iModel], app.Health[indexParent], app.Debris, (void*)SND_ALIAS_SYSTEMEXCLAMATION);
+				::handleShotCollision(app.Scene.Geometry[indexParent / 7], indexParent / 7, iModel, collisionPoint, app.Health[iModel], app.Health[indexParent], app.Debris, app.Explosions, (void*)SND_ALIAS_SYSTEMEXCLAMATION);
 				app.ShotsEnemy.Remove(iShot);
 				--iShot;
 				break;

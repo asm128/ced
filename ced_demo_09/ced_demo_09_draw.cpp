@@ -139,14 +139,13 @@ int													draw				(SApplication & app)	{
 
 	drawStars(app.Stars, {framework.Pixels, framework.Window.Size});
 
-
 	app.Scene.LightVector.Normalize();
 
 	::ced::SMatrix4<float>									matrixView			= {};
 	matrixView.LookAt(app.Scene.Camera.Position, app.Scene.Camera.Target, app.Scene.Camera.Up);
 	{
 		::ced::SMatrix4<float>									matrixProjection	= {};
-		matrixProjection.FieldOfView(::ced::MATH_PI * .25, targetPixels.metrics().x / (double)targetPixels.metrics().y, 0.1, 200);
+		matrixProjection.FieldOfView(::ced::MATH_PI * .25, targetPixels.metrics().x / (double)targetPixels.metrics().y, 0.1, 1000);
 		matrixView											= matrixView * matrixProjection;
 	}
 	{
@@ -163,27 +162,25 @@ int													draw				(SApplication & app)	{
 	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
 	::ced::container<::ced::STriangleWeights<double>>		pixelVertexWeights;
 	::ced::SModelTransform									matrices;
-	::ced::SModelTransform									matricesParent;
 	::ced::SColorBGRA										colorLightPlayer		= ::ced::SColorBGRA{0xFF, 0xFF, 0xFF}  * .2;
 	::ced::SColorBGRA										colorLightEnemy			= ::ced::SColorBGRA{0xFF, 0xFF, 0xFF}  * .2;
+	app.Scene.ModelMatricesLocal.resize(app.Scene.Models.size());
 	for(uint32_t iModel = 0; iModel < app.Scene.Models.size(); ++iModel) {
-		if(app.Health[iModel] <= 0)
-			continue;
 		::ced::SModel3D											& model			= app.Scene.Models[iModel];
 		matrices.Scale		.Scale			(model.Scale	, true);
 		matrices.Rotation	.Rotation		(model.Rotation);
 		matrices.Position	.SetTranslation	(model.Position, true);
+		app.Scene.ModelMatricesLocal[iModel]				= matrices.Scale * matrices.Rotation * matrices.Position;
+	}
 
+	for(uint32_t iModel = 0; iModel < app.Scene.Models.size(); ++iModel) {
+		if(app.Health[iModel] <= 0)
+			continue;
 		::ced::SEntity											& entity				= app.Scene.Entities[iModel];
 		if(-1 == entity.Parent)
 			continue;
-		::ced::SModel3D											& modelParent			= app.Scene.Models[entity.Parent];
-		matricesParent.Scale	.Scale			(modelParent.Scale, true);
-		matricesParent.Rotation	.Rotation		(modelParent.Rotation);
-		matricesParent.Position	.SetTranslation	(modelParent.Position, true);
-
-		::ced::SMatrix4<float>									matrixTransform			= matrices.Scale * matrices.Rotation * matrices.Position;
-		::ced::SMatrix4<float>									matrixTransformParent	= matricesParent.Scale * matricesParent.Rotation * matricesParent.Position;
+		::ced::SMatrix4<float>									matrixTransform			= app.Scene.ModelMatricesLocal[iModel];
+		const ::ced::SMatrix4<float>							& matrixTransformParent	= app.Scene.ModelMatricesLocal[entity.Parent];
 		matrixTransform										= matrixTransform  * matrixTransformParent ;
 		::ced::container<::ced::SCoord3<float>>					lightPoints				= {};
 		::ced::container<::ced::SColorBGRA>						lightColors				= {};
@@ -218,6 +215,69 @@ int													draw				(SApplication & app)	{
 			pixelCoords			.clear();
 			pixelVertexWeights	.clear();
 			::ced::drawQuadTriangle(targetPixels, app.Scene.Geometry[iModel / 7], iTriangle, matrixTransform, matrixView, app.Scene.LightVector, pixelCoords, pixelVertexWeights, {app.Scene.Image[iModel / 7].Pixels.begin(), app.Scene.Image[iModel / 7].Metrics}, lightPoints, lightColors, {framework.DepthBuffer.begin(), framework.Window.Size});
+		}
+	}
+
+	for(uint32_t iExplosion = 0; iExplosion < app.Explosions.size(); ++iExplosion) {
+		const ::SExplosion							& explosion				= app.Explosions[iExplosion];
+		::ced::SEntity								& entity				= app.Scene.Entities[explosion.IndexEntity];
+		if(-1 == entity.Parent)
+			continue;
+		::ced::SMatrix4<float>						matrixTransform			= app.Scene.ModelMatricesLocal[explosion.IndexEntity];
+		const ::ced::SMatrix4<float>				& matrixTransformParent	= app.Scene.ModelMatricesLocal[entity.Parent];
+		matrixTransform							= matrixTransform  * matrixTransformParent ;
+
+		::ced::container<::ced::SCoord3<float>>					lightPoints				= {};
+		::ced::container<::ced::SColorBGRA>						lightColors				= {};
+		lightPoints.resize(app.ShotsEnemy.Particles.Position.size() + app.ShotsPlayer.Particles.Position.size() + app.Debris.Particles.Position.size() + 4);
+		lightColors.resize(app.ShotsEnemy.Particles.Position.size() + app.ShotsPlayer.Particles.Position.size() + app.Debris.Particles.Position.size() + 4);
+		lightPoints[0]									= app.Scene.Models[0].Position;
+		lightColors[0]									= colorLightPlayer;
+		for(uint32_t iEnemy = 1; iEnemy < 4; ++iEnemy) {
+			uint32_t iModelEnemy = 7 * iEnemy;
+			if(iModelEnemy >= app.Scene.Models.size())
+				continue;
+			lightPoints[iEnemy]								= app.Scene.Models[iModelEnemy].Position;
+			lightColors[iEnemy]								= colorLightEnemy;
+		}
+		uint32_t												iOffset					= 4;
+		for(uint32_t iShot = 0; iShot < app.ShotsEnemy.Particles.Position.size(); ++iShot) {
+			lightPoints[iOffset + iShot]						= app.ShotsEnemy.Particles.Position[iShot];
+			lightColors[iOffset + iShot]						= colorShotEnemy;
+		}
+		iOffset												+= app.ShotsEnemy.Particles.Position.size();
+		for(uint32_t iShot = 0; iShot < app.ShotsPlayer.Particles.Position.size(); ++iShot) {
+			lightPoints[iOffset + iShot]						= app.ShotsPlayer.Particles.Position[iShot];
+			lightColors[iOffset + iShot]						= colorShotPlayer;
+		}
+		iOffset												+= app.ShotsPlayer.Particles.Position.size();
+		for(uint32_t iParticle = 0; iParticle < app.Debris.Particles.Position.size(); ++iParticle) {
+			lightPoints[iOffset + iParticle]						= app.Debris.Particles.Position[iParticle];
+			::ced::SColorFloat									colorShot			= app.Debris.Colors[iParticle % ::std::size(app.Debris.Colors)];
+			lightColors[iOffset + iParticle]						= colorShot * app.Debris.Brightness[iParticle];
+		}
+
+		for(uint32_t iExplosionPart = 0; iExplosionPart < explosion.Particles.Position.size(); ++iExplosionPart) {
+			const SSlice & sliceMesh = explosion.Slices[iExplosionPart];
+			for(uint32_t iTriangle = 0, countTriangles = sliceMesh.Count; iTriangle < countTriangles; ++iTriangle) {
+				pixelCoords			.clear();
+				pixelVertexWeights	.clear();
+				::ced::SMatrix4<float>						matrixPart			= {};
+				matrixPart.Identity();
+				matrixPart._41							= explosion.Particles.Position[iExplosionPart].x;
+				matrixPart._42							= explosion.Particles.Position[iExplosionPart].y;
+				matrixPart._43							= explosion.Particles.Position[iExplosionPart].z;
+				const ::ced::SGeometryQuads								& geometry			= app.Scene.Geometry[explosion.IndexMesh];
+				::ced::STriangle3	<float>								triangle			= geometry.Triangles	[(sliceMesh.Offset + iTriangle)];
+				::ced::SCoord3		<float>								normal				= geometry.Normals		[(sliceMesh.Offset + iTriangle) / 2];
+				::ced::STriangle2	<float>								triangleTexCoords	= geometry.TextureCoords[(sliceMesh.Offset + iTriangle)];
+  				::ced::drawQuadTriangle(targetPixels, triangle, normal, triangleTexCoords, matrixPart, matrixView, app.Scene.LightVector, pixelCoords, pixelVertexWeights, {app.Scene.Image[explosion.IndexMesh].Pixels.begin(), app.Scene.Image[explosion.IndexMesh].Metrics}, lightPoints, lightColors, {framework.DepthBuffer.begin(), framework.Window.Size});
+				triangle											= {triangle.A, triangle.C, triangle.B};
+				triangleTexCoords									= {triangleTexCoords.A, triangleTexCoords.C, triangleTexCoords.B};
+				normal.x											*= -1;
+				normal.y											*= -1;
+				::ced::drawQuadTriangle(targetPixels, triangle, normal, triangleTexCoords, matrixPart, matrixView, app.Scene.LightVector, pixelCoords, pixelVertexWeights, {app.Scene.Image[explosion.IndexMesh].Pixels.begin(), app.Scene.Image[explosion.IndexMesh].Metrics}, lightPoints, lightColors, {framework.DepthBuffer.begin(), framework.Window.Size});
+			}
 		}
 	}
 

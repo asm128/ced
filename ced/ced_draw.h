@@ -61,7 +61,21 @@ namespace ced
 		, ::ced::container<::ced::STriangleWeights<double>>	& pixelVertexWeights
 		, ::ced::view_grid<uint32_t>						depthBuffer
 		);
-
+	int								drawQuadTriangle
+		( const ::ced::view_grid<::ced::SColorBGRA>			targetPixels
+		, ::ced::STriangle3			<float>					triangle
+		, ::ced::SCoord3			<float>					normal
+		, const ::ced::STriangle2	<float>					& triangleTexCoords
+		, const ::ced::SMatrix4<float>						& matrixTransform
+		, const ::ced::SMatrix4<float>						& matrixView
+		, const ::ced::SCoord3<float>						& lightVector
+		, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
+		, ::ced::container<::ced::STriangleWeights<double>>	& pixelVertexWeights
+		, ::ced::view_grid<::ced::SColorBGRA>				textureImage
+		, ::ced::container<::ced::SCoord3<float>>			& lightPoints
+		, ::ced::container<::ced::SColorBGRA>				& lightColors
+		, ::ced::view_grid<uint32_t>						depthBuffer
+		);
 	int								drawTriangle
 		( const ::ced::view_grid<::ced::SColorBGRA>			targetPixels
 		, const ::ced::SGeometryTriangles					& geometry
