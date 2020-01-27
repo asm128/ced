@@ -61,9 +61,8 @@ struct SDebris	{
 	::SParticles3								Particles			= {};
 
 	int											Spawn				(const ::ced::SCoord3<float> & position, const ::ced::SCoord3<float> & direction, float speed, float brightness)	{
-		Particles	.Spawn(position, direction, speed);
-		Brightness	.push_back(brightness);
-		return 0;
+		Particles.Spawn(position, direction, speed);
+		return Brightness.push_back(brightness);
 	}
 	int											SpawnSpherical		(uint32_t countDebris, const ::ced::SCoord3<float> & position, float speedDebris, float brightness)	{
 		for(uint32_t iDebris = 0; iDebris < countDebris; ++iDebris) {
@@ -102,10 +101,9 @@ struct SShots	{
 		if(Delay < 1)
 			return 0;
 		Delay										= 0;
-		Particles	.Spawn(position, direction, speed);
-		Brightness	.push_back(brightness);
+		Particles.Spawn(position, direction, speed);
 		PositionPrev.push_back(position);
-		return 0;
+		return Brightness.push_back(brightness);
 	}
 
 	int											Update				(float lastFrameSeconds)	{
@@ -119,9 +117,8 @@ struct SShots	{
 	}
 	int											Remove				(uint32_t iShot)			{
 		Particles.Remove(iShot);
-		PositionPrev	.remove_unordered(iShot);
-		Brightness		.remove_unordered(iShot);
-		return Brightness.size();
+		PositionPrev		.remove_unordered(iShot);
+		return Brightness	.remove_unordered(iShot);
 	}
 };
 
@@ -147,9 +144,8 @@ struct SExplosion {
 		return 0;
 	}
 	int											Remove				(uint32_t iSlice)			{
-		Slices			.remove_unordered(iSlice);
-		Particles		.Remove(iSlice);
-		return Slices.size();
+		Particles.Remove(iSlice);
+		return Slices.remove_unordered(iSlice);;
 	}
 };
 

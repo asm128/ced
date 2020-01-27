@@ -57,30 +57,23 @@ int													setup				(SApplication & app)	{
 	srand((uint32_t)time(0));
 
 	app.Scene.Geometry.resize(5);
-	//::ced::geometryBuildGrid(app.Scene.Geometry[0], {2U, 2U}, {1U, 1U});
-	::ced::geometryBuildSphere(app.Scene.Geometry[0],  8U, 7U, 1, {0, 1});
-	//::ced::geometryBuildCube(app.Scene.Geometry[0]);
+	::ced::geometryBuildSphere	(app.Scene.Geometry[0],  8U, 7U, 1, {0, 1});
+	::ced::geometryBuildFigure0	(app.Scene.Geometry[1], 2U, 8U, 1, {});
+	::ced::geometryBuildGrid	(app.Scene.Geometry[2], {2U, 2U}, {1U, 1U});
+	::ced::geometryBuildCube	(app.Scene.Geometry[2]);
+	::ced::geometryBuildCube	(app.Scene.Geometry[3]);
+	::ced::geometryBuildSphere	(app.Scene.Geometry[3], 4U, 2U, 1, {0, 0});
+	::ced::geometryBuildSphere	(app.Scene.Geometry[4], 16U, 2U, 1, {0, 0});
 
-	//::ced::geometryBuildSphere(app.Scene.Geometry[1],  4U, 3U, 1, {0, 1});
-	::ced::geometryBuildCube(app.Scene.Geometry[1]);
-	::ced::geometryBuildCube(app.Scene.Geometry[2]);
-	//::ced::geometryBuildCube(app.Scene.Geometry[3]);
-	::ced::geometryBuildCube(app.Scene.Geometry[4]);
-	::ced::geometryBuildGrid(app.Scene.Geometry[1], {2U, 2U}, {1U, 1U});
-	::ced::geometryBuildSphere(app.Scene.Geometry[2], 3U, 2U, 1, {0, 0});
-	::ced::geometryBuildSphere(app.Scene.Geometry[3], 4U, 2U, 1, {0, 0});
-	::ced::geometryBuildSphere(app.Scene.Geometry[4], 16U, 2U, 1, {0, 0});
-	//::ced::geometryBuildFigure0(app.Geometry, 10U, 10U, 1, {});
-
-	const uint32_t												partHealthPlayer		= 200;
-	const uint32_t												partHealthEnemy			= 1000;
+	const uint32_t											partHealthPlayer		= 200;
+	const uint32_t											partHealthEnemy			= 1000;
 	app.Scene.Models[::modelCreate(app, partHealthPlayer)].Position		= {-30};
 	app.Scene.Models[::modelCreate(app, partHealthEnemy )].Position		= {+20};
 	app.Scene.Models[::modelCreate(app, partHealthEnemy )].Position		= {+25};
-	//app.Scene.Models[::modelCreate(app, partHealthEnemy )].Position		= {+30};
-	//app.Scene.Models[::modelCreate(app, partHealthEnemy )].Position		= {+35};
+	app.Scene.Models[::modelCreate(app, partHealthEnemy )].Position		= {+30};
+	app.Scene.Models[::modelCreate(app, partHealthEnemy )].Position		= {+35};
 
-	::ced::SColorFloat										baseColor	[4]	=
+	::ced::SColorFloat										baseColor	[4]			=
 		{ ::ced::LIGHTGREEN
 		, ::ced::LIGHTBLUE
 		, ::ced::LIGHTRED
@@ -89,25 +82,19 @@ int													setup				(SApplication & app)	{
 
 	app.Scene.Image.resize(5);
 	for(uint32_t iImage = 0; iImage < app.Scene.Image.size(); ++iImage) {
-		app.Scene.Image[iImage].Metrics								= {24, 6};
+		app.Scene.Image[iImage].Metrics						= {24, 6};
 		app.Scene.Image[iImage].Pixels.resize(app.Scene.Image[iImage].Metrics.x * app.Scene.Image[iImage].Metrics.y);
 		for(uint32_t y = 0; y < app.Scene.Image[iImage].Metrics.y; ++y) {// Generate noise color for planet texture
-			//bool yAffect = rand() % 3;
-			bool xAffect = (y % 2);
+			bool													xAffect						= (y % 2);
 			::ced::SColorFloat										lineColor					= baseColor[rand() % ::std::size(baseColor)];
-			//bool zAffect = 0 == y % 2;
 			for(uint32_t x = 0; x < app.Scene.Image[iImage].Metrics.x; ++x) {
 				app.Scene.Image[iImage].Pixels[y * app.Scene.Image[iImage].Metrics.x + x] = lineColor * (xAffect ? ::std::max(.5, sin(x)) : 1);
 			}
 		}
-		//::ced::bmpFileLoad("../ced_data/cp437_12x12.bmp", app.Scene.Image[iImage]);
 	}
-
 	app.Scene.Camera.Target				= {};
 	app.Scene.Camera.Position			= {-0.000001f, 100, 0};
 	app.Scene.Camera.Up					= {0, 1, 0};
-
-
 	return 0;
 }
 
@@ -170,8 +157,8 @@ static	int											handleShotCollision
 		::SExplosion											newExplosion				= {};
 		newExplosion.IndexMesh								= indexShip;
 		newExplosion.IndexEntity							= indexEntityPart;
-		for(uint32_t iQuad = 0, countQuads = meshShip.Triangles.size() / 4; iQuad < countQuads; ++iQuad) {
-			newExplosion.Slices.push_back({(uint16_t)(iQuad), 2});
+		for(uint32_t iQuad = 0, countQuads = meshShip.Triangles.size() / 6; iQuad < countQuads; ++iQuad) {
+			newExplosion.Slices.push_back({(uint16_t)iQuad, (uint16_t)(rand() % 4 + 3)});
 			::ced::SCoord3<float>									direction					= {0, 1, 0};
 			direction.RotateX(rand() * (::ced::MATH_2PI / RAND_MAX));
 			direction.RotateY(rand() * (::ced::MATH_2PI / RAND_MAX));
