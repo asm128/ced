@@ -9,6 +9,10 @@
 
 namespace ced
 {
+	struct SLight3 {
+		::ced::SCoord3<float>			Position;
+		float							Range;
+	};
 
 	int								setPixel			(::ced::view_grid<::ced::SColorBGRA> pixels	, ::ced::SCoord2	<int32_t>	position	, ::ced::SColorBGRA color);
 	int								drawRectangle		(::ced::view_grid<::ced::SColorBGRA> pixels	, ::ced::SRectangle	<int32_t>	rectangle	, ::ced::SColorBGRA color);
@@ -86,6 +90,21 @@ namespace ced
 		, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
 		, ::ced::container<::ced::STriangleWeights<double>>	& pixelVertexWeights
 		, ::ced::view_grid<::ced::SColorBGRA>				textureImage
+		, ::ced::view_grid<uint32_t>						depthBuffer
+		);
+	int								drawTriangle
+		( const ::ced::view_grid<::ced::SColorBGRA>			targetPixels
+		, const ::ced::SGeometryTriangles					& geometry
+		, const int											iTriangle
+		, const ::ced::SMatrix4<float>						& matrixTransform
+		, const ::ced::SMatrix4<float>						& matrixView
+		, const ::ced::SCoord3<float>						& lightVector
+		, const ::ced::SColorFloat							& lightColor
+		, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
+		, ::ced::container<::ced::STriangleWeights<double>>	& pixelVertexWeights
+		, ::ced::view_grid<::ced::SColorBGRA>				textureImage
+		, ::ced::container<::ced::SLight3>					& lightPoints
+		, ::ced::container<::ced::SColorBGRA>				& lightColors
 		, ::ced::view_grid<uint32_t>						depthBuffer
 		);
 } // namespace

@@ -127,7 +127,6 @@ namespace ced
 			}
 			return 0;
 		}
-
 		void											SetPosition						(uint32_t iBody, const ::ced::SCoord3<float>& newPosition )			{
 			::ced::STransform3									& bodyTransform					= Transforms[iBody];
 			if( 0 == memcmp( &newPosition.x, &bodyTransform.Position.x, sizeof( ::ced::SCoord3<float> ) ) )
@@ -137,7 +136,6 @@ namespace ced
 			bodyFlags.OutdatedTransform						=
 			bodyFlags.OutdatedTensorWorld					= true;
 		}
-
 		void											SetOrientation					(uint32_t iBody, const ::ced::SQuaternion<float>& newOrientation )	{
 			::ced::STransform3									& bodyTransform					= Transforms[iBody];
 			if( 0 == memcmp( &newOrientation.x, &bodyTransform.Orientation.x, sizeof(::ced::SQuaternion<float>) ) )

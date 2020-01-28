@@ -295,7 +295,7 @@ int													ced::drawQuadTriangle
 		position												+= triangleWorld.C * vertexWeights.C;
 		::ced::SColorFloat											texelColor				= textureImage[(uint32_t)(texCoord.y * imageUnit.y) % textureImage.Metrics.y][(uint32_t)(texCoord.x * imageUnit.x) % textureImage.Metrics.x];
 		::ced::SColorFloat											fragmentColor			= {};
-		double														rangeLight				= 10;
+		static constexpr	const double							rangeLight				= 10;
 		for(uint32_t iLight = 0; iLight < lightPoints.size(); ++iLight) {
 			::ced::SCoord3<float>										lightToPoint		= lightPoints[iLight] - position;
 			::ced::SCoord3<float>										vectorToLight		= lightToPoint;
@@ -441,3 +441,75 @@ int													ced::drawTriangle
 	}
 	return 0;
 }
+
+
+int													ced::drawTriangle
+	( const ::ced::view_grid<::ced::SColorBGRA>			targetPixels
+	, const ::ced::SGeometryTriangles					& geometry
+	, const int											iTriangle
+	, const ::ced::SMatrix4<float>						& matrixTransform
+	, const ::ced::SMatrix4<float>						& matrixView
+	, const ::ced::SCoord3<float>						& lightVector
+	, const ::ced::SColorFloat							& lightColor
+	, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
+	, ::ced::container<::ced::STriangleWeights<double>>	& pixelVertexWeights
+	, ::ced::view_grid<::ced::SColorBGRA>				textureImage
+	, ::ced::container<::ced::SLight3>					& lightPoints
+	, ::ced::container<::ced::SColorBGRA>				& lightColors
+	, ::ced::view_grid<uint32_t>						depthBuffer
+	) {
+	::ced::STriangle3		<float>								triangleWorld		= geometry.Triangles		[iTriangle];
+	::ced::transform(triangleWorld, matrixTransform);
+	::ced::STriangle3		<float>								triangle			= triangleWorld;
+	const ::ced::STriangle3	<float>								& triangleNormals	= geometry.Normals			[iTriangle];
+	const ::ced::STriangle2	<float>								& triangleTexCoords	= geometry.TextureCoords	[iTriangle];
+	::ced::transform(triangle, matrixView);
+	if(triangle.A.z < 0 || triangle.A.z >= 1)
+		return 0;
+	if(triangle.B.z < 0 || triangle.B.z >= 1)
+		return 0;
+	if(triangle.C.z < 0 || triangle.C.z >= 1)
+		return 0;
+
+	::ced::drawTriangle(targetPixels.metrics(), triangle, pixelCoords, pixelVertexWeights, depthBuffer);
+
+	::ced::SCoord2<float>										imageUnit			= {textureImage.metrics().x - 1.0f, textureImage.metrics().y - 1.0f};
+	for(uint32_t iPixelCoord = 0; iPixelCoord < pixelCoords.size(); ++iPixelCoord) {
+		const ::ced::SCoord2<int32_t>								pixelCoord				= pixelCoords		[iPixelCoord];
+		const ::ced::STriangleWeights<double>						& vertexWeights			= pixelVertexWeights[iPixelCoord];
+		::ced::SCoord3<float>										normal					= triangleNormals.A * vertexWeights.A;
+		normal													+= triangleNormals.B * vertexWeights.B;
+		normal													+= triangleNormals.C * vertexWeights.C;
+		normal													= matrixTransform.TransformDirection(normal).Normalize();
+
+		double														lightFactorDirectional	= normal.Dot(lightVector);
+
+		::ced::SCoord2<float>										texCoord				= triangleTexCoords.A * vertexWeights.A;
+		texCoord												+= triangleTexCoords.B * vertexWeights.B;
+		texCoord												+= triangleTexCoords.C * vertexWeights.C;
+		::ced::SColorFloat											texelColor				= textureImage[(uint32_t)(texCoord.y * imageUnit.y) % textureImage.Metrics.y][(uint32_t)(texCoord.x * imageUnit.x) % textureImage.Metrics.x];
+		::ced::SColorFloat											fragmentColor			= {};
+
+		::ced::SCoord3<float>										position				= triangleWorld.A * vertexWeights.A;
+		position												+= triangleWorld.B * vertexWeights.B;
+		position												+= triangleWorld.C * vertexWeights.C;
+		for(uint32_t iLight = 0; iLight < lightPoints.size(); ++iLight) {
+			const ::ced::SLight3										& light				= lightPoints[iLight];
+
+			::ced::SCoord3<float>										lightToPoint		= light.Position - position;
+			::ced::SCoord3<float>										vectorToLight		= lightToPoint;
+			vectorToLight.Normalize();
+			double														lightFactorPoint	= vectorToLight.Dot(normal.Normalize());
+			if(lightToPoint.Length() > light.Range || lightFactorPoint <= 0)
+				continue;
+			double														invAttenuation		= ::std::max(0.0, 1.0 - (lightToPoint.Length() / light.Range));
+			fragmentColor											+= ::ced::SColorFloat{texelColor * lightColors[iLight] * invAttenuation * .5};
+		}
+		 (void)lightColor;
+		 (void)lightFactorDirectional ;
+
+		::ced::setPixel(targetPixels, pixelCoord, (texelColor * .1) + texelColor * lightColor * lightFactorDirectional + fragmentColor);
+	}
+	return 0;
+}
+
