@@ -33,7 +33,7 @@ int													modelCreate			(SApplication & app)	{
 		app.Scene.Models		[indexModel].Rotation.z		= (float)(-::ced::MATH_PI_2);
 	app.Scene.Entities		[indexModel]				= {-1};
 	for(uint32_t iModel = indexModel + 1; iModel < app.Scene.Models.size(); ++iModel) {
-		::ced::SModel3D											& model			= app.Scene.Models[iModel];
+		::ced::SModel3											& model			= app.Scene.Models[iModel];
 		model.Scale											= {1, 1, 1};
 		//model.Rotation										= {0, 1, 0};
 		model.Position										= {2, 0.5};
@@ -115,8 +115,8 @@ int													update				(SApplication & app)	{
 	app.AnimationTime									+= lastFrameSeconds;
 	app.ShotsPlayer.Delay								+= lastFrameSeconds * 20;
 	app.ShotsEnemy.Delay								+= lastFrameSeconds * 7;
-	::ced::SModel3D											& modelPlayer		= app.Scene.Models[0];
-	::ced::SModel3D											& modelEnemy		= app.Scene.Models[7];
+	::ced::SModel3											& modelPlayer		= app.Scene.Models[0];
+	::ced::SModel3											& modelEnemy		= app.Scene.Models[7];
 
 	modelEnemy.Position.z								= (float)(sin(app.AnimationTime) * 20);
 
@@ -158,7 +158,7 @@ int													update				(SApplication & app)	{
 	app.ShotsEnemy	.Update((float)lastFrameSeconds);
 	app.Debris		.Update((float)lastFrameSeconds);
 
-	::ced::SModelTransform									matricesParent;
+	::ced::SModelMatrices									matricesParent;
 	for(uint32_t iShot = 0; iShot < app.ShotsPlayer.Position.size(); ++iShot) {
 		const ::ced::SLine3<float>								shotSegment			= {app.ShotsPlayer.PositionPrev[iShot], app.ShotsPlayer.Position[iShot]};
 		for(uint32_t iModel = 7; iModel < app.Scene.Models.size(); ++iModel) {

@@ -13,7 +13,7 @@ struct SApplication {
 	::ced::SFramework									Framework			= {};
 
 	::ced::SImage										Image				= {};
-	::ced::container<::ced::SModel3D>					Models;
+	::ced::container<::ced::SModel3>					Models;
 	::ced::SGeometryTriangles							Geometry;
 };
 
@@ -28,7 +28,7 @@ int													setup				(SApplication & app)	{
 	//::ced::geometryBuildFigure0(app.Geometry, 10U, 10U, 1, {});
 	app.Models.resize(6);
 	for(uint32_t iModel = 0; iModel < app.Models.size(); ++iModel) {
-		::ced::SModel3D											& model			= app.Models[iModel];
+		::ced::SModel3											& model			= app.Models[iModel];
 		model.Scale											= {1, 1, 1};
 		//model.Rotation										= {0, 1, 0};
 		model.Position										= {4, 0.5};
@@ -88,7 +88,7 @@ int													update				(SApplication & app)	{
 
 	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
 	::ced::container<::ced::STriangleWeights<double>>		pixelVertexWeights;
-	::ced::SModelTransform									matrices;
+	::ced::SModelMatrices									matrices;
 	for(uint32_t iModel = 0; iModel < app.Models.size(); ++iModel) {
 		matrices.Scale		.Scale			(app.Models[iModel].Scale	, true);
 		matrices.Rotation	.Rotation		(app.Models[iModel].Rotation);

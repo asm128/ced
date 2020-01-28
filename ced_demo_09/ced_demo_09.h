@@ -11,7 +11,7 @@ struct SScene	{
 	::ced::container<::ced::SImage>						Image					= {};
 	::ced::container<::ced::SMatrix4<float>>			ModelMatricesLocal		= {};
 	::ced::container<::ced::SMatrix4<float>>			ModelMatricesGlobal		= {};
-	::ced::container<::ced::SModel3D>					Models					= {};
+	::ced::container<::ced::SModel3>					Models					= {};
 	::ced::container<::ced::SEntity>					Entities				= {};
 	::ced::container<int32_t>							GeometryIndex			= {};
 	::ced::container<::ced::SGeometryQuads>				Geometry				= {};

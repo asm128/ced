@@ -17,7 +17,7 @@ int													ced::bmpFileLoad
 	for(uint32_t y = 0; y < imageLoaded.Metrics.y; ++y)
 	for(uint32_t x = 0; x < imageLoaded.Metrics.x; ++x) {
 		COLORREF												winColor			= GetPixel(hdc, x, y);
-		imageLoaded.Pixels[y * imageLoaded.Metrics.x + x]	= {GetRValue(winColor), GetGValue(winColor), GetBValue(winColor), 0xFF};
+		imageLoaded.Pixels[y * imageLoaded.Metrics.x + x]	= {GetBValue(winColor), GetGValue(winColor), GetRValue(winColor), 0xFF};
 	}
 	SelectObject(hdc, oldBMP);
 	DeleteDC(hdc);

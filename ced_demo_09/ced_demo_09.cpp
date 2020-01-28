@@ -36,7 +36,7 @@ static	int											modelCreate			(::SApplication & app, uint32_t partHealth)	{
 	app.Scene.Entities		[indexModel]				= {-1};
 	app.Health[indexModel]									= partHealth * countParts;
 	for(uint32_t iModel = indexModel + 1; iModel < app.Scene.Models.size(); ++iModel) {
-		::ced::SModel3D											& model			= app.Scene.Models[iModel];
+		::ced::SModel3											& model			= app.Scene.Models[iModel];
 		model.Scale											= {1, 1, 1};
 		model.Rotation										= {0, 0, 0};
 		model.Position										= {2, 0.5};
@@ -211,23 +211,23 @@ int													update				(SApplication & app)	{
 
 	app.AnimationTime									+= lastFrameSeconds;
 	//app.ShotsPlayer.Delay								+= lastFrameSeconds * 20;
-	::ced::SModelTransform									matrices;
+	::ced::SModelMatrices									matrices;
 	app.Scene.ModelMatricesLocal.resize(app.Scene.Models.size());
 	for(uint32_t iModel = 0; iModel < app.Scene.Models.size(); ++iModel) {
-		::ced::SModel3D											& model				= app.Scene.Models[iModel];
+		::ced::SModel3											& model				= app.Scene.Models[iModel];
 		matrices.Scale		.Scale			(model.Scale	, true);
 		matrices.Rotation	.Rotation		(model.Rotation);
 		matrices.Position	.SetTranslation	(model.Position, true);
 		app.Scene.ModelMatricesLocal[iModel]				= matrices.Scale * matrices.Rotation * matrices.Position;
 	}
 
-	::ced::SModelTransform									matricesParent;
-	::ced::SModel3D											& modelPlayer			= app.Scene.Models[0];
+	::ced::SModelMatrices									matricesParent;
+	::ced::SModel3											& modelPlayer			= app.Scene.Models[0];
 	for(uint32_t iEnemy = 7; iEnemy < app.Scene.Models.size(); ++iEnemy) {
 		const int32_t											indexParent				= app.Scene.Entities[iEnemy].Parent;
 		if(0 >= app.Health[iEnemy])
 			continue;
-		::ced::SModel3D											& modelEnemy			= app.Scene.Models[iEnemy];
+		::ced::SModel3											& modelEnemy			= app.Scene.Models[iEnemy];
 		if(-1 == indexParent) {
 			modelEnemy.Position.z								= (float)(sin(app.AnimationTime) * iEnemy * 3) * ((iEnemy % 2) ? -1 : 1);
 		}
@@ -250,7 +250,7 @@ int													update				(SApplication & app)	{
 				continue;
 			matricesParent										= {};
 			const int32_t											indexParent				= app.Scene.Entities[iEntity].Parent;
-			::ced::SModel3D											& modelEnemy			= app.Scene.Models[iEntity];
+			::ced::SModel3											& modelEnemy			= app.Scene.Models[iEntity];
 			::ced::SCoord3<float>									positionGlobal			= app.Scene.ModelMatricesLocal[indexParent].Transform(modelEnemy.Position);
 			//positionGlobal.x									+= 1.5;
 			app.ShotsPlayer.Delay								+= lastFrameSeconds * 10;

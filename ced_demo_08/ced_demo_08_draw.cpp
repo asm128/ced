@@ -152,14 +152,14 @@ int													draw				(SApplication & app)	{
 
 	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
 	::ced::container<::ced::STriangleWeights<double>>		pixelVertexWeights;
-	::ced::SModelTransform									matrices;
-	::ced::SModelTransform									matricesParent;
+	::ced::SModelMatrices									matrices;
+	::ced::SModelMatrices									matricesParent;
 	::ced::SColorBGRA											colorShotPlayer			= {0x20, 0xfF, 0x40};
 	::ced::SColorBGRA											colorShotEnemy			= {0x40, 0x20, 0xfF};
 	for(uint32_t iModel = 0; iModel < app.Scene.Models.size(); ++iModel) {
 		if(app.Health[iModel] <= 0)
 			continue;
-		::ced::SModel3D											& model			= app.Scene.Models[iModel];
+		::ced::SModel3											& model			= app.Scene.Models[iModel];
 		matrices.Scale		.Scale			(model.Scale	, true);
 		matrices.Rotation	.Rotation		(model.Rotation);
 		matrices.Position	.SetTranslation	(model.Position, true);

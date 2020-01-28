@@ -36,7 +36,7 @@ static constexpr const ::ced::SCoord3<int8_t>		geometryNormals	[6]		=
 	, { 0, 1, 0} // Top
 	};
 
-struct SModel3D {
+struct SModel3 {
 	::ced::SCoord3<float>								Scale;
 	::ced::SCoord3<float>								Rotation;
 	::ced::SCoord3<float>								Position;
@@ -55,7 +55,7 @@ struct SApplication {
 	double												TotalTime			= 0;
 	::ced::SColorBGRA									Colors		[4]		= { {0xff,0, 0}, {0, 0xFF, 0}, {0, 0, 0xFF}, {0xFF, 0xC0, 0x40} };
 
-	::ced::container<::SModel3D>						Models;
+	::ced::container<::SModel3>						Models;
 	::ced::container<uint32_t>							DepthBuffer;
 	::SGeometryQuads									Geometry;
 };
@@ -119,7 +119,7 @@ int													setup				(SApplication & app)	{
 
 	app.Models.resize(10);
 	for(uint32_t iModel = 0; iModel < app.Models.size(); ++iModel) {
-		SModel3D												& model			= app.Models[iModel];
+		SModel3												& model			= app.Models[iModel];
 		model.Scale											= {1, 1, 1};
 		model.Rotation										= {0, 1, 0};
 		model.Position										= {4, 0.5};
