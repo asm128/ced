@@ -214,7 +214,7 @@ int													update				(SApplication & app)	{
 	::ced::SModelTransform									matrices;
 	app.Scene.ModelMatricesLocal.resize(app.Scene.Models.size());
 	for(uint32_t iModel = 0; iModel < app.Scene.Models.size(); ++iModel) {
-		::ced::SModel3D											& model			= app.Scene.Models[iModel];
+		::ced::SModel3D											& model				= app.Scene.Models[iModel];
 		matrices.Scale		.Scale			(model.Scale	, true);
 		matrices.Rotation	.Rotation		(model.Rotation);
 		matrices.Position	.SetTranslation	(model.Position, true);
@@ -222,12 +222,12 @@ int													update				(SApplication & app)	{
 	}
 
 	::ced::SModelTransform									matricesParent;
-	::ced::SModel3D											& modelPlayer		= app.Scene.Models[0];
+	::ced::SModel3D											& modelPlayer			= app.Scene.Models[0];
 	for(uint32_t iEnemy = 7; iEnemy < app.Scene.Models.size(); ++iEnemy) {
 		const int32_t											indexParent				= app.Scene.Entities[iEnemy].Parent;
 		if(0 >= app.Health[iEnemy])
 			continue;
-		::ced::SModel3D											& modelEnemy		= app.Scene.Models[iEnemy];
+		::ced::SModel3D											& modelEnemy			= app.Scene.Models[iEnemy];
 		if(-1 == indexParent) {
 			modelEnemy.Position.z								= (float)(sin(app.AnimationTime) * iEnemy * 3) * ((iEnemy % 2) ? -1 : 1);
 		}

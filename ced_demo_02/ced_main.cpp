@@ -108,9 +108,9 @@ int												update				(SApplication & app)	{
 	::ced::SMatrix4<float>								matrixViewport		= {};
 	matrixView.LookAt(cameraPosition, cameraTarget, cameraUp);
 	matrixProjection.FieldOfView(::ced::MATH_PI * .25, targetPixels.metrics().x / (double)targetPixels.metrics().y, 0.01, 1000);
-	matrixViewport.Viewport(targetPixels.metrics(), 0.01, 1000);
+	matrixViewport.Viewport(targetPixels.metrics());
 	matrixView										= matrixView * matrixProjection;
-	matrixView										= matrixView * matrixViewport.GetInverse();
+	matrixView										= matrixView * matrixViewport;
 
 	for(uint32_t iTriangle = 0; iTriangle < app.Triangles.size(); ++iTriangle) {
 		::ced::STriangle3	<float>							triangle			= app.Triangles	[iTriangle];
@@ -127,10 +127,6 @@ int												update				(SApplication & app)	{
 			, {(int32_t)triangle.B.x, (int32_t)triangle.B.y}
 			, {(int32_t)triangle.C.x, (int32_t)triangle.C.y}
 			};
-		::ced::SCoord2	<int32_t>							halfScreen			= window.Size.Cast<int32_t>() / 2;
-		newTriangle.A									+= {halfScreen.x, halfScreen.y, };
-		newTriangle.B									+= {halfScreen.x, halfScreen.y, };
-		newTriangle.C									+= {halfScreen.x, halfScreen.y, };
 		uint32_t											colorIndex			= (uint32_t)(app.TotalTime * .2) % ::std::size(app.Colors);
 		::ced::drawTriangle(targetPixels, newTriangle, app.Colors[colorIndex] * .1 + app.Colors[colorIndex] * lightFactor); //app.Colors[iTriangle % ::std::size(app.Colors)]);
 	}

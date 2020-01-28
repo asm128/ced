@@ -96,11 +96,9 @@ int													update				(SApplication & app)	{
 	::ced::SMatrix4<float>									matrixViewport		= {};
 	matrixView.LookAt(cameraPosition, cameraTarget, cameraUp);
 	matrixProjection.FieldOfView(::ced::MATH_PI * .25, targetPixels.metrics().x / (double)targetPixels.metrics().y, 0.01, 1000);
-	matrixViewport.Viewport(targetPixels.metrics(), 0.01, 1000);
+	matrixViewport.Viewport(targetPixels.metrics());
 	matrixView											= matrixView * matrixProjection;
-	matrixViewport										= matrixViewport.GetInverse();
-	matrixViewport._41									+= targetPixels.metrics().x / 2;
-	matrixViewport._42									+= targetPixels.metrics().y / 2;
+	matrixView											= matrixView * matrixViewport;
 
 	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
 	::ced::container<::ced::STriangleWeights<double>>		pixelVertexWeights;
@@ -123,7 +121,7 @@ int													update				(SApplication & app)	{
 		for(uint32_t iTriangle = 0; iTriangle < app.Geometry.Triangles.size(); ++iTriangle) {
 			pixelCoords			.clear();
 			pixelVertexWeights	.clear();
-			::ced::drawTriangle(targetPixels, app.Geometry, iTriangle, matrixTransform, matrixView * matrixViewport, lightVector, pixelCoords, pixelVertexWeights, {app.Image.Pixels.begin(), app.Image.Metrics}, {framework.DepthBuffer.begin(), framework.Window.Size});
+			::ced::drawTriangle(targetPixels, app.Geometry, iTriangle, matrixTransform, matrixView, lightVector, pixelCoords, pixelVertexWeights, {app.Image.Pixels.begin(), app.Image.Metrics}, {framework.DepthBuffer.begin(), framework.Window.Size});
 		}
 	}
 	return framework.Running ? 0 : 1;

@@ -210,14 +210,11 @@ int													draw				(SApplication & app)	{
 	{
 		::ced::SMatrix4<float>									matrixProjection	= {};
 		matrixProjection.FieldOfView(::ced::MATH_PI * .25, targetPixels.metrics().x / (double)targetPixels.metrics().y, 0.1, 1000);
-		matrixView											= matrixView * matrixProjection;
+		matrixView											*= matrixProjection;
 	}
 	{
 		::ced::SMatrix4<float>									matrixViewport		= {};
-		matrixViewport.Viewport(targetPixels.metrics(), 0.01, 1000);
-		matrixViewport										= matrixViewport.GetInverse();
-		matrixViewport._41									+= targetPixels.metrics().x / 2;
-		matrixViewport._42									+= targetPixels.metrics().y / 2;
+		matrixViewport.Viewport(targetPixels.metrics());
 		matrixView											*= matrixViewport;
 	}
 
@@ -242,7 +239,7 @@ int													draw				(SApplication & app)	{
 		matrixTransform										= matrixTransform  * matrixTransformParent ;
 		::getLightArrays(matrixTransform.GetTranslation(), lightPointsWorld, lightColorsWorld, lightPointsModel, lightColorsModel);
 		::ced::SGeometryQuads									& mesh					= app.Scene.Geometry[iModel / 7];
-		::ced::view_grid<::ced::SColorBGRA>						image					= {app.Scene.Image[iModel / 7].Pixels.begin(), app.Scene.Image[iModel / 7].Metrics};
+		::ced::view_grid<::ced::SColorBGRA>						image					= app.Scene.Image[iModel / 7];
 		for(uint32_t iTriangle = 0; iTriangle < mesh.Triangles.size(); ++iTriangle) {
 			pixelCoords			.clear();
 			pixelVertexWeights	.clear();
@@ -256,7 +253,7 @@ int													draw				(SApplication & app)	{
 		if(-1 == entity.Parent)
 			continue;
 
-		::ced::view_grid<::ced::SColorBGRA>			image					= {app.Scene.Image[explosion.IndexMesh].Pixels.begin(), app.Scene.Image[explosion.IndexMesh].Metrics};
+		::ced::view_grid<::ced::SColorBGRA>			image					= app.Scene.Image	[explosion.IndexMesh];
 		const ::ced::SGeometryQuads					& mesh					= app.Scene.Geometry[explosion.IndexMesh];
 		for(uint32_t iExplosionPart = 0; iExplosionPart < explosion.Particles.Position.size(); ++iExplosionPart) {
 			const SSlice								& sliceMesh				= explosion.Slices[iExplosionPart];

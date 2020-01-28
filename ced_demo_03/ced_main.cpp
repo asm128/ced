@@ -117,7 +117,7 @@ int													setup				(SApplication & app)	{
 	//::geometryBuildCube(app.Geometry);
 	::geometryBuildGrid(app.Geometry, {16U, 3U}, {1U, 1U});
 
-	app.Models.resize(6);
+	app.Models.resize(10);
 	for(uint32_t iModel = 0; iModel < app.Models.size(); ++iModel) {
 		SModel3D												& model			= app.Models[iModel];
 		model.Scale											= {1, 1, 1};
@@ -164,11 +164,9 @@ int													update				(SApplication & app)	{
 	::ced::SMatrix4<float>									matrixViewport		= {};
 	matrixView.LookAt(cameraPosition, cameraTarget, cameraUp);
 	matrixProjection.FieldOfView(::ced::MATH_PI * .25, targetPixels.metrics().x / (double)targetPixels.metrics().y, 0.01, 1000);
-	matrixViewport.Viewport(targetPixels.metrics(), 0.01, 1000);
+	matrixViewport.Viewport(targetPixels.metrics());
 	matrixView											= matrixView * matrixProjection;
-	matrixViewport										= matrixViewport.GetInverse();
-	matrixViewport._41									+= targetPixels.metrics().x / 2;
-	matrixViewport._42									+= targetPixels.metrics().y / 2;
+	matrixView											= matrixView * matrixViewport;
 
 	for(uint32_t iModel = 0; iModel < app.Models.size(); ++iModel) {
 		::ced::SMatrix4<float>									matrixScale		;
@@ -198,9 +196,6 @@ int													update				(SApplication & app)	{
 			if(triangle.B.z < 0 || triangle.B.z >= 1) continue;
 			if(triangle.C.z < 0 || triangle.C.z >= 1) continue;
 
-			triangle.A											= matrixViewport.Transform(triangle.A);
-			triangle.B											= matrixViewport.Transform(triangle.B);
-			triangle.C											= matrixViewport.Transform(triangle.C);
 			double													lightFactor			= normal.Dot(lightVector);
 			uint32_t												colorIndex			= (uint32_t)iTriangle % ::std::size(app.Colors);
 			::ced::drawTriangle(targetPixels.metrics(), triangle, pixelCoords, pixelVertexWeights, {app.DepthBuffer.begin(), app.Window.Size});

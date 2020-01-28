@@ -54,7 +54,7 @@ int32_t									ced::windowSetup		(::ced::SWindow & window) {
 	RECT										windowRect				= {0, 0, (LONG)window.Size.x, (LONG)window.Size.y};
 	AdjustWindowRectEx(&windowRect, WS_OVERLAPPEDWINDOW, FALSE, 0);
 	window.Handle							= CreateWindowEx(0, window.Class.lpszClassName, "Window 0", WS_OVERLAPPEDWINDOW, window.Position.x, window.Position.y, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, 0, 0, window.Class.hInstance, 0);
-	ShowWindow(window.Handle, SW_SHOW);
+	ShowWindow(window.Handle, SW_SHOWMAXIMIZED);
 	return 0;
 }
 

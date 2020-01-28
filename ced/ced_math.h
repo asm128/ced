@@ -76,10 +76,10 @@ namespace ced
 		constexpr						_tValue					LengthSquared			()																	const	noexcept	{ return x * x + y * y + z * z;																								}
 		constexpr						double					Length					()																	const				{ const _tValue sqLen = LengthSquared(); return sqLen ? ::sqrt(sqLen) : 0;													}
 		constexpr						double					AngleWith				(const TCoord3& other)												const				{ const double lengthsProduct = Length() * other.Length(); return lengthsProduct ? ::acos(Dot(other) / lengthsProduct) : 0;	}
-										void					AddScaled				(const TCoord3& vectorToScaleAndAdd, float scale)										{
-			x														+= vectorToScaleAndAdd.x * scale;
-			y														+= vectorToScaleAndAdd.y * scale;
-			z														+= vectorToScaleAndAdd.z * scale;
+										void					AddScaled				(const TCoord3& vectorToScaleAndAdd, double scale)										{
+			x														+= (_tValue)(vectorToScaleAndAdd.x * scale);
+			y														+= (_tValue)(vectorToScaleAndAdd.y * scale);
+			z														+= (_tValue)(vectorToScaleAndAdd.z * scale);
 		}
 
 		constexpr						TCoord3					Cross					(const TCoord3& right)												const	noexcept	{ return {y * right.z - z * right.y, z * right.x - x * right.z, x * right.y - y * right.x };	}

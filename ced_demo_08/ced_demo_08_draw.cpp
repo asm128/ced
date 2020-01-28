@@ -146,11 +146,9 @@ int													draw				(SApplication & app)	{
 	::ced::SMatrix4<float>									matrixViewport		= {};
 	matrixView.LookAt(app.Scene.Camera.Position, app.Scene.Camera.Target, app.Scene.Camera.Up);
 	matrixProjection.FieldOfView(::ced::MATH_PI * .25, targetPixels.metrics().x / (double)targetPixels.metrics().y, 0.01, 1000);
-	matrixViewport.Viewport(targetPixels.metrics(), 0.01, 1000);
+	matrixViewport.Viewport(targetPixels.metrics());
 	matrixView											= matrixView * matrixProjection;
-	matrixViewport										= matrixViewport.GetInverse();
-	matrixViewport._41									+= targetPixels.metrics().x / 2;
-	matrixViewport._42									+= targetPixels.metrics().y / 2;
+	matrixView											= matrixView * matrixViewport;
 
 	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
 	::ced::container<::ced::STriangleWeights<double>>		pixelVertexWeights;
@@ -198,12 +196,12 @@ int													draw				(SApplication & app)	{
 		for(uint32_t iTriangle = 0; iTriangle < app.Scene.Geometry.Triangles.size(); ++iTriangle) {
 			pixelCoords			.clear();
 			pixelVertexWeights	.clear();
-			::ced::drawQuadTriangle(targetPixels, app.Scene.Geometry, iTriangle, matrixTransform, matrixView * matrixViewport, app.Scene.LightVector, pixelCoords, pixelVertexWeights, {app.Scene.Image.Pixels.begin(), app.Scene.Image.Metrics}, lightPoints, lightColors, {framework.DepthBuffer.begin(), framework.Window.Size});
+			::ced::drawQuadTriangle(targetPixels, app.Scene.Geometry, iTriangle, matrixTransform, matrixView, app.Scene.LightVector, pixelCoords, pixelVertexWeights, {app.Scene.Image.Pixels.begin(), app.Scene.Image.Metrics}, lightPoints, lightColors, {framework.DepthBuffer.begin(), framework.Window.Size});
 		}
 	}
 
-	::drawShots(targetPixels, app.ShotsPlayer	, matrixView * matrixViewport, colorShotPlayer	, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
-	::drawShots(targetPixels, app.ShotsEnemy	, matrixView * matrixViewport, colorShotEnemy	, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
-	::drawDebris(targetPixels, app.Debris		, matrixView * matrixViewport, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
+	::drawShots(targetPixels, app.ShotsPlayer	, matrixView, colorShotPlayer	, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
+	::drawShots(targetPixels, app.ShotsEnemy	, matrixView, colorShotEnemy	, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
+	::drawDebris(targetPixels, app.Debris		, matrixView, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
 	return 0;
 }
