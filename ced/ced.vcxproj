@@ -163,6 +163,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ced_collision.cpp" />
     <ClCompile Include="ced_draw.cpp" />
     <ClCompile Include="ced_framework.cpp" />
     <ClCompile Include="ced_geometry.cpp" />
@@ -171,6 +172,7 @@
     <ClCompile Include="ced_window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ced_collision.h" />
     <ClInclude Include="ced_color.h" />
     <ClInclude Include="ced_draw.h" />
     <ClInclude Include="ced_framework.h" />

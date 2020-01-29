@@ -138,11 +138,11 @@ static	int											drawDebris			(::ced::view_grid<::ced::SColorBGRA> targetPix
 		starFinalColor.g										= ::std::max(0.0f, starFinalColor.g - (1.0f - ::std::min(1.0f, debris.Brightness[iParticle] * 2.5f * (1.0f / debris.Brightness.size() * iParticle * 2))));
 		starFinalColor.b										= ::std::max(0.0f, starFinalColor.b - (1.0f - ::std::min(1.0f, debris.Brightness[iParticle] * 2.5f * (1.0f / debris.Brightness.size() * iParticle * 1))));
 		//::ced::setPixel(targetPixels, pixelCoord, starFinalColor);
-		const	double											brightRadius		= 3.0;
+		const	double											brightRadius		= 2.0;
 		const	double											brightRadiusSquared	= brightRadius * brightRadius;
 		double													brightUnit			= 1.0 / brightRadiusSquared;
-		for(int32_t y = (int32_t)-brightRadius; y < (int32_t)brightRadius; ++y)
-		for(int32_t x = (int32_t)-brightRadius; x < (int32_t)brightRadius; ++x) {
+		for(int32_t y = (int32_t)-brightRadius - 1; y < (int32_t)brightRadius + 1; ++y)
+		for(int32_t x = (int32_t)-brightRadius - 1; x < (int32_t)brightRadius + 1; ++x) {
 			::ced::SCoord2<float>									brightPos			= {(float)x, (float)y};
 			const double											brightDistance		= brightPos.LengthSquared();
 			if(brightDistance <= brightRadiusSquared) {
@@ -295,7 +295,7 @@ int													update						(SApplication & app)	{
 	if(GetAsyncKeyState('A')) app.SolarSystem.Scene.Camera.Position.RotateY( (GetAsyncKeyState(VK_SHIFT) ? 100 : 2) * secondsLastFrame);
 	if(GetAsyncKeyState('D')) app.SolarSystem.Scene.Camera.Position.RotateY(-(GetAsyncKeyState(VK_SHIFT) ? 100 : 2) * secondsLastFrame);
 
-	app.SolarSystem.SunFire.SpawnSpherical(1000, {}, 5, 1, 10);
+	app.SolarSystem.SunFire.SpawnSpherical(100, {}, 5, 1, 10);
 
 	// Update physics
 	app.SolarSystem.SunFire.Update(secondsLastFrame * 2);

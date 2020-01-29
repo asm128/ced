@@ -297,7 +297,7 @@ namespace ced
 	};
 
 	template<typename _tValue>
-	struct SCircle3 {
+	struct SSphere {
 		SCoord3<_tValue>					Position	;
 		double								Radius		;
 	};

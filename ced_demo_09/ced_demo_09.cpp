@@ -1,4 +1,5 @@
 #include "ced_demo_09.h"
+#include "ced_collision.h"
 #include <time.h>
 
 int													cleanup				(SApplication & app)	{ return ::ced::frameworkCleanup(app.Framework); }
@@ -27,14 +28,14 @@ static	int											modelCreate			(::SApplication & app, uint32_t partHealth)	{
 	app.Scene.Models				.resize(indexModel + 1 + countParts);
 	app.Scene.Entities				.resize(indexModel + 1 + countParts);
 
-	app.Scene.Models	[indexModel]				= {};
-	app.Scene.Models	[indexModel].Scale			= {1, 1, 1};
+	app.Scene.Models	[indexModel]					= {};
+	app.Scene.Models	[indexModel].Scale				= {1, 1, 1};
 	if(0 == indexModel)
-		app.Scene.Models	[indexModel].Rotation.z		= (float)(-::ced::MATH_PI_2);
+		app.Scene.Models	[indexModel].Rotation.z			= (float)(-::ced::MATH_PI_2);
 	else
-		app.Scene.Models	[indexModel].Rotation.z		= (float)(::ced::MATH_PI_2);
-	app.Scene.Entities	[indexModel]				= {-1};
-	app.Health[indexModel]									= partHealth * countParts;
+		app.Scene.Models	[indexModel].Rotation.z			= (float)(::ced::MATH_PI_2);
+	app.Scene.Entities	[indexModel]					= {-1};
+	app.Health[indexModel]								= partHealth * countParts;
 	for(uint32_t iModel = indexModel + 1; iModel < app.Scene.Models.size(); ++iModel) {
 		::ced::SModel3											& model			= app.Scene.Models[iModel];
 		model.Scale											= {1, 1, 1};
@@ -68,11 +69,11 @@ int													setup				(SApplication & app)	{
 
 	const uint32_t											partHealthPlayer		= 200;
 	const uint32_t											partHealthEnemy			= 1000;
-	app.Scene.Models[::modelCreate(app, partHealthPlayer)].Position		= {-30};
-	app.Scene.Models[::modelCreate(app, partHealthEnemy )].Position		= {+20};
-	app.Scene.Models[::modelCreate(app, partHealthEnemy )].Position		= {+25};
-	app.Scene.Models[::modelCreate(app, partHealthEnemy )].Position		= {+30};
-	app.Scene.Models[::modelCreate(app, partHealthEnemy )].Position		= {+35};
+	app.Scene.Models[::modelCreate(app, partHealthPlayer)].Position	= {-30};
+	app.Scene.Models[::modelCreate(app, partHealthEnemy )].Position	= {+20};
+	app.Scene.Models[::modelCreate(app, partHealthEnemy )].Position	= {+25};
+	app.Scene.Models[::modelCreate(app, partHealthEnemy )].Position	= {+30};
+	app.Scene.Models[::modelCreate(app, partHealthEnemy )].Position	= {+35};
 
 	::ced::SColorFloat										baseColor	[4]			=
 		{ ::ced::LIGHTGREEN
@@ -82,7 +83,7 @@ int													setup				(SApplication & app)	{
 		};
 
 	app.Scene.Image.resize(5);
-	::ced::bmpFileLoad("../ced_data/earth_color.bmp", app.Scene.Image[0], true);
+	//::ced::bmpFileLoad("../ced_data/mars_color.bmp", app.Scene.Image[0], true);
 	for(uint32_t iImage = 0; iImage < app.Scene.Image.size(); ++iImage) {
 		if(app.Scene.Image[iImage].Pixels.size())
 			continue;
@@ -96,33 +97,12 @@ int													setup				(SApplication & app)	{
 			}
 		}
 	}
-	app.Scene.Camera.Target				= {};
-	app.Scene.Camera.Position			= {-0.000001f, 100, 0};
-	app.Scene.Camera.Up					= {0, 1, 0};
+	app.Scene.Camera.Target								= {};
+	app.Scene.Camera.Position							= {-0.000001f, 100, 0};
+	app.Scene.Camera.Up									= {0, 1, 0};
 	return 0;
 }
 
-// Intersects ray r = p + td, |d| = 1, with sphere s and, if intersecting,
-// returns t value of intersection and intersection point q
-static	int											intersectRaySphere		(const ::ced::SCoord3<float> & p, const ::ced::SCoord3<float> & d, const ::ced::SCoord3<float> & sphereCenter, double sphereRadius, float &t, ::ced::SCoord3<float> &q) {
-	const ::ced::SCoord3<float>								m						= p - sphereCenter;
-	double													b						= m.Dot(d);
-	double													c						= m.Dot(m) - sphereRadius * sphereRadius;
-
-	if (c > 0.0f && b > 0.0f)	// Exit if r’s origin outside s (c > 0) and r pointing away from s (b > 0)
-		return 0;
-	double													discr					= b * b - c;
-
-	if (discr < 0.0f)	// A negative discriminant corresponds to ray missing sphere
-		return 0;
-
-	t					= (float)(-b - sqrt(discr));	// Ray now found to intersect sphere, compute smallest t value of intersection
-	if (t < 0.0f)	// If t is negative, ray started inside sphere so clamp t to zero
-		t					= 0.0f;
-
-	q					= p + d * t;
-	return 1;
-}
 
 static	int											handleShotCollision
 	( ::ced::SGeometryQuads				& meshShip
@@ -192,7 +172,7 @@ static	int											collisionDetect		(::SShots & shots, const ::ced::SCoord3<fl
 		const ::ced::SLine3<float>								shotSegment			= {shots.PositionPrev[iShot], shots.Particles.Position[iShot]};
 		float													t				= 0;
 		::ced::SCoord3<float>									collisionPoint	= {};
-		if( intersectRaySphere(shotSegment.A, (shotSegment.B - shotSegment.A).Normalize(), modelPosition, 1.2, t, collisionPoint)
+		if( ::ced::intersectRaySphere(shotSegment.A, (shotSegment.B - shotSegment.A).Normalize(), {modelPosition, 1.2}, t, collisionPoint)
 			&& t < 1
 		) {
 			detected											= true;
@@ -258,7 +238,7 @@ int													update				(SApplication & app)	{
 			::ced::SCoord3<float>									positionGlobal			= app.Scene.ModelMatricesLocal[indexParent].Transform(modelEnemy.Position);
 			//positionGlobal.x									+= 1.5;
 			app.ShotsPlayer.Delay								+= secondsLastFrame * 10;
-			::ced::SCoord3<float>									direction			= {1, 0, 0};
+			::ced::SCoord3<float>									direction				= {1, 0, 0};
 			direction.RotateY(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
 			direction.RotateZ(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
 			app.ShotsPlayer.Spawn(positionGlobal, direction, 100, .2f);
@@ -274,12 +254,12 @@ int													update				(SApplication & app)	{
 	if(GetAsyncKeyState('D')) modelPlayer.Position.z		-= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
 
 	if(GetAsyncKeyState(VK_NUMPAD5))
-		modelPlayer.Rotation								= {0, 0, (float)-::ced::MATH_PI_2};
+		modelPlayer.Rotation									= {0, 0, (float)-::ced::MATH_PI_2};
 	else {
-		if(GetAsyncKeyState(VK_NUMPAD8)) modelPlayer.Rotation.z	-= (float)(secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-		if(GetAsyncKeyState(VK_NUMPAD2)) modelPlayer.Rotation.z	+= (float)(secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-		if(GetAsyncKeyState(VK_NUMPAD6)) modelPlayer.Rotation.x -= (float)(secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-		if(GetAsyncKeyState(VK_NUMPAD4)) modelPlayer.Rotation.x += (float)(secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+		if(GetAsyncKeyState(VK_NUMPAD8)) modelPlayer.Rotation.z		-= (float)(secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+		if(GetAsyncKeyState(VK_NUMPAD2)) modelPlayer.Rotation.z		+= (float)(secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+		if(GetAsyncKeyState(VK_NUMPAD6)) modelPlayer.Rotation.x		-= (float)(secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+		if(GetAsyncKeyState(VK_NUMPAD4)) modelPlayer.Rotation.x		+= (float)(secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
 	}
 
 	if(app.Health[0])
