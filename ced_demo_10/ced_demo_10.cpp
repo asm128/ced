@@ -139,11 +139,11 @@ int													setup							(SApplication & app)	{
 
 	app.SolarSystem.Image.resize(PLANET_COUNT + 1);
 
-	::ced::bmpFileLoad("../ced_data/sun_color.bmp", app.SolarSystem.Image[0]);
+	::ced::bmpFileLoad("../ced_data/sun_color.bmp", app.SolarSystem.Image[0], true);
 	for(uint32_t iPlanet = 0; iPlanet < PLANET_COUNT; ++iPlanet) {
 		char														finalPath[256] = {};
 		sprintf_s(finalPath, "../ced_data/%s", PLANET_IMAGE[iPlanet]);
-		::ced::bmpFileLoad(finalPath, app.SolarSystem.Image[iPlanet + 1]);
+		::ced::bmpFileLoad(finalPath, app.SolarSystem.Image[iPlanet + 1], true);
 	}
 
 	for(uint32_t iImage = 0; iImage < app.SolarSystem.Image.size(); ++iImage) {

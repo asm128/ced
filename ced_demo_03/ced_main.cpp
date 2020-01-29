@@ -49,13 +49,13 @@ struct SGeometryQuads {
 
 struct SApplication {
 	::ced::SWindow										Window				= {};
-	::ced::SColorBGRA										* Pixels			= 0;
+	::ced::SColorBGRA									* Pixels			= 0;
 	::ced::STimer										Timer				= {};
 	bool												Running				= true;
 	double												TotalTime			= 0;
 	::ced::SColorBGRA									Colors		[4]		= { {0xff,0, 0}, {0, 0xFF, 0}, {0, 0, 0xFF}, {0xFF, 0xC0, 0x40} };
 
-	::ced::container<::SModel3>						Models;
+	::ced::container<::SModel3>							Models;
 	::ced::container<uint32_t>							DepthBuffer;
 	::SGeometryQuads									Geometry;
 };
@@ -115,7 +115,7 @@ int													setup				(SApplication & app)	{
 	app.Pixels											= (::ced::SColorBGRA*)malloc(sizeof(::ced::SColorBGRA) * pixelCount);
 	app.DepthBuffer.resize(pixelCount);
 	//::geometryBuildCube(app.Geometry);
-	::geometryBuildGrid(app.Geometry, {16U, 3U}, {1U, 1U});
+	::geometryBuildGrid(app.Geometry, {4U, 3U}, {1U, 1U});
 
 	app.Models.resize(10);
 	for(uint32_t iModel = 0; iModel < app.Models.size(); ++iModel) {

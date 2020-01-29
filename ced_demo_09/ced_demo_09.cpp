@@ -57,6 +57,7 @@ int													setup				(SApplication & app)	{
 	srand((uint32_t)time(0));
 
 	app.Scene.Geometry.resize(5);
+	//::ced::geometryBuildCube	(app.Scene.Geometry[0]);
 	::ced::geometryBuildSphere	(app.Scene.Geometry[0],  8U, 7U, 1, {0, 1});
 	::ced::geometryBuildFigure0	(app.Scene.Geometry[1], 2U, 8U, 1, {});
 	::ced::geometryBuildGrid	(app.Scene.Geometry[2], {2U, 2U}, {1U, 1U});
@@ -81,7 +82,10 @@ int													setup				(SApplication & app)	{
 		};
 
 	app.Scene.Image.resize(5);
+	::ced::bmpFileLoad("../ced_data/earth_color.bmp", app.Scene.Image[0], true);
 	for(uint32_t iImage = 0; iImage < app.Scene.Image.size(); ++iImage) {
+		if(app.Scene.Image[iImage].Pixels.size())
+			continue;
 		app.Scene.Image[iImage].Metrics						= {24, 6};
 		app.Scene.Image[iImage].Pixels.resize(app.Scene.Image[iImage].Metrics.x * app.Scene.Image[iImage].Metrics.y);
 		for(uint32_t y = 0; y < app.Scene.Image[iImage].Metrics.y; ++y) {// Generate noise color for planet texture

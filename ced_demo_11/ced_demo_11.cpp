@@ -82,7 +82,7 @@ struct SDebris	{
 			float											& speed				= Particles.Speed		[iShot];
 			float											& brightness 		= Brightness			[iShot];
 			brightness									-= fLastFrame;
-			speed										-= fLastFrame * (rand() % 8);
+			speed										-= fLastFrame * (rand() % 16);
 			if(brightness < 0) {
 				Particles.Remove(iShot);
 				Brightness.remove_unordered(iShot--);
@@ -231,11 +231,11 @@ int													setup							(SApplication & app)	{
 		};
 
 	app.SolarSystem.Image.resize(PLANET_COUNT + 1);
-	::ced::bmpFileLoad("../ced_data/sun_color.bmp", app.SolarSystem.Image[0]);
+	::ced::bmpFileLoad("../ced_data/sun_color.bmp", app.SolarSystem.Image[0], true);
 	for(uint32_t iPlanet = 0; iPlanet < PLANET_COUNT; ++iPlanet) {
 		char														finalPath[256] = {};
 		sprintf_s(finalPath, "../ced_data/%s", PLANET_IMAGE[iPlanet]);
-		::ced::bmpFileLoad(finalPath, app.SolarSystem.Image[iPlanet + 1]);
+		::ced::bmpFileLoad(finalPath, app.SolarSystem.Image[iPlanet + 1], true);
 	}
 
 	for(uint32_t iImage = 0; iImage < app.SolarSystem.Image.size(); ++iImage) {
@@ -248,7 +248,7 @@ int													setup							(SApplication & app)	{
 			app.SolarSystem.Image[iImage].Pixels[y * app.SolarSystem.Image[iImage].Metrics.x + x]		= colors[iImage % ::std::size(colors)];
 		}
 	}
-	app.SolarSystem.Entities.push_back({-1, 0, 0, 0});
+	app.SolarSystem.Entities.push_back({-1, 0, 0, 0, -1});
 	for(uint32_t iPlanet = 0; iPlanet < PLANET_COUNT; ++iPlanet) {
 		const uint32_t											iBodyOrbit					= iPlanet * 2;
 		const uint32_t											iBodyPlanet					= iBodyOrbit + 1;
@@ -298,7 +298,7 @@ int													update						(SApplication & app)	{
 	app.SolarSystem.SunFire.SpawnSpherical(1000, {}, 5, 1, 10);
 
 	// Update physics
-	app.SolarSystem.SunFire.Update(secondsLastFrame);
+	app.SolarSystem.SunFire.Update(secondsLastFrame * 2);
 	::ced::SIntegrator3										& bodies						= app.SolarSystem.World;
 	bodies.Integrate(secondsLastFrame);
 
@@ -329,8 +329,9 @@ int													update						(SApplication & app)	{
 	for(uint32_t iEntity = 0; iEntity < app.SolarSystem.Entities.size(); ++iEntity) {
 		const ::SEntity											& entity					= app.SolarSystem.Entities[iEntity];
 		if(-1 != entity.IndexParent)	// process root entities
-			continue;
-		updateEntityTransforms(iEntity, app.SolarSystem.Entities, scene, bodies);
+			updateEntityTransforms(iEntity, app.SolarSystem.Entities, scene, bodies);
+		else
+			app.SolarSystem.Scene.Transform[iEntity].Identity();
 	}
 
 	::ced::container<::ced::SLight3>						lightPoints;
@@ -348,12 +349,14 @@ int													update						(SApplication & app)	{
 
 		matrices.Scale		.Scale			(scene.Pivot[entity.IndexModel].Scale		, true);
 		matrices.Position	.SetTranslation	(scene.Pivot[entity.IndexModel].Position	, true);
+		::ced::view_grid<::ced::SColorBGRA>						entityImage					= app.SolarSystem.Image[entity.IndexImage];
+		::ced::SGeometryTriangles								& entityGeometry			= scene.Geometry[entity.IndexGeometry];
 		matrixTransform										= matrices.Scale * matrices.Position * matrixTransform;
 		::ced::SMatrix4<float>									matrixTransformView			= matrixTransform * matrixView;
-		for(uint32_t iTriangle = 0; iTriangle < scene.Geometry[0].Triangles.size(); ++iTriangle) {
+		for(uint32_t iTriangle = 0; iTriangle < entityGeometry.Triangles.size(); ++iTriangle) {
 			pixelCoords			.clear();
 			pixelVertexWeights	.clear();
-			::ced::drawTriangle(targetPixels, scene.Geometry[0], iTriangle, matrixTransform, matrixTransformView, lightVector, iEntity ? ::ced::BLACK : ::ced::WHITE, pixelCoords, pixelVertexWeights, app.SolarSystem.Image[entity.IndexImage], lightPoints, lightColors, depthBuffer);
+			::ced::drawTriangle(targetPixels, entityGeometry, iTriangle, matrixTransform, matrixTransformView, lightVector, iEntity ? ::ced::BLACK : ::ced::WHITE, pixelCoords, pixelVertexWeights, entityImage, lightPoints, lightColors, depthBuffer);
 		}
 	}
 	::drawDebris(targetPixels, app.SolarSystem.SunFire, matrixView, depthBuffer);

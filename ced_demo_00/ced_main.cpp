@@ -34,7 +34,7 @@ int									setup				(SApplication & app)	{
 		::ced::SCircle		<int32_t>			& circle			= app.Circles	[y * 2 + x];
 		rectangle.Position					= {(int32_t)(window.Size.x / 2 * x	), (int32_t)(window.Size.y / 2 * y	)};
 		rectangle.Size						= {(int32_t)(window.Size.x / 2		), (int32_t)(window.Size.y / 2		)};
-		circle.Position						= {rectangle.Position.x + rectangle.Size.x / 2, rectangle.Position.y + rectangle.Size.y / 2};
+		circle.Position						= {rectangle.Position.x + rectangle.Size.x / 2, rectangle.Position.y + rectangle.Size.y / 4};
 		circle.Radius						= 10;
 
 		::ced::STriangle2	<int32_t>			& triangle			= app.Triangles	[y * 2 + x];
@@ -68,7 +68,7 @@ int									update				(SApplication & app)	{
 			::ced::SCircle		<int32_t>			& circle			= app.Circles	[y * 2 + x];
 			rectangle.Position					= {(int32_t)(window.Size.x / 2 * x	), (int32_t)(window.Size.y / 2 * y	)};
 			rectangle.Size						= {(int32_t)(window.Size.x / 2		), (int32_t)(window.Size.y / 2		)};
-			circle.Position						= {rectangle.Position.x + rectangle.Size.x / 2, rectangle.Position.y + rectangle.Size.y / 2};
+			circle.Position						= {rectangle.Position.x + rectangle.Size.x / 2, rectangle.Position.y + rectangle.Size.y / 4};
 			circle.Radius						= 10;
 		}
 	}
