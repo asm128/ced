@@ -30,6 +30,9 @@
     <ClCompile Include="ced_framework.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ced_rigidbody.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ced_math.h">
@@ -65,7 +68,7 @@
     <ClInclude Include="ced_framework.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ced_stars.h">
+    <ClInclude Include="ced_rigidbody.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

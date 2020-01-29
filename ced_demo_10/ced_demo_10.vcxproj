@@ -168,10 +168,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ced_demo_10.cpp" />
-    <ClCompile Include="ced_rigidbody.cpp" />
+    <ClCompile Include="rigidbody.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ced_rigidbody.h" />
+    <ClInclude Include="rigidbody.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,4 +1,4 @@
-#include "ced_rigidbody.h"
+#include "rigidbody.h"
 
 #include "ced_geometry.h"
 #include "ced_image.h"
@@ -48,7 +48,7 @@ struct SEntity {
 };
 
 struct SSolarSystem {
-	::ced::SIntegrator3									World							= {};
+	::SIntegrator3										World							= {};
 	::SScene											Scene							= {};
 	::ced::container<::SEntity>							Entities						= {};
 	::ced::container<::ced::SImage>						Image							= {};
@@ -56,10 +56,9 @@ struct SSolarSystem {
 
 struct SApplication {
 	::ced::SFramework									Framework						= {};
-
-
 	::SSolarSystem										SolarSystem						= {};
 };
+
 																				//	- Mercury	- Venus		- Earth		- Mars		- Jupiter	- Saturn	- Uranus	- Neptune	- Pluto
 static constexpr const double	PLANET_MASSES				[PLANET_COUNT]	=	{	0.330f		, 4.87f		, 5.97f		, 0.642f	, 1899		, 568		, 86.8f		, 102		, 0.0125f	};
 static constexpr const double	PLANET_SCALES				[PLANET_COUNT]	=	{	4879		, 12104		, 12756		, 6792		, 142984	, 120536	, 51118		, 49528		, 2390		};
@@ -73,7 +72,6 @@ static constexpr const double	PLANET_ORBITALINCLINATION	[PLANET_COUNT]	=	{	7.0		
 static constexpr const double	PLANET_ORBITALECCENTRICITY	[PLANET_COUNT]	=	{	0.205f	, 0.007f	, 0.017f	, 0.094f	, 0.049f	, 0.057f	, 0.046f	, 0.011f	, 0.244f	};
 static constexpr const char*	PLANET_IMAGE				[PLANET_COUNT]	=	{	"mercury_color.bmp"	, "venus_color.bmp"	, "earth_color.bmp"	, "mars_color.bmp"	, "jupiter_color.bmp"	, "saturn_color.bmp"	, "uranus_color.bmp"	, "neptune_color.bmp"	, "pluto_color.bmp"	};
 
-
 int													cleanup							(SApplication & app)	{ return ::ced::frameworkCleanup(app.Framework); }
 int													setup							(SApplication & app)	{
 	::ced::SFramework										& framework						= app.Framework;
@@ -84,7 +82,7 @@ int													setup							(SApplication & app)	{
 
 	app.SolarSystem.Scene.Pivot.resize	(PLANET_COUNT + 1);
 	app.SolarSystem.World.Spawn					(PLANET_COUNT * 2);
-	::ced::SIntegrator3										& bodies						= app.SolarSystem.World;
+	::SIntegrator3											& bodies						= app.SolarSystem.World;
 	::SScene												& scene							= app.SolarSystem.Scene;
 	::ced::SQuaternion<float>								axialTilt, orbitalInclination;
 
@@ -105,11 +103,11 @@ int													setup							(SApplication & app)	{
 			orbitalInclination.Identity();
 
 			//::ced::SMass3											& orbitMass						= bodies.Masses		[iPlanet * 2]		= {};
-			::ced::STransform3										& orbitTransform				= bodies.Transforms	[iPlanet * 2]		= {};
-			::ced::SForce3											& orbitForces					= bodies.Forces		[iPlanet * 2]		= {};
-			::ced::SMass3											& planetMass					= bodies.Masses		[iPlanet * 2 + 1]	= {};
-			::ced::STransform3										& planetTransform				= bodies.Transforms	[iPlanet * 2 + 1]	= {};
-			::ced::SForce3											& planetForces					= bodies.Forces		[iPlanet * 2 + 1]	= {};
+			::STransform3											& orbitTransform				= bodies.Transforms	[iPlanet * 2]		= {};
+			::SForce3												& orbitForces					= bodies.Forces		[iPlanet * 2]		= {};
+			::SMass3												& planetMass					= bodies.Masses		[iPlanet * 2 + 1]	= {};
+			::STransform3											& planetTransform				= bodies.Transforms	[iPlanet * 2 + 1]	= {};
+			::SForce3												& planetForces					= bodies.Forces		[iPlanet * 2 + 1]	= {};
 			planetMass.InverseMass								= float(1.0 / PLANET_MASSES[iPlanet]);
 			planetTransform.Position.x							= float(1.0 / PLANET_DISTANCE[PLANET_COUNT - 1] * PLANET_DISTANCE[iPlanet] * 2000);
 			planetForces										= {};
@@ -141,12 +139,12 @@ int													setup							(SApplication & app)	{
 
 	app.SolarSystem.Image.resize(PLANET_COUNT + 1);
 
-	::ced::bmpFileLoad("../ced_data/sun_color.bmp", app.SolarSystem.Image[1]);
-	for(uint32_t iPlanet = 0; iPlanet < PLANET_COUNT; ++iPlanet) {
-		char														finalPath[256] = {};
-		sprintf_s(finalPath, "../ced_data/%s", PLANET_IMAGE[iPlanet]);
-		::ced::bmpFileLoad(finalPath, app.SolarSystem.Image[iPlanet + 1]);
-	}
+	//::ced::bmpFileLoad("../ced_data/sun_color.bmp", app.SolarSystem.Image[1]);
+	//for(uint32_t iPlanet = 0; iPlanet < PLANET_COUNT; ++iPlanet) {
+	//	char														finalPath[256] = {};
+	//	sprintf_s(finalPath, "../ced_data/%s", PLANET_IMAGE[iPlanet]);
+	//	::ced::bmpFileLoad(finalPath, app.SolarSystem.Image[iPlanet + 1]);
+	//}
 
 	for(uint32_t iImage = 0; iImage < app.SolarSystem.Image.size(); ++iImage) {
 		if(app.SolarSystem.Image[iImage].Pixels.size())
@@ -171,13 +169,13 @@ int													setup							(SApplication & app)	{
 	// Update physics
 	bodies.Integrate((365 * 4 + 1) * 10);
 
-	app.SolarSystem.Scene.Camera.Target				= {};
-	app.SolarSystem.Scene.Camera.Position			= {-0.000001f, 500, -1000};
-	app.SolarSystem.Scene.Camera.Up					= {0, 1, 0};
+	app.SolarSystem.Scene.Camera.Target					= {};
+	app.SolarSystem.Scene.Camera.Position				= {-0.000001f, 500, -1000};
+	app.SolarSystem.Scene.Camera.Up						= {0, 1, 0};
 	return 0;
 }
 
-int													updateEntityTransforms		(uint32_t iEntity, ::ced::container<::SEntity> & entities, SScene & scene, ::ced::SIntegrator3 & bodies)	{
+int													updateEntityTransforms		(uint32_t iEntity, ::ced::container<::SEntity> & entities, SScene & scene, ::SIntegrator3 & bodies)	{
 	const SEntity											& entity					= entities[iEntity];
 	::ced::SModelMatrices									matrices					= {};
 	::ced::SMatrix4<float>									matrixBody					= {};
@@ -206,7 +204,7 @@ int													update						(SApplication & app)	{
 	if(GetAsyncKeyState('D')) app.SolarSystem.Scene.Camera.Position.RotateY((GetAsyncKeyState(VK_SHIFT) ? 100 : 2) * lastFrameSeconds);
 
 	// Update physics
-	::ced::SIntegrator3										& bodies						= app.SolarSystem.World;
+	::SIntegrator3											& bodies						= app.SolarSystem.World;
 	bodies.Integrate(lastFrameSeconds * 10);
 
 	//------------------------------------------- Transform and Draw

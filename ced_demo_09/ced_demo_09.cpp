@@ -253,7 +253,7 @@ int													update				(SApplication & app)	{
 			::ced::SModel3											& modelEnemy			= app.Scene.Models[iEntity];
 			::ced::SCoord3<float>									positionGlobal			= app.Scene.ModelMatricesLocal[indexParent].Transform(modelEnemy.Position);
 			//positionGlobal.x									+= 1.5;
-			app.ShotsPlayer.Delay								+= lastFrameSeconds * 5;
+			app.ShotsPlayer.Delay								+= lastFrameSeconds * 10;
 			::ced::SCoord3<float>									direction			= {1, 0, 0};
 			direction.RotateY(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
 			direction.RotateZ(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));

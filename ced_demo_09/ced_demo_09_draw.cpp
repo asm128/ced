@@ -104,7 +104,7 @@ static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixe
 			)
 				continue;
 			uint32_t												depth				= uint32_t(pixelCoord.z * 0xFFFFFFFFU);
-			::ced::setPixel(targetPixels, {(int32_t)pixelCoord.x, (int32_t)pixelCoord.y}, starFinalColor);
+			targetPixels[(uint32_t)pixelCoord.y][(uint32_t)pixelCoord.x] = starFinalColor;
 
 			const	double											brightRadius		= 6;
 			const	double											brightRadiusSquared	= brightRadius * brightRadius;
