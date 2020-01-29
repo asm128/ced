@@ -118,10 +118,11 @@ int													update				(SApplication & app)	{
 		::ced::SMatrix4<float>									matrixTransform			= matrices.Scale * matrices.Rotation * matrices.Position;
 		::ced::SMatrix4<float>									matrixTransformParent	= matricesParent.Scale * matricesParent.Rotation * matricesParent.Position;
 		matrixTransform										= matrixTransform  * matrixTransformParent ;
+		::ced::SMatrix4<float>									matrixTransformView		= matrixTransform * matrixView;
 		for(uint32_t iTriangle = 0; iTriangle < app.Geometry.Triangles.size(); ++iTriangle) {
 			pixelCoords			.clear();
 			pixelVertexWeights	.clear();
-			::ced::drawTriangle(targetPixels, app.Geometry, iTriangle, matrixTransform, matrixView, lightVector, pixelCoords, pixelVertexWeights, {app.Image.Pixels.begin(), app.Image.Metrics}, {framework.DepthBuffer.begin(), framework.Window.Size});
+			::ced::drawTriangle(targetPixels, app.Geometry, iTriangle, matrixTransform, matrixTransformView, lightVector, pixelCoords, pixelVertexWeights, {app.Image.Pixels.begin(), app.Image.Metrics}, {framework.DepthBuffer.begin(), framework.Window.Size});
 		}
 	}
 	return framework.Running ? 0 : 1;

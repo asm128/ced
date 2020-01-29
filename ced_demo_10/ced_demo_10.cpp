@@ -200,12 +200,12 @@ int													update						(SApplication & app)	{
 	if(GetAsyncKeyState('E')) app.SolarSystem.Scene.Camera.Position.z				+= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 100 : 10);
 	if(GetAsyncKeyState('S')) app.SolarSystem.Scene.Camera.Position					+= app.SolarSystem.Scene.Camera.Position / app.SolarSystem.Scene.Camera.Position.Length() * (GetAsyncKeyState(VK_SHIFT) ? 100 : 2) * lastFrameSeconds;
 	if(GetAsyncKeyState('W')) app.SolarSystem.Scene.Camera.Position					-= app.SolarSystem.Scene.Camera.Position / app.SolarSystem.Scene.Camera.Position.Length() * (GetAsyncKeyState(VK_SHIFT) ? 100 : 2) * lastFrameSeconds;
-	if(GetAsyncKeyState('A')) app.SolarSystem.Scene.Camera.Position.RotateY((GetAsyncKeyState(VK_SHIFT) ? 100 : 2) * lastFrameSeconds);
-	if(GetAsyncKeyState('D')) app.SolarSystem.Scene.Camera.Position.RotateY((GetAsyncKeyState(VK_SHIFT) ? 100 : 2) * lastFrameSeconds);
+	if(GetAsyncKeyState('A')) app.SolarSystem.Scene.Camera.Position.RotateY( (GetAsyncKeyState(VK_SHIFT) ? 100 : 2) * lastFrameSeconds);
+	if(GetAsyncKeyState('D')) app.SolarSystem.Scene.Camera.Position.RotateY(-(GetAsyncKeyState(VK_SHIFT) ? 100 : 2) * lastFrameSeconds);
 
 	// Update physics
 	::SIntegrator3											& bodies						= app.SolarSystem.World;
-	bodies.Integrate(lastFrameSeconds * 10);
+	bodies.Integrate(lastFrameSeconds);
 
 	//------------------------------------------- Transform and Draw
 	const ::ced::SCamera									& camera					= app.SolarSystem.Scene.Camera;
@@ -256,10 +256,11 @@ int													update						(SApplication & app)	{
 		matrices.Scale		.Scale			(scene.Pivot[entity.IndexModel].Scale		, true);
 		matrices.Position	.SetTranslation	(scene.Pivot[entity.IndexModel].Position	, true);
 		matrixTransform										= matrices.Scale * matrices.Position * matrixTransform;
+		::ced::SMatrix4<float>									matrixTransformView			= matrixTransform * matrixView;
 		for(uint32_t iTriangle = 0; iTriangle < scene.Geometry[0].Triangles.size(); ++iTriangle) {
 			pixelCoords			.clear();
 			pixelVertexWeights	.clear();
-			::ced::drawTriangle(targetPixels, scene.Geometry[0], iTriangle, matrixTransform, matrixView, lightVector, ::ced::BLACK, pixelCoords, pixelVertexWeights, app.SolarSystem.Image[entity.IndexImage], lightPoints, lightColors, depthBuffer);
+			::ced::drawTriangle(targetPixels, scene.Geometry[0], iTriangle, matrixTransform, matrixTransformView, lightVector, ::ced::BLACK, pixelCoords, pixelVertexWeights, app.SolarSystem.Image[entity.IndexImage], lightPoints, lightColors, depthBuffer);
 		}
 	}
 	return framework.Running ? 0 : 1;

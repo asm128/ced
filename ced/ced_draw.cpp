@@ -261,7 +261,7 @@ int													ced::drawQuadTriangle
 	, ::ced::SCoord3			<float>					normal
 	, const ::ced::STriangle2	<float>					& triangleTexCoords
 	, const ::ced::SMatrix4<float>						& matrixTransform
-	, const ::ced::SMatrix4<float>						& matrixView
+	, const ::ced::SMatrix4<float>						& matrixTransformView
 	, const ::ced::SCoord3<float>						& lightVector
 	, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
 	, ::ced::container<::ced::STriangleWeights<double>>	& pixelVertexWeights
@@ -270,9 +270,9 @@ int													ced::drawQuadTriangle
 	, ::ced::container<::ced::SColorBGRA>				& lightColors
 	, ::ced::view_grid<uint32_t>						depthBuffer
 	) {
-	::ced::transform(triangle, matrixTransform);
 	::ced::STriangle3	<float>								triangleWorld		= triangle;
-	::ced::transform(triangle, matrixView);
+	::ced::transform(triangleWorld, matrixTransform);
+	::ced::transform(triangle, matrixTransformView);
 	if(triangle.A.z < 0 || triangle.A.z >= 1) return 0;
 	if(triangle.B.z < 0 || triangle.B.z >= 1) return 0;
 	if(triangle.C.z < 0 || triangle.C.z >= 1) return 0;
@@ -315,7 +315,7 @@ int													ced::drawQuadTriangle
 	, const ::ced::SGeometryQuads						& geometry
 	, const int											iTriangle
 	, const ::ced::SMatrix4<float>						& matrixTransform
-	, const ::ced::SMatrix4<float>						& matrixView
+	, const ::ced::SMatrix4<float>						& matrixTransformView
 	, const ::ced::SCoord3<float>						& lightVector
 	, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
 	, ::ced::container<::ced::STriangleWeights<double>>	& pixelVertexWeights
@@ -327,7 +327,7 @@ int													ced::drawQuadTriangle
 	const ::ced::STriangle3	<float>							& triangle			= geometry.Triangles	[iTriangle];;
 	const ::ced::SCoord3		<float>						& normal			= geometry.Normals		[iTriangle / 2];
 	const ::ced::STriangle2	<float>							& triangleTexCoords	= geometry.TextureCoords[iTriangle];
-	return ::ced::drawQuadTriangle(targetPixels, triangle, normal, triangleTexCoords, matrixTransform, matrixView, lightVector, pixelCoords, pixelVertexWeights, textureImage, lightPoints, lightColors, depthBuffer);
+	return ::ced::drawQuadTriangle(targetPixels, triangle, normal, triangleTexCoords, matrixTransform, matrixTransformView, lightVector, pixelCoords, pixelVertexWeights, textureImage, lightPoints, lightColors, depthBuffer);
 }
 
 int													ced::drawQuadTriangle
@@ -335,7 +335,7 @@ int													ced::drawQuadTriangle
 	, const ::ced::SGeometryQuads						& geometry
 	, const int											iTriangle
 	, const ::ced::SMatrix4<float>						& matrixTransform
-	, const ::ced::SMatrix4<float>						& matrixView
+	, const ::ced::SMatrix4<float>						& matrixTransformView
 	, const ::ced::SCoord3<float>						& lightVector
 	, const ::ced::SColorBGRA							color
 	, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
@@ -345,8 +345,7 @@ int													ced::drawQuadTriangle
 	::ced::STriangle3	<float>								triangle			= geometry.Triangles	[iTriangle];
 	::ced::SCoord3		<float>								normal				= geometry.Normals		[iTriangle / 2];
 	normal												= matrixTransform.TransformDirection(normal).Normalize();
-	::ced::transform(triangle, matrixTransform);
-	::ced::transform(triangle, matrixView);
+	::ced::transform(triangle, matrixTransformView);
 	if(triangle.A.z < 0 || triangle.A.z >= 1) return 0;
 	if(triangle.B.z < 0 || triangle.B.z >= 1) return 0;
 	if(triangle.C.z < 0 || triangle.C.z >= 1) return 0;
@@ -366,7 +365,7 @@ int													ced::drawTriangle
 	, const ::ced::SGeometryTriangles					& geometry
 	, const int											iTriangle
 	, const ::ced::SMatrix4<float>						& matrixTransform
-	, const ::ced::SMatrix4<float>						& matrixView
+	, const ::ced::SMatrix4<float>						& matrixTransformView
 	, const ::ced::SCoord3<float>						& lightVector
 	, const ::ced::SColorBGRA							color
 	, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
@@ -375,8 +374,7 @@ int													ced::drawTriangle
 	) {
 	::ced::STriangle3		<float>								triangle			= geometry.Triangles	[iTriangle];
 	const ::ced::STriangle3	<float>								& triangleNormals	= geometry.Normals		[iTriangle];
-	::ced::transform(triangle, matrixTransform);
-	::ced::transform(triangle, matrixView);
+	::ced::transform(triangle, matrixTransformView);
 	if(triangle.A.z < 0 || triangle.A.z >= 1) return 0;
 	if(triangle.B.z < 0 || triangle.B.z >= 1) return 0;
 	if(triangle.C.z < 0 || triangle.C.z >= 1) return 0;
@@ -400,7 +398,7 @@ int													ced::drawTriangle
 	, const ::ced::SGeometryTriangles					& geometry
 	, const int											iTriangle
 	, const ::ced::SMatrix4<float>						& matrixTransform
-	, const ::ced::SMatrix4<float>						& matrixView
+	, const ::ced::SMatrix4<float>						& matrixTransformView
 	, const ::ced::SCoord3<float>						& lightVector
 	, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
 	, ::ced::container<::ced::STriangleWeights<double>>	& pixelVertexWeights
@@ -410,8 +408,7 @@ int													ced::drawTriangle
 	::ced::STriangle3		<float>								triangle			= geometry.Triangles		[iTriangle];
 	const ::ced::STriangle3	<float>								& triangleNormals	= geometry.Normals			[iTriangle];
 	const ::ced::STriangle2	<float>								& triangleTexCoords	= geometry.TextureCoords	[iTriangle];
-	::ced::transform(triangle, matrixTransform);
-	::ced::transform(triangle, matrixView);
+	::ced::transform(triangle, matrixTransformView);
 	if(triangle.A.z < 0 || triangle.A.z >= 1)
 		return 0;
 	if(triangle.B.z < 0 || triangle.B.z >= 1)
@@ -441,13 +438,12 @@ int													ced::drawTriangle
 	return 0;
 }
 
-
 int													ced::drawTriangle
 	( const ::ced::view_grid<::ced::SColorBGRA>			targetPixels
 	, const ::ced::SGeometryTriangles					& geometry
 	, const int											iTriangle
 	, const ::ced::SMatrix4<float>						& matrixTransform
-	, const ::ced::SMatrix4<float>						& matrixView
+	, const ::ced::SMatrix4<float>						& matrixTransformView
 	, const ::ced::SCoord3<float>						& lightVector
 	, const ::ced::SColorFloat							& lightColor
 	, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
@@ -460,9 +456,9 @@ int													ced::drawTriangle
 	::ced::STriangle3		<float>								triangleWorld		= geometry.Triangles		[iTriangle];
 	const ::ced::STriangle3	<float>								& triangleNormals	= geometry.Normals			[iTriangle];
 	const ::ced::STriangle2	<float>								& triangleTexCoords	= geometry.TextureCoords	[iTriangle];
-	::ced::transform(triangleWorld, matrixTransform);
 	::ced::STriangle3		<float>								triangle			= triangleWorld;
-	::ced::transform(triangle, matrixView);
+	::ced::transform(triangleWorld, matrixTransform);
+	::ced::transform(triangle, matrixTransformView);
 	if(triangle.A.z < 0 || triangle.A.z >= 1)
 		return 0;
 	if(triangle.B.z < 0 || triangle.B.z >= 1)

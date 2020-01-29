@@ -242,13 +242,14 @@ int													draw				(SApplication & app)	{
 		::ced::SMatrix4<float>									matrixTransform			= app.Scene.ModelMatricesLocal[iModel];
 		const ::ced::SMatrix4<float>							& matrixTransformParent	= app.Scene.ModelMatricesLocal[entity.Parent];
 		matrixTransform										= matrixTransform  * matrixTransformParent ;
+		::ced::SMatrix4<float>									matrixTransformView		= matrixTransform * matrixView;
 		::getLightArrays(matrixTransform.GetTranslation(), lightPointsWorld, lightColorsWorld, lightPointsModel, lightColorsModel);
 		::ced::SGeometryQuads									& mesh					= app.Scene.Geometry[iModel / 7];
 		::ced::view_grid<::ced::SColorBGRA>						image					= app.Scene.Image[iModel / 7];
 		for(uint32_t iTriangle = 0; iTriangle < mesh.Triangles.size(); ++iTriangle) {
 			pixelCoords			.clear();
 			pixelVertexWeights	.clear();
-			::ced::drawQuadTriangle(targetPixels, mesh, iTriangle, matrixTransform, matrixView, app.Scene.LightVector, pixelCoords, pixelVertexWeights, image, lightPointsModel, lightColorsModel, depthBuffer);
+			::ced::drawQuadTriangle(targetPixels, mesh, iTriangle, matrixTransform, matrixTransformView, app.Scene.LightVector, pixelCoords, pixelVertexWeights, image, lightPointsModel, lightColorsModel, depthBuffer);
 		}
 	}
 
@@ -266,6 +267,7 @@ int													draw				(SApplication & app)	{
 			matrixPart.Identity();
 			matrixPart.RotationX(app.AnimationTime * 2);
 			matrixPart.SetTranslation(explosion.Particles.Position[iExplosionPart], false);
+			::ced::SMatrix4<float>									matrixTransformView		= matrixPart * matrixView;
 			::getLightArrays(matrixPart.GetTranslation(), lightPointsWorld, lightColorsWorld, lightPointsModel, lightColorsModel);
 			for(uint32_t iTriangle = 0, countTriangles = sliceMesh.Count; iTriangle < countTriangles; ++iTriangle) {
 				pixelCoords			.clear();
@@ -274,14 +276,14 @@ int													draw				(SApplication & app)	{
 				::ced::STriangle3	<float>								triangle			= mesh.Triangles	[iActualTriangle];
 				::ced::SCoord3		<float>								normal				= mesh.Normals		[iActualTriangle / 2];
 				::ced::STriangle2	<float>								triangleTexCoords	= mesh.TextureCoords[iActualTriangle];
-  				::ced::drawQuadTriangle(targetPixels, triangle, normal, triangleTexCoords, matrixPart, matrixView, app.Scene.LightVector, pixelCoords, pixelVertexWeights, image, lightPointsModel, lightColorsModel, depthBuffer);
+  				::ced::drawQuadTriangle(targetPixels, triangle, normal, triangleTexCoords, matrixPart, matrixTransformView, app.Scene.LightVector, pixelCoords, pixelVertexWeights, image, lightPointsModel, lightColorsModel, depthBuffer);
 				pixelCoords			.clear();
 				pixelVertexWeights	.clear();
 				triangle											= {triangle.A, triangle.C, triangle.B};
 				triangleTexCoords									= {triangleTexCoords.A, triangleTexCoords.C, triangleTexCoords.B};
 				normal.x											*= -1;
 				normal.y											*= -1;
-				::ced::drawQuadTriangle(targetPixels, triangle, normal, triangleTexCoords, matrixPart, matrixView, app.Scene.LightVector, pixelCoords, pixelVertexWeights, image, lightPointsModel, lightColorsModel, depthBuffer);
+				::ced::drawQuadTriangle(targetPixels, triangle, normal, triangleTexCoords, matrixPart, matrixTransformView, app.Scene.LightVector, pixelCoords, pixelVertexWeights, image, lightPointsModel, lightColorsModel, depthBuffer);
 			}
 		}
 	}

@@ -32,7 +32,7 @@ namespace ced
 		, const ::ced::SGeometryQuads						& geometry
 		, const int											iTriangle
 		, const ::ced::SMatrix4<float>						& matrixTransform
-		, const ::ced::SMatrix4<float>						& matrixView
+		, const ::ced::SMatrix4<float>						& matrixTransformView
 		, const ::ced::SCoord3<float>						& lightVector
 		, const ::ced::SColorBGRA							color
 		, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
@@ -44,7 +44,7 @@ namespace ced
 		, const ::ced::SGeometryQuads						& geometry
 		, const int											iTriangle
 		, const ::ced::SMatrix4<float>						& matrixTransform
-		, const ::ced::SMatrix4<float>						& matrixView
+		, const ::ced::SMatrix4<float>						& matrixTransformView
 		, const ::ced::SCoord3<float>						& lightVector
 		, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
 		, ::ced::container<::ced::STriangleWeights<double>>	& pixelVertexWeights
@@ -58,7 +58,7 @@ namespace ced
 		, const ::ced::SGeometryTriangles					& geometry
 		, const int											iTriangle
 		, const ::ced::SMatrix4<float>						& matrixTransform
-		, const ::ced::SMatrix4<float>						& matrixView
+		, const ::ced::SMatrix4<float>						& matrixTransformView
 		, const ::ced::SCoord3<float>						& lightVector
 		, ::ced::SColorBGRA									color
 		, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
@@ -71,7 +71,7 @@ namespace ced
 		, ::ced::SCoord3			<float>					normal
 		, const ::ced::STriangle2	<float>					& triangleTexCoords
 		, const ::ced::SMatrix4<float>						& matrixTransform
-		, const ::ced::SMatrix4<float>						& matrixView
+		, const ::ced::SMatrix4<float>						& matrixTransformView
 		, const ::ced::SCoord3<float>						& lightVector
 		, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
 		, ::ced::container<::ced::STriangleWeights<double>>	& pixelVertexWeights
@@ -85,7 +85,7 @@ namespace ced
 		, const ::ced::SGeometryTriangles					& geometry
 		, const int											iTriangle
 		, const ::ced::SMatrix4<float>						& matrixTransform
-		, const ::ced::SMatrix4<float>						& matrixView
+		, const ::ced::SMatrix4<float>						& matrixTransformView
 		, const ::ced::SCoord3<float>						& lightVector
 		, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
 		, ::ced::container<::ced::STriangleWeights<double>>	& pixelVertexWeights
@@ -97,7 +97,7 @@ namespace ced
 		, const ::ced::SGeometryTriangles					& geometry
 		, const int											iTriangle
 		, const ::ced::SMatrix4<float>						& matrixTransform
-		, const ::ced::SMatrix4<float>						& matrixView
+		, const ::ced::SMatrix4<float>						& matrixTransformView
 		, const ::ced::SCoord3<float>						& lightVector
 		, const ::ced::SColorFloat							& lightColor
 		, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords

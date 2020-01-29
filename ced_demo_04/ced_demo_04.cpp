@@ -104,12 +104,13 @@ int													update				(SApplication & app)	{
 		matrixPosition	.SetTranslation	(app.Models[iModel].Position, true);
 
 		::ced::SMatrix4<float>									matrixTransform		= matrixScale * matrixRotation * matrixPosition;
+		::ced::SMatrix4<float>									matrixTransformView	= matrixTransform * matrixView;
 		for(uint32_t iTriangle = 0; iTriangle < app.Geometry.Triangles.size(); ++iTriangle) {
 			pixelCoords			.clear();
 			pixelVertexWeights	.clear();
 			uint32_t												colorIndex			= (uint32_t)iModel % ::std::size(app.Colors);
-			::ced::SColorBGRA											triangleColor		= app.Colors[colorIndex];
-			::ced::drawQuadTriangle(targetPixels, app.Geometry, iTriangle, matrixTransform, matrixView, lightVector, triangleColor, pixelCoords, pixelVertexWeights, {app.DepthBuffer.begin(), app.Window.Size});
+			::ced::SColorBGRA										triangleColor		= app.Colors[colorIndex];
+			::ced::drawQuadTriangle(targetPixels, app.Geometry, iTriangle, matrixTransform, matrixTransformView, lightVector, triangleColor, pixelCoords, pixelVertexWeights, {app.DepthBuffer.begin(), app.Window.Size});
 		}
 	}
 	return app.Running ? 0 : 1;

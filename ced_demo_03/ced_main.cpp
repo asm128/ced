@@ -176,7 +176,7 @@ int													update				(SApplication & app)	{
 		matrixRotation	.Rotation		(app.Models[iModel].Rotation);
 		matrixPosition	.SetTranslation	(app.Models[iModel].Position, true);
 
-		::ced::SMatrix4<float>									matrixTransform		= matrixScale * matrixPosition * matrixRotation;
+		::ced::SMatrix4<float>									matrixTransform		= matrixScale * matrixPosition * matrixRotation * matrixView;
 		::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
 		::ced::container<::ced::STriangleWeights<double>>		pixelVertexWeights;
 		for(uint32_t iTriangle = 0; iTriangle < app.Geometry.Triangles.size(); ++iTriangle) {
@@ -187,10 +187,6 @@ int													update				(SApplication & app)	{
 			triangle.A											= matrixTransform.Transform(triangle.A);
 			triangle.B											= matrixTransform.Transform(triangle.B);
 			triangle.C											= matrixTransform.Transform(triangle.C);
-
-			triangle.A											= matrixView.Transform(triangle.A);
-			triangle.B											= matrixView.Transform(triangle.B);
-			triangle.C											= matrixView.Transform(triangle.C);
 
 			if(triangle.A.z < 0 || triangle.A.z >= 1) continue;
 			if(triangle.B.z < 0 || triangle.B.z >= 1) continue;

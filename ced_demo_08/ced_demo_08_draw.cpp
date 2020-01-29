@@ -170,12 +170,13 @@ int													draw				(SApplication & app)	{
 		matricesParent.Scale	.Scale			(app.Scene.Models[entity.Parent].Scale, true);
 		matricesParent.Rotation	.Rotation		(app.Scene.Models[entity.Parent].Rotation);
 		matricesParent.Position	.SetTranslation	(app.Scene.Models[entity.Parent].Position, true);
-
 		::ced::SMatrix4<float>									matrixTransform			= matrices.Scale * matrices.Rotation * matrices.Position;
 		::ced::SMatrix4<float>									matrixTransformParent	= matricesParent.Scale * matricesParent.Rotation * matricesParent.Position;
 		matrixTransform										= matrixTransform  * matrixTransformParent ;
+		::ced::SMatrix4<float>									matrixTransformView		= matrixTransform * matrixView;
+
 		::ced::container<::ced::SCoord3<float>>					lightPoints				= {};
-		::ced::container<::ced::SColorBGRA>							lightColors				= {};
+		::ced::container<::ced::SColorBGRA>						lightColors				= {};
 		lightPoints.resize(app.ShotsEnemy.Position.size() + app.ShotsPlayer.Position.size() + app.Debris.Position.size());
 		lightColors.resize(app.ShotsEnemy.Position.size() + app.ShotsPlayer.Position.size() + app.Debris.Position.size());
 		uint32_t												iOffset					= 0;
@@ -196,7 +197,7 @@ int													draw				(SApplication & app)	{
 		for(uint32_t iTriangle = 0; iTriangle < app.Scene.Geometry.Triangles.size(); ++iTriangle) {
 			pixelCoords			.clear();
 			pixelVertexWeights	.clear();
-			::ced::drawQuadTriangle(targetPixels, app.Scene.Geometry, iTriangle, matrixTransform, matrixView, app.Scene.LightVector, pixelCoords, pixelVertexWeights, {app.Scene.Image.Pixels.begin(), app.Scene.Image.Metrics}, lightPoints, lightColors, {framework.DepthBuffer.begin(), framework.Window.Size});
+			::ced::drawQuadTriangle(targetPixels, app.Scene.Geometry, iTriangle, matrixTransform, matrixTransformView, app.Scene.LightVector, pixelCoords, pixelVertexWeights, {app.Scene.Image.Pixels.begin(), app.Scene.Image.Metrics}, lightPoints, lightColors, {framework.DepthBuffer.begin(), framework.Window.Size});
 		}
 	}
 

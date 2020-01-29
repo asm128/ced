@@ -64,8 +64,8 @@ int													update				(SApplication & app)	{
 	static ::ced::SCoord3<float>							cameraPosition		= {15, 5, 0};
 	::ced::SCoord3<float>									cameraUp			= {0, 1, 0};
 
-	if(GetAsyncKeyState('Q')) cameraPosition.y					-= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
-	if(GetAsyncKeyState('E')) cameraPosition.y					+= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
+	if(GetAsyncKeyState('Q')) cameraPosition.y				-= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
+	if(GetAsyncKeyState('E')) cameraPosition.y				+= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
 
 	//------------------------------------------- Transform and Draw
 	::ced::view_grid<::ced::SColorBGRA>						targetPixels		= {framework.Pixels, framework.Window.Size};
@@ -94,10 +94,11 @@ int													update				(SApplication & app)	{
 		matrices.Position	.SetTranslation	(app.Models[iModel].Position, true);
 
 		::ced::SMatrix4<float>									matrixTransform		= matrices.Scale * matrices.Rotation * matrices.Position;
+		::ced::SMatrix4<float>									matrixTransformView	= matrixTransform * matrixView;
 		for(uint32_t iTriangle = 0; iTriangle < app.Geometry.Triangles.size(); ++iTriangle) {
 			pixelCoords			.clear();
 			pixelVertexWeights	.clear();
-			::ced::drawTriangle(targetPixels, app.Geometry, iTriangle, matrixTransform, matrixView, lightVector, pixelCoords, pixelVertexWeights, {app.Image.Pixels.begin(), app.Image.Metrics}, {framework.DepthBuffer.begin(), app.Framework.Window.Size});
+			::ced::drawTriangle(targetPixels, app.Geometry, iTriangle, matrixTransform, matrixTransformView, lightVector, pixelCoords, pixelVertexWeights, {app.Image.Pixels.begin(), app.Image.Metrics}, {framework.DepthBuffer.begin(), app.Framework.Window.Size});
 		}
 	}
 	return framework.Running ? 0 : 1;
