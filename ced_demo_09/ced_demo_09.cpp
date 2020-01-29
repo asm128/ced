@@ -10,10 +10,10 @@ static	int											setupStars			(SStars & stars, ::ced::SCoord2<uint32_t> targ
 	stars.Brightness.resize(128);
 	stars.Position	.resize(128);
 	for(uint32_t iStar = 0; iStar < stars.Brightness.size(); ++iStar) {
-		stars.Speed			[iStar]						= float(16 + (rand() % 64));
-		stars.Brightness	[iStar]						= float(1.0 / RAND_MAX * rand());
-		stars.Position		[iStar].y					= float(rand() % targetSize.y);
-		stars.Position		[iStar].x					= float(rand() % targetSize.x);
+		stars.Speed			[iStar]							= float(16 + (rand() % 64));
+		stars.Brightness	[iStar]							= float(1.0 / RAND_MAX * rand());
+		stars.Position		[iStar].y						= float(rand() % targetSize.y);
+		stars.Position		[iStar].x						= float(rand() % targetSize.x);
 	}
 	return 0;
 }
@@ -27,13 +27,13 @@ static	int											modelCreate			(::SApplication & app, uint32_t partHealth)	{
 	app.Scene.Models				.resize(indexModel + 1 + countParts);
 	app.Scene.Entities				.resize(indexModel + 1 + countParts);
 
-	app.Scene.Models		[indexModel]				= {};
-	app.Scene.Models		[indexModel].Scale			= {1, 1, 1};
+	app.Scene.Models	[indexModel]				= {};
+	app.Scene.Models	[indexModel].Scale			= {1, 1, 1};
 	if(0 == indexModel)
-		app.Scene.Models		[indexModel].Rotation.z		= (float)(-::ced::MATH_PI_2);
+		app.Scene.Models	[indexModel].Rotation.z		= (float)(-::ced::MATH_PI_2);
 	else
-		app.Scene.Models		[indexModel].Rotation.z		= (float)(::ced::MATH_PI_2);
-	app.Scene.Entities		[indexModel]				= {-1};
+		app.Scene.Models	[indexModel].Rotation.z		= (float)(::ced::MATH_PI_2);
+	app.Scene.Entities	[indexModel]				= {-1};
 	app.Health[indexModel]									= partHealth * countParts;
 	for(uint32_t iModel = indexModel + 1; iModel < app.Scene.Models.size(); ++iModel) {
 		::ced::SModel3											& model			= app.Scene.Models[iModel];
@@ -136,7 +136,7 @@ static	int											handleShotCollision
 	healthParent										-= 100;
 	float													debrisSpeed					= 50;
 	float													debrisBright				= 1;
-	uint32_t												debrisCount					= 10;
+	uint32_t												debrisCount					= 5;
 	bool													exploded					= false;
 	if(0 >= healthParth) {
 		exploded											= true	;
@@ -147,7 +147,7 @@ static	int											handleShotCollision
 		}
 		else {
 			debrisSpeed											= 60	;
-			debrisCount											= 150	;
+			debrisCount											= 40	;
 			debrisBright										= 2		;
 		}
 	}
@@ -253,11 +253,11 @@ int													update				(SApplication & app)	{
 			::ced::SModel3											& modelEnemy			= app.Scene.Models[iEntity];
 			::ced::SCoord3<float>									positionGlobal			= app.Scene.ModelMatricesLocal[indexParent].Transform(modelEnemy.Position);
 			//positionGlobal.x									+= 1.5;
-			app.ShotsPlayer.Delay								+= lastFrameSeconds * 10;
+			app.ShotsPlayer.Delay								+= lastFrameSeconds * 5;
 			::ced::SCoord3<float>									direction			= {1, 0, 0};
 			direction.RotateY(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
 			direction.RotateZ(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
-			app.ShotsPlayer.Spawn(positionGlobal, direction, 200, .2f);
+			app.ShotsPlayer.Spawn(positionGlobal, direction, 100, .2f);
 		}
 	}
 

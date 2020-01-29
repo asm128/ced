@@ -32,7 +32,7 @@ namespace ced
 		inline constexpr					view_grid			()									noexcept		= default;
 
 
-		::ced::view<_tValue>				operator[]			(uint32_t index)									{ if(index >= Metrics.y) throw(""); return ::ced::view<_tValue>{&Data[Metrics.x * index], Metrics.x}; }
+ 		::ced::view<_tValue>				operator[]			(uint32_t index)									{ if(index >= Metrics.y) throw(""); return ::ced::view<_tValue>{&Data[Metrics.x * index], Metrics.x}; }
 		::ced::view<const _tValue>			operator[]			(uint32_t index)					const			{ if(index >= Metrics.y) throw(""); return ::ced::view<_tValue>{&Data[Metrics.x * index], Metrics.x}; }
 
 		_tValue *							begin				()									const			{ return Data; }

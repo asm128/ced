@@ -126,7 +126,7 @@ int								ced::drawLine
 			) {
 				const double					factor					= yAxis ? 1.0 / yDiff * line.A.y : 1.0 / xDiff * line.A.x;
 				const double					finalZ					= lineFloat.B.z * factor + (lineFloat.A.z * (1.0 - factor));
-				intZ						= uint32_t(0xFFFFFFFFU * (finalZ));
+				intZ						= uint32_t(0xFFFFFFFFU * finalZ);
 				if(depthBuffer[line.A.y][line.A.x] <= intZ)
 					continue;
 
@@ -143,7 +143,7 @@ int								ced::drawLine
 			) {
 				const double					factor					= 1.0 / (yAxis ? yDiff * line.A.y : xDiff * line.A.x);
 				const double					finalZ					= lineFloat.B.z * factor + (lineFloat.A.z * (1.0 - factor));
-				intZ						= uint32_t((0xFFFFFFFFU) * (finalZ));
+				intZ						= uint32_t(0xFFFFFFFFU * finalZ);
 				if(depthBuffer[line.A.y][line.A.x] <= intZ)
 					continue;
 
@@ -242,10 +242,11 @@ int								ced::drawTriangle
 			continue;
 
 		uint32_t							intZ					= uint32_t(0xFFFFFFFFU * finalZ);
-		if(depthBuffer[p.y][p.x] < intZ)
+		uint32_t							& currentDepth			= depthBuffer[p.y][p.x];
+		if(currentDepth < intZ)
 			continue;
 
-		depthBuffer[p.y][p.x] = intZ;
+		currentDepth					= intZ;
 		pixelCoords.push_back(p);
 		proportions.push_back({proportionA, proportionB, proportionC});
 
@@ -269,10 +270,8 @@ int													ced::drawQuadTriangle
 	, ::ced::container<::ced::SColorBGRA>				& lightColors
 	, ::ced::view_grid<uint32_t>						depthBuffer
 	) {
+	::ced::transform(triangle, matrixTransform);
 	::ced::STriangle3	<float>								triangleWorld		= triangle;
-	::ced::transform(triangleWorld, matrixTransform);
-
-	triangle											= triangleWorld;
 	::ced::transform(triangle, matrixView);
 	if(triangle.A.z < 0 || triangle.A.z >= 1) return 0;
 	if(triangle.B.z < 0 || triangle.B.z >= 1) return 0;
@@ -325,8 +324,8 @@ int													ced::drawQuadTriangle
 	, ::ced::container<::ced::SColorBGRA>				& lightColors
 	, ::ced::view_grid<uint32_t>						depthBuffer
 	) {
-	::ced::STriangle3	<float>								triangle			= geometry.Triangles	[iTriangle];;
-	::ced::SCoord3		<float>								normal				= geometry.Normals		[iTriangle / 2];
+	const ::ced::STriangle3	<float>							& triangle			= geometry.Triangles	[iTriangle];;
+	const ::ced::SCoord3		<float>						& normal			= geometry.Normals		[iTriangle / 2];
 	const ::ced::STriangle2	<float>							& triangleTexCoords	= geometry.TextureCoords[iTriangle];
 	return ::ced::drawQuadTriangle(targetPixels, triangle, normal, triangleTexCoords, matrixTransform, matrixView, lightVector, pixelCoords, pixelVertexWeights, textureImage, lightPoints, lightColors, depthBuffer);
 }
@@ -459,10 +458,10 @@ int													ced::drawTriangle
 	, ::ced::view_grid<uint32_t>						depthBuffer
 	) {
 	::ced::STriangle3		<float>								triangleWorld		= geometry.Triangles		[iTriangle];
-	::ced::transform(triangleWorld, matrixTransform);
-	::ced::STriangle3		<float>								triangle			= triangleWorld;
 	const ::ced::STriangle3	<float>								& triangleNormals	= geometry.Normals			[iTriangle];
 	const ::ced::STriangle2	<float>								& triangleTexCoords	= geometry.TextureCoords	[iTriangle];
+	::ced::transform(triangleWorld, matrixTransform);
+	::ced::STriangle3		<float>								triangle			= triangleWorld;
 	::ced::transform(triangle, matrixView);
 	if(triangle.A.z < 0 || triangle.A.z >= 1)
 		return 0;

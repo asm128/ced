@@ -63,15 +63,18 @@ static	int											drawDebris			(::ced::view_grid<::ced::SColorBGRA> targetPix
 			const double											brightDistance		= brightPos.LengthSquared();
 			if(brightDistance <= brightRadiusSquared) {
 				::ced::SCoord2<int32_t>									blendPos			= pixelCoord + (brightPos).Cast<int32_t>();
-				if( blendPos.y >= 0 && blendPos.y < (int32_t)targetPixels.metrics().y
-				 && blendPos.x >= 0 && blendPos.x < (int32_t)targetPixels.metrics().x
-				 && depth <= depthBuffer[blendPos.y][blendPos.x]
-				) {
-					depthBuffer[blendPos.y][blendPos.x]					= depth;
-					double													finalBrightness					= 1.0-(brightDistance * brightUnit);
-					::ced::SColorFloat										backgroundColor					= targetPixels[blendPos.y][blendPos.x];
-					::ced::setPixel(targetPixels, blendPos, backgroundColor + starFinalColor * finalBrightness);
-				}
+				if( blendPos.y < 0 || blendPos.y >= (int32_t)targetPixels.metrics().y
+				 || blendPos.x < 0 || blendPos.x >= (int32_t)targetPixels.metrics().x
+				)
+					continue;
+				uint32_t												& blendVal			= depthBuffer[blendPos.y][blendPos.x];
+				if(depth > blendVal)
+					continue;
+				blendVal											= depth;
+				double													finalBrightness					= 1.0-(brightDistance * brightUnit);
+				::ced::SColorBGRA										& pixelVal						= targetPixels[blendPos.y][blendPos.x];
+				::ced::SColorFloat										pixelColor						= starFinalColor * finalBrightness + pixelVal;
+				pixelVal											= pixelColor;
 			}
 		}
 	}
@@ -103,7 +106,7 @@ static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixe
 			uint32_t												depth				= uint32_t(pixelCoord.z * 0xFFFFFFFFU);
 			::ced::setPixel(targetPixels, {(int32_t)pixelCoord.x, (int32_t)pixelCoord.y}, starFinalColor);
 
-			const	double											brightRadius		= 7.5;
+			const	double											brightRadius		= 6;
 			const	double											brightRadiusSquared	= brightRadius * brightRadius;
 			double													brightUnit			= 1.0 / brightRadiusSquared;
 			for(int32_t y = (int32_t)-brightRadius; y < (int32_t)brightRadius; ++y)
@@ -112,16 +115,18 @@ static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixe
 				const double											brightDistance		= brightPos.LengthSquared();
 				if(brightDistance <= brightRadiusSquared) {
 					::ced::SCoord2<int32_t>									blendPos			= ::ced::SCoord2<int32_t>{(int32_t)pixelCoord.x, (int32_t)pixelCoord.y} + (brightPos).Cast<int32_t>();
-					if( blendPos.y >= 0 && blendPos.y < (int32_t)targetPixels.metrics().y
-					 && blendPos.x >= 0 && blendPos.x < (int32_t)targetPixels.metrics().x
-					 && depth <= depthBuffer[blendPos.y][blendPos.x]
-					) {
-						depthBuffer[blendPos.y][blendPos.x]					= depth;
-						double													finalBrightness					= (1.0 - (brightDistance * brightUnit)) * (1.0 / pixelCoords.size() * iPixelCoord);
-						::ced::SColorFloat										backgroundColor					= targetPixels[blendPos.y][blendPos.x];
-						::ced::SColorFloat										pixelColor						= backgroundColor + starFinalColor * finalBrightness;
-						::ced::setPixel(targetPixels, blendPos, pixelColor);
-					}
+					if( blendPos.y < 0 || blendPos.y >= (int32_t)targetPixels.metrics().y
+					 || blendPos.x < 0 || blendPos.x >= (int32_t)targetPixels.metrics().x
+					)
+						continue;
+					uint32_t												& blendVal			= depthBuffer[blendPos.y][blendPos.x];
+					if(depth > blendVal)
+						continue;
+					blendVal											= depth;
+					::ced::SColorBGRA										& pixelVal						= targetPixels[blendPos.y][blendPos.x];
+					double													finalBrightness					= (1.0 - (brightDistance * brightUnit)) * (1.0 / pixelCoords.size() * iPixelCoord);
+					::ced::SColorFloat										pixelColor						= starFinalColor * finalBrightness + pixelVal;
+					pixelVal											= pixelColor;
 				}
 			}
 		}
@@ -131,7 +136,7 @@ static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixe
 }
 
 static constexpr	const ::ced::SColorBGRA			colorShotPlayer			= ::ced::SColorBGRA{0x40, 0xfF, 0x80};// *.2;
-static constexpr	const ::ced::SColorBGRA			colorShotEnemy			= ::ced::SColorBGRA{0x00, 0x00, 0xfF};// *.2;
+static constexpr	const ::ced::SColorBGRA			colorShotEnemy			= ::ced::SColorBGRA{0x40, 0x20, 0xfF};// *.2;
 
 
 static	int											getLightArrays
@@ -143,14 +148,14 @@ static	int											getLightArrays
 	::ced::SColorBGRA										colorLightEnemy			= ::ced::SColorBGRA{0xFF, 0xFF, 0xFF}  * .2;
 	lightPoints.resize(app.ShotsEnemy.Particles.Position.size() + app.ShotsPlayer.Particles.Position.size() + app.Debris.Particles.Position.size() + 4);
 	lightColors.resize(app.ShotsEnemy.Particles.Position.size() + app.ShotsPlayer.Particles.Position.size() + app.Debris.Particles.Position.size() + 4);
-	lightPoints[0]									= app.Scene.Models[0].Position;
-	lightColors[0]									= colorLightPlayer;
+	lightPoints[0]										= app.Scene.Models[0].Position;
+	lightColors[0]										= colorLightPlayer;
 	for(uint32_t iEnemy = 1; iEnemy < 4; ++iEnemy) {
 		uint32_t iModelEnemy = 7 * iEnemy;
 		if(iModelEnemy >= app.Scene.Models.size())
 			continue;
-		lightPoints[iEnemy]								= app.Scene.Models[iModelEnemy].Position;
-		lightColors[iEnemy]								= colorLightEnemy;
+		lightPoints[iEnemy]									= app.Scene.Models[iModelEnemy].Position;
+		lightColors[iEnemy]									= colorLightEnemy;
 	}
 	uint32_t												iOffset					= 4;
 	for(uint32_t iShot = 0; iShot < app.ShotsEnemy.Particles.Position.size(); ++iShot) {
@@ -164,9 +169,9 @@ static	int											getLightArrays
 	}
 	iOffset												+= app.ShotsPlayer.Particles.Position.size();
 	for(uint32_t iParticle = 0; iParticle < app.Debris.Particles.Position.size(); ++iParticle) {
-		lightPoints[iOffset + iParticle]						= app.Debris.Particles.Position[iParticle];
-		::ced::SColorFloat									colorShot			= app.Debris.Colors[iParticle % ::std::size(app.Debris.Colors)];
-		lightColors[iOffset + iParticle]						= colorShot * app.Debris.Brightness[iParticle];
+		lightPoints[iOffset + iParticle]					= app.Debris.Particles.Position[iParticle];
+		::ced::SColorFloat										colorShot			= app.Debris.Colors[iParticle % ::std::size(app.Debris.Colors)];
+		lightColors[iOffset + iParticle]					= colorShot * app.Debris.Brightness[iParticle];
 	}
 	return 0;
 }
@@ -195,8 +200,8 @@ int													draw				(SApplication & app)	{
 	::ced::view_grid<::ced::SColorBGRA>						targetPixels		= {framework.Pixels, framework.Window.Size};
 	if(0 == targetPixels.size())
 		return 1;
-	::ced::SColorBGRA											colorBackground		= {0x20, 0x8, 0x4};
-	//colorBackground										+= (colorBackground * (0.5 + (0.5 / 65535 * rand())) * ((rand() % 2) ? -1 : 1)) ;
+	::ced::SColorBGRA										colorBackground		= {0x20, 0x8, 0x4};
+	//colorBackground									+= (colorBackground * (0.5 + (0.5 / 65535 * rand())) * ((rand() % 2) ? -1 : 1)) ;
 	for(uint32_t y = 0; y < framework.Window.Size.y; ++y) // Generate noise color for planet texture
 	for(uint32_t x = 0; x < framework.Window.Size.x; ++x)
 		framework.Pixels[y * framework.Window.Size.x + x]	= colorBackground;

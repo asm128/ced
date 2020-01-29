@@ -64,6 +64,14 @@ namespace ced
 		static constexpr const ::ced::SMatrix4<float>	MatrixIdentity4					= {1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
 		static constexpr const ::ced::SMatrix3<float>	MatrixIdentity3					= {1,0,0,0,1,0,0,0,1};
 
+		int32_t 										Clear							()	{
+			BodyFrames				.clear();
+			BodyFlags				.clear();
+			Forces					.clear();
+			Masses					.clear();
+			Transforms				.clear();
+			return TransformsLocal	.clear();
+		}
 		int32_t 										Spawn							()	{
 			BodyFrames				.push_back({});
 			BodyFlags				.push_back({});

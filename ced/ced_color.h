@@ -1,4 +1,4 @@
-#include <algorithm>
+#include <cstdint>
 
 #ifndef CED_COLOR_H_23904872398475
 #define CED_COLOR_H_23904872398475
@@ -12,7 +12,11 @@ namespace ced
 	template <typename _tBase> struct color_rgba	{ _tBase r, g, b, a;	};
 
 	template<typename _tValue>
-	constexpr	_tValue							clamp	(_tValue value, _tValue min, _tValue max)					{ return ::std::min(max, ::std::max(value, min)); };
+	inline			constexpr	const _tValue	&		min		(const _tValue & a, const _tValue & b)						{ return (a < b) ? a : b; }
+	template<typename _tValue>
+	inline			constexpr	const _tValue	&		max		(const _tValue & a, const _tValue & b)						{ return (a > b) ? a : b; }
+	template<typename _tValue>
+	inline			constexpr	const _tValue	&		clamp	(const _tValue & value, const _tValue & min, const _tValue & max)					{ return ::ced::min(max, ::ced::max(value, min)); }
 
 	// Stores RGBA color channels
 	struct SColorRGBA : public ::ced::color_rgba<uint8_t> {
