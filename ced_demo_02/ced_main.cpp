@@ -81,8 +81,8 @@ int												setup				(SApplication & app)	{
 
 int												update				(SApplication & app)	{
 	::ced::SWindow										& window			= app.Window;
-	double												lastFrameSeconds	= app.Timer.Tick() * .000001;
-	app.TotalTime									+= lastFrameSeconds;
+	double												secondsLastFrame	= app.Timer.Tick() * .000001;
+	app.TotalTime									+= secondsLastFrame;
 	if(1 == ::ced::windowUpdate(window, app.Pixels))
 		return 1;
 	if(window.Resized) {
@@ -98,8 +98,8 @@ int												update				(SApplication & app)	{
 	::ced::SCoord3<float>								cameraUp			= {0, 1, 0};
 
 	static ::ced::SCoord3<float>						lightVector			= {5, 2, 0};
-	lightVector										= lightVector	.RotateY(lastFrameSeconds * 2);
-	cameraPosition									= cameraPosition.RotateY(lastFrameSeconds / 2);
+	lightVector										= lightVector	.RotateY(secondsLastFrame * 2);
+	cameraPosition									= cameraPosition.RotateY(secondsLastFrame / 2);
 
 	lightVector.Normalize();
 

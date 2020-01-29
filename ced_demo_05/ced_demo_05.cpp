@@ -65,8 +65,8 @@ int													setup				(SApplication & app)	{
 
 int													update				(SApplication & app)	{
 	::ced::SWindow											& window			= app.Window;
-	double													lastFrameSeconds	= app.Timer.Tick() * .000001;
-	app.TotalTime										+= lastFrameSeconds;
+	double													secondsLastFrame	= app.Timer.Tick() * .000001;
+	app.TotalTime										+= secondsLastFrame;
 	if(1 == ::ced::windowUpdate(window, app.Pixels))
 		return 1;
 	if(window.Resized) {

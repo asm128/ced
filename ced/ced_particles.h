@@ -10,12 +10,12 @@ namespace ced
 		::ced::container<::ced::SCoord3<float>>		Direction			= {};
 		::ced::container<float>						Speed				= {};
 
-		int											IntegrateSpeed		(double lastFrameSeconds)	{
+		int											IntegrateSpeed		(double secondsLastFrame)	{
 			for(uint32_t iShot = 0; iShot < Position.size(); ++iShot) {
 				::ced::SCoord3<float>							& direction			= Direction	[iShot];
 				::ced::SCoord3<float>							& position			= Position	[iShot];
 				float											& speed				= Speed		[iShot];
-				position									+= direction * speed * lastFrameSeconds;
+				position									+= direction * speed * secondsLastFrame;
 			}
 			return 0;
 		}

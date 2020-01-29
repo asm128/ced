@@ -206,11 +206,11 @@ int													update				(SApplication & app)	{
 		framework.Running = false;
 	//------------------------------------------- Handle input
 	double													speed				= 10;
-	double													lastFrameSeconds	= framework.Timer.ElapsedMicroseconds * .000001;
-	lastFrameSeconds									= ::std::min(lastFrameSeconds, 0.200);
+	double													secondsLastFrame	= framework.Timer.ElapsedMicroseconds * .000001;
+	secondsLastFrame									= ::std::min(secondsLastFrame, 0.200);
 
-	app.AnimationTime									+= lastFrameSeconds;
-	//app.ShotsPlayer.Delay								+= lastFrameSeconds * 20;
+	app.AnimationTime									+= secondsLastFrame;
+	//app.ShotsPlayer.Delay								+= secondsLastFrame * 20;
 	::ced::SModelMatrices									matrices;
 	app.Scene.ModelMatricesLocal.resize(app.Scene.Models.size());
 	for(uint32_t iModel = 0; iModel < app.Scene.Models.size(); ++iModel) {
@@ -232,9 +232,9 @@ int													update				(SApplication & app)	{
 			modelEnemy.Position.z								= (float)(sin(app.AnimationTime) * iEnemy * 3) * ((iEnemy % 2) ? -1 : 1);
 		}
 		else {
-			app.Scene.Models[iEnemy].Rotation.y					+= (float)lastFrameSeconds * 1;
+			app.Scene.Models[iEnemy].Rotation.y					+= (float)secondsLastFrame * 1;
 			matricesParent										= {};
-			app.ShotsEnemy.Delay								+= lastFrameSeconds * .5;
+			app.ShotsEnemy.Delay								+= secondsLastFrame * .5;
 			::ced::SCoord3<float>									positionGlobal			= app.Scene.ModelMatricesLocal[indexParent].Transform(modelEnemy.Position);
 			if(1 < (modelPlayer.Position - positionGlobal).LengthSquared()) {
 				::ced::SCoord3<float>									direction			= modelPlayer.Position - positionGlobal;
@@ -253,7 +253,7 @@ int													update				(SApplication & app)	{
 			::ced::SModel3											& modelEnemy			= app.Scene.Models[iEntity];
 			::ced::SCoord3<float>									positionGlobal			= app.Scene.ModelMatricesLocal[indexParent].Transform(modelEnemy.Position);
 			//positionGlobal.x									+= 1.5;
-			app.ShotsPlayer.Delay								+= lastFrameSeconds * 10;
+			app.ShotsPlayer.Delay								+= secondsLastFrame * 10;
 			::ced::SCoord3<float>									direction			= {1, 0, 0};
 			direction.RotateY(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
 			direction.RotateZ(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
@@ -261,41 +261,41 @@ int													update				(SApplication & app)	{
 		}
 	}
 
-	if(GetAsyncKeyState('Q')) app.Scene.Camera.Position.y	-= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
-	if(GetAsyncKeyState('E')) app.Scene.Camera.Position.y	+= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
+	if(GetAsyncKeyState('Q')) app.Scene.Camera.Position.y	-= (float)secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
+	if(GetAsyncKeyState('E')) app.Scene.Camera.Position.y	+= (float)secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
 
-	if(GetAsyncKeyState('W')) modelPlayer.Position.x		+= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
-	if(GetAsyncKeyState('S')) modelPlayer.Position.x		-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
-	if(GetAsyncKeyState('A')) modelPlayer.Position.z		+= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
-	if(GetAsyncKeyState('D')) modelPlayer.Position.z		-= (float)(lastFrameSeconds * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
+	if(GetAsyncKeyState('W')) modelPlayer.Position.x		+= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
+	if(GetAsyncKeyState('S')) modelPlayer.Position.x		-= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
+	if(GetAsyncKeyState('A')) modelPlayer.Position.z		+= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
+	if(GetAsyncKeyState('D')) modelPlayer.Position.z		-= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
 
 	if(GetAsyncKeyState(VK_NUMPAD5))
 		modelPlayer.Rotation								= {0, 0, (float)-::ced::MATH_PI_2};
 	else {
-		if(GetAsyncKeyState(VK_NUMPAD8)) modelPlayer.Rotation.z	-= (float)(lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-		if(GetAsyncKeyState(VK_NUMPAD2)) modelPlayer.Rotation.z	+= (float)(lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-		if(GetAsyncKeyState(VK_NUMPAD6)) modelPlayer.Rotation.x -= (float)(lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-		if(GetAsyncKeyState(VK_NUMPAD4)) modelPlayer.Rotation.x += (float)(lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+		if(GetAsyncKeyState(VK_NUMPAD8)) modelPlayer.Rotation.z	-= (float)(secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+		if(GetAsyncKeyState(VK_NUMPAD2)) modelPlayer.Rotation.z	+= (float)(secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+		if(GetAsyncKeyState(VK_NUMPAD6)) modelPlayer.Rotation.x -= (float)(secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+		if(GetAsyncKeyState(VK_NUMPAD4)) modelPlayer.Rotation.x += (float)(secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
 	}
 
 	if(app.Health[0])
-		modelPlayer.Rotation.y								+= (float)lastFrameSeconds * .5f;
+		modelPlayer.Rotation.y								+= (float)secondsLastFrame * .5f;
 	for(uint32_t iEnemy = 1; iEnemy < app.Scene.Models.size(); ++iEnemy) {
 		if(0 == app.Health[iEnemy])
 			continue;
-		app.Scene.Models[iEnemy].Rotation.y						+= (float)lastFrameSeconds * (.1f * iEnemy);
+		app.Scene.Models[iEnemy].Rotation.y						+= (float)secondsLastFrame * (.1f * iEnemy);
 	}
 
-	app.Scene.LightVector									= app.Scene.LightVector.RotateY(lastFrameSeconds * 2);
+	app.Scene.LightVector									= app.Scene.LightVector.RotateY(secondsLastFrame * 2);
 	if(framework.Window.Resized)
 		::setupStars(app.Stars, framework.Window.Size);
 
-	app.ShotsPlayer	.Update((float)lastFrameSeconds);
-	app.ShotsEnemy	.Update((float)lastFrameSeconds);
-	app.Debris		.Update((float)lastFrameSeconds);
-	app.Stars		.Update(framework.Window.Size.y, (float)lastFrameSeconds);
+	app.ShotsPlayer	.Update((float)secondsLastFrame);
+	app.ShotsEnemy	.Update((float)secondsLastFrame);
+	app.Debris		.Update((float)secondsLastFrame);
+	app.Stars		.Update(framework.Window.Size.y, (float)secondsLastFrame);
 	for(uint32_t iExplosion = 0; iExplosion < app.Explosions.size(); ++iExplosion)
-		app.Explosions[iExplosion].Update((float)lastFrameSeconds);
+		app.Explosions[iExplosion].Update((float)secondsLastFrame);
 
 	::ced::container<::ced::SCoord3<float>>					collisionPoints;
 	for(uint32_t iModel = 0; iModel < app.Scene.Models.size(); ++iModel) {

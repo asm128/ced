@@ -5,22 +5,31 @@ int													ced::bmpFileLoad
 	( const char						* filename
 	, ::ced::SImage						& imageLoaded
 	) {
-	HINSTANCE												hInstance			= GetModuleHandle(0);
-	HBITMAP													loadedBMP			= (HBITMAP)LoadImage(hInstance, filename, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-	HDC														hdc					= CreateCompatibleDC(0);
-	BITMAP													bitmap				= {};
-	GetObject(loadedBMP, sizeof(BITMAP), &bitmap);
-	HBITMAP													oldBMP				= (HBITMAP)SelectObject(hdc, loadedBMP);
-	imageLoaded.Pixels.resize(bitmap.bmHeight * bitmap.bmWidth);
-	imageLoaded.Metrics.x								= bitmap.bmWidth	;
-	imageLoaded.Metrics.y								= bitmap.bmHeight	;
-	for(uint32_t y = 0; y < imageLoaded.Metrics.y; ++y)
-	for(uint32_t x = 0; x < imageLoaded.Metrics.x; ++x) {
-		COLORREF												winColor			= GetPixel(hdc, x, y);
-		imageLoaded.Pixels[y * imageLoaded.Metrics.x + x]	= {GetBValue(winColor), GetGValue(winColor), GetRValue(winColor), 0xFF};
-	}
-	SelectObject(hdc, oldBMP);
-	DeleteDC(hdc);
-	DeleteObject(loadedBMP);
+	HBITMAP															phBitmap									= (HBITMAP)LoadImageA(NULL, filename, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION | LR_DEFAULTSIZE | LR_LOADFROMFILE);		// Use LoadImage() to get the image loaded into a DIBSection
+	if(phBitmap == NULL)
+		return -1; //, "Failed to load bitmap file: %s.", szFileName.begin());
+
+	BITMAP															bm											= {};
+	GetObject(phBitmap, sizeof(BITMAP), &bm);		// Get the color depth of the DIBSection
+	if(0 > imageLoaded.Pixels.resize(bm.bmWidth * bm.bmHeight))
+		return -1; //, "Out of memory? Requested size: {x: %i, y: %i}", (int32_t)bm.bmWidth, (int32_t)bm.bmHeight);
+	imageLoaded.Metrics											= {(uint32_t)bm.bmWidth, (uint32_t)bm.bmHeight};
+	HDC																hMemDC										= CreateCompatibleDC(NULL);
+	HBITMAP															hOldBitmap;
+	hOldBitmap													= (HBITMAP)SelectObject(hMemDC, phBitmap);
+	//::ced::SColorBGRA												* bmpPixels		= 0;
+	BITMAPINFO									bitmapInfo				= {};
+	bitmapInfo.bmiHeader.biSize				= sizeof(BITMAPINFO);
+	bitmapInfo.bmiHeader.biWidth			= bm.bmWidth;
+	bitmapInfo.bmiHeader.biHeight			= bm.bmHeight;
+	bitmapInfo.bmiHeader.biPlanes			= 1;
+	bitmapInfo.bmiHeader.biBitCount			= 32;
+	bitmapInfo.bmiHeader.biCompression		= BI_RGB;
+	bitmapInfo.bmiHeader.biSizeImage		= bm.bmWidth * bm.bmHeight * sizeof(::ced::SColorBGRA);
+	bitmapInfo.bmiHeader.biXPelsPerMeter	= 0xce4;
+	bitmapInfo.bmiHeader.biYPelsPerMeter	= 0xce4;
+	GetDIBits(hMemDC, phBitmap, 0, imageLoaded.Metrics.y, (void**)imageLoaded.Pixels.begin(), &bitmapInfo, DIB_RGB_COLORS);
+	SelectObject(hMemDC, hOldBitmap);
+	DeleteDC	(hMemDC);
 	return 0;
 }

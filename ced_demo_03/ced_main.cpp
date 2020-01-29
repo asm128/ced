@@ -130,8 +130,8 @@ int													setup				(SApplication & app)	{
 
 int													update				(SApplication & app)	{
 	::ced::SWindow											& window			= app.Window;
-	double													lastFrameSeconds	= app.Timer.Tick() * .000001;
-	app.TotalTime										+= lastFrameSeconds;
+	double													secondsLastFrame	= app.Timer.Tick() * .000001;
+	app.TotalTime										+= secondsLastFrame;
 	if(1 == ::ced::windowUpdate(window, app.Pixels))
 		return 1;
 	if(window.Resized) {
@@ -149,13 +149,13 @@ int													update				(SApplication & app)	{
 	static ::ced::SCoord3<float>							cameraPosition		= {15, 5, 0};
 	::ced::SCoord3<float>									cameraUp			= {0, 1, 0};
 
-	if(GetAsyncKeyState('Q')) cameraPosition.y					-= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
-	if(GetAsyncKeyState('E')) cameraPosition.y					+= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
+	if(GetAsyncKeyState('Q')) cameraPosition.y					-= (float)secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
+	if(GetAsyncKeyState('E')) cameraPosition.y					+= (float)secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
 
 	//------------------------------------------- Transform and Draw
 	static ::ced::SCoord3<float>							lightVector			= {15, 12, 0};
-	lightVector											= lightVector	.RotateY(lastFrameSeconds * 4);
-	cameraPosition										= cameraPosition.RotateY(lastFrameSeconds);
+	lightVector											= lightVector	.RotateY(secondsLastFrame * 4);
+	cameraPosition										= cameraPosition.RotateY(secondsLastFrame);
 
 	lightVector.Normalize();
 

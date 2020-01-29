@@ -57,22 +57,22 @@ int													update				(SApplication & app)	{
 	if(1 == ::ced::frameworkUpdate(app.Framework))
 		framework.Running									= false;
 	//------------------------------------------- Handle input
-	double													lastFrameSeconds	= framework.Timer.ElapsedMicroseconds * .000001;
+	double													secondsLastFrame	= framework.Timer.ElapsedMicroseconds * .000001;
 
 	//------------------------------------------- Handle input
 	::ced::SCoord3<float>									cameraTarget		= {};
 	static ::ced::SCoord3<float>							cameraPosition		= {15, 5, 0};
 	::ced::SCoord3<float>									cameraUp			= {0, 1, 0};
 
-	if(GetAsyncKeyState('Q')) cameraPosition.y				-= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
-	if(GetAsyncKeyState('E')) cameraPosition.y				+= (float)lastFrameSeconds * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
+	if(GetAsyncKeyState('Q')) cameraPosition.y				-= (float)secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
+	if(GetAsyncKeyState('E')) cameraPosition.y				+= (float)secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
 
 	//------------------------------------------- Transform and Draw
 	::ced::view_grid<::ced::SColorBGRA>						targetPixels		= {framework.Pixels, framework.Window.Size};
 	memset(targetPixels.begin(), 0, sizeof(::ced::SColorBGRA) * targetPixels.size());
 	static ::ced::SCoord3<float>							lightVector			= {15, 12, 0};
-	lightVector											= lightVector	.RotateY(lastFrameSeconds * 2);
-	cameraPosition										= cameraPosition.RotateY(lastFrameSeconds / 2);
+	lightVector											= lightVector	.RotateY(secondsLastFrame * 2);
+	cameraPosition										= cameraPosition.RotateY(secondsLastFrame / 2);
 
 	lightVector.Normalize();
 

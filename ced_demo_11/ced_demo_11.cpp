@@ -1,4 +1,4 @@
-#include "rigidbody.h"
+#include "ced_rigidbody.h"
 
 #include "ced_geometry.h"
 #include "ced_image.h"
@@ -6,6 +6,7 @@
 
 #include "ced_framework.h"
 #include "ced_model.h"
+#include "ced_particles.h"
 
 #include <cstring>
 #include <cstdint>
@@ -47,8 +48,53 @@ struct SEntity {
 	::ced::container<uint32_t>							IndexChild						;
 };
 
+
+struct SDebris	{
+	::ced::SColorBGRA							Colors[4]			=
+		{ {0x80, 0xAF, 0xFF, }
+		, {0x40, 0xAF, 0xFF, }
+		, {0x80, 0xCF, 0xFF, }
+		//, {0x00, 0x00, 0xFF, }
+		};
+	::ced::container<float>						Brightness			= {};
+	::ced::SParticles3							Particles			= {};
+
+	int											Spawn				(const ::ced::SCoord3<float> & position, const ::ced::SCoord3<float> & direction, float speed, float brightness)	{
+		Particles.Spawn(position, direction, speed);
+		return Brightness.push_back(brightness);
+	}
+	int											SpawnSpherical		(uint32_t countDebris, const ::ced::SCoord3<float> & position, float speedDebris, float brightness, float offset)	{
+		for(uint32_t iDebris = 0; iDebris < countDebris; ++iDebris) {
+			::ced::SCoord3<float>									direction				= {0, 1 * offset, 0};
+			direction.RotateX(rand() * (::ced::MATH_2PI / RAND_MAX));
+			direction.RotateY(rand() * (::ced::MATH_2PI / RAND_MAX));
+			direction.RotateZ(rand() * (::ced::MATH_2PI / RAND_MAX));
+			const ::ced::SCoord3<float>newPosition		= position + direction;
+			direction.Normalize();
+			Spawn(newPosition, direction, speedDebris, brightness);
+		}
+		return 0;
+	}
+	int											Update				(double secondsLastFrame)	{
+		Particles.IntegrateSpeed(secondsLastFrame);
+		const float										fLastFrame			= (float)secondsLastFrame;
+		for(uint32_t iShot = 0; iShot < Particles.Position.size(); ++iShot) {
+			float											& speed				= Particles.Speed		[iShot];
+			float											& brightness 		= Brightness			[iShot];
+			brightness									-= fLastFrame;
+			speed										-= fLastFrame * (rand() % 8);
+			if(brightness < 0) {
+				Particles.Remove(iShot);
+				Brightness.remove_unordered(iShot--);
+			}
+		}
+		return 0;
+	}
+};
+
 struct SSolarSystem {
-	::SIntegrator3										World							= {};
+	::SDebris											SunFire							= {};
+	::ced::SIntegrator3									World							= {};
 	::SScene											Scene							= {};
 	::ced::container<::SEntity>							Entities						= {};
 	::ced::container<::ced::SImage>						Image							= {};
@@ -72,6 +118,53 @@ static constexpr const double	PLANET_ORBITALINCLINATION	[PLANET_COUNT]	=	{	7.0		
 static constexpr const double	PLANET_ORBITALECCENTRICITY	[PLANET_COUNT]	=	{	0.205f	, 0.007f	, 0.017f	, 0.094f	, 0.049f	, 0.057f	, 0.046f	, 0.011f	, 0.244f	};
 static constexpr const char*	PLANET_IMAGE				[PLANET_COUNT]	=	{	"mercury_color.bmp"	, "venus_color.bmp"	, "earth_color.bmp"	, "mars_color.bmp"	, "jupiter_color.bmp"	, "saturn_color.bmp"	, "uranus_color.bmp"	, "neptune_color.bmp"	, "pluto_color.bmp"	};
 
+static	int											drawDebris			(::ced::view_grid<::ced::SColorBGRA> targetPixels, SDebris & debris, const ::ced::SMatrix4<float> & matrixVPV, ::ced::view_grid<uint32_t> depthBuffer)	{
+	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
+	for(uint32_t iParticle = 0; iParticle < debris.Brightness.size(); ++iParticle) {
+		::ced::SColorFloat										colorShot			= debris.Colors[iParticle % ::std::size(debris.Colors)];
+		::ced::SCoord3<float>									starPos				= debris.Particles.Position[iParticle];
+		starPos												= matrixVPV.Transform(starPos);
+		const ::ced::SCoord2<int32_t>							pixelCoord			= {(int32_t)starPos.x, (int32_t)starPos.y};
+		if( pixelCoord.y < 0 || pixelCoord.y >= (int32_t)targetPixels.metrics().y
+		 || pixelCoord.x < 0 || pixelCoord.x >= (int32_t)targetPixels.metrics().x
+		)
+			continue;
+		if(starPos.z > 1 || starPos.z < 0)
+			continue;
+		uint32_t												depth				= uint32_t(starPos.z * 0xFFFFFFFFU);
+		if(depth > depthBuffer[pixelCoord.y][pixelCoord.x])
+			continue;
+		::ced::SColorFloat											starFinalColor	= colorShot * debris.Brightness[iParticle];
+		starFinalColor.g										= ::std::max(0.0f, starFinalColor.g - (1.0f - ::std::min(1.0f, debris.Brightness[iParticle] * 2.5f * (1.0f / debris.Brightness.size() * iParticle * 2))));
+		starFinalColor.b										= ::std::max(0.0f, starFinalColor.b - (1.0f - ::std::min(1.0f, debris.Brightness[iParticle] * 2.5f * (1.0f / debris.Brightness.size() * iParticle * 1))));
+		//::ced::setPixel(targetPixels, pixelCoord, starFinalColor);
+		const	double											brightRadius		= 3.0;
+		const	double											brightRadiusSquared	= brightRadius * brightRadius;
+		double													brightUnit			= 1.0 / brightRadiusSquared;
+		for(int32_t y = (int32_t)-brightRadius; y < (int32_t)brightRadius; ++y)
+		for(int32_t x = (int32_t)-brightRadius; x < (int32_t)brightRadius; ++x) {
+			::ced::SCoord2<float>									brightPos			= {(float)x, (float)y};
+			const double											brightDistance		= brightPos.LengthSquared();
+			if(brightDistance <= brightRadiusSquared) {
+				::ced::SCoord2<int32_t>									blendPos			= pixelCoord + (brightPos).Cast<int32_t>();
+				if( blendPos.y < 0 || blendPos.y >= (int32_t)targetPixels.metrics().y
+				 || blendPos.x < 0 || blendPos.x >= (int32_t)targetPixels.metrics().x
+				)
+					continue;
+				uint32_t												& blendVal			= depthBuffer[blendPos.y][blendPos.x];
+				//if(depth > blendVal)
+				//	continue;
+				blendVal											= depth;
+				double													finalBrightness					= 1.0-(brightDistance * brightUnit);
+				::ced::SColorBGRA										& pixelVal						= targetPixels[blendPos.y][blendPos.x];
+				::ced::SColorFloat										pixelColor						= starFinalColor * finalBrightness + pixelVal;
+				pixelVal											= pixelColor;
+			}
+		}
+	}
+	return 0;
+}
+
 int													cleanup							(SApplication & app)	{ return ::ced::frameworkCleanup(app.Framework); }
 int													setup							(SApplication & app)	{
 	::ced::SFramework										& framework						= app.Framework;
@@ -81,8 +174,8 @@ int													setup							(SApplication & app)	{
 	::ced::geometryBuildSphere(app.SolarSystem.Scene.Geometry[0], 20U, 16U, 1, {});
 
 	app.SolarSystem.Scene.Pivot.resize	(PLANET_COUNT + 1);
-	app.SolarSystem.World.Spawn					(PLANET_COUNT * 2);
-	::SIntegrator3											& bodies						= app.SolarSystem.World;
+	app.SolarSystem.World.Spawn			(PLANET_COUNT * 2);
+	::ced::SIntegrator3										& bodies						= app.SolarSystem.World;
 	::SScene												& scene							= app.SolarSystem.Scene;
 	::ced::SQuaternion<float>								axialTilt, orbitalInclination;
 
@@ -103,13 +196,13 @@ int													setup							(SApplication & app)	{
 			orbitalInclination.Identity();
 
 			//::ced::SMass3											& orbitMass						= bodies.Masses		[iPlanet * 2]		= {};
-			::STransform3											& orbitTransform				= bodies.Transforms	[iPlanet * 2]		= {};
-			::SForce3												& orbitForces					= bodies.Forces		[iPlanet * 2]		= {};
-			::SMass3												& planetMass					= bodies.Masses		[iPlanet * 2 + 1]	= {};
-			::STransform3											& planetTransform				= bodies.Transforms	[iPlanet * 2 + 1]	= {};
-			::SForce3												& planetForces					= bodies.Forces		[iPlanet * 2 + 1]	= {};
+			::ced::STransform3										& orbitTransform				= bodies.Transforms	[iPlanet * 2]		= {};
+			::ced::SForce3											& orbitForces					= bodies.Forces		[iPlanet * 2]		= {};
+			::ced::SMass3											& planetMass					= bodies.Masses		[iPlanet * 2 + 1]	= {};
+			::ced::STransform3										& planetTransform				= bodies.Transforms	[iPlanet * 2 + 1]	= {};
+			::ced::SForce3											& planetForces					= bodies.Forces		[iPlanet * 2 + 1]	= {};
 			planetMass.InverseMass								= float(1.0 / PLANET_MASSES[iPlanet]);
-			planetTransform.Position.x							= float(1.0 / PLANET_DISTANCE[PLANET_COUNT - 1] * PLANET_DISTANCE[iPlanet] * 2000);
+			planetTransform.Position.x							= float(1.0 / PLANET_DISTANCE[PLANET_COUNT - 1] * PLANET_DISTANCE[iPlanet] * 2500);
 			planetForces										= {};
 
 			axialTilt.MakeFromEulerTaitBryan((float)(::ced::MATH_2PI / 360.0 * PLANET_AXIALTILT[iPlanet]), 0, 0);					// Calculate the axial inclination of the planet IN RADIANS
@@ -138,7 +231,6 @@ int													setup							(SApplication & app)	{
 		};
 
 	app.SolarSystem.Image.resize(PLANET_COUNT + 1);
-
 	::ced::bmpFileLoad("../ced_data/sun_color.bmp", app.SolarSystem.Image[0]);
 	for(uint32_t iPlanet = 0; iPlanet < PLANET_COUNT; ++iPlanet) {
 		char														finalPath[256] = {};
@@ -175,7 +267,7 @@ int													setup							(SApplication & app)	{
 	return 0;
 }
 
-int													updateEntityTransforms		(uint32_t iEntity, ::ced::container<::SEntity> & entities, SScene & scene, ::SIntegrator3 & bodies)	{
+int													updateEntityTransforms		(uint32_t iEntity, ::ced::container<::SEntity> & entities, SScene & scene, ::ced::SIntegrator3 & bodies)	{
 	const SEntity											& entity					= entities[iEntity];
 	::ced::SModelMatrices									matrices					= {};
 	::ced::SMatrix4<float>									matrixBody					= {};
@@ -192,10 +284,10 @@ int													update						(SApplication & app)	{
 	::ced::SFramework										& framework					= app.Framework;
 	if(1 == ::ced::frameworkUpdate(app.Framework))
 		framework.Running									= false;
-	//------------------------------------------- Handle input
+	// ------------------------------------------- Handle input
 	double													secondsLastFrame			= framework.Timer.ElapsedMicroseconds * .000001;
 
-	//------------------------------------------- Handle input
+	// ------------------------------------------- Handle input
 	if(GetAsyncKeyState('Q')) app.SolarSystem.Scene.Camera.Position.z				-= (float)secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 100 : 10);
 	if(GetAsyncKeyState('E')) app.SolarSystem.Scene.Camera.Position.z				+= (float)secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 100 : 10);
 	if(GetAsyncKeyState('S')) app.SolarSystem.Scene.Camera.Position					+= app.SolarSystem.Scene.Camera.Position / app.SolarSystem.Scene.Camera.Position.Length() * (GetAsyncKeyState(VK_SHIFT) ? 100 : 2) * secondsLastFrame;
@@ -203,8 +295,11 @@ int													update						(SApplication & app)	{
 	if(GetAsyncKeyState('A')) app.SolarSystem.Scene.Camera.Position.RotateY( (GetAsyncKeyState(VK_SHIFT) ? 100 : 2) * secondsLastFrame);
 	if(GetAsyncKeyState('D')) app.SolarSystem.Scene.Camera.Position.RotateY(-(GetAsyncKeyState(VK_SHIFT) ? 100 : 2) * secondsLastFrame);
 
+	app.SolarSystem.SunFire.SpawnSpherical(1000, {}, 5, 1, 10);
+
 	// Update physics
-	::SIntegrator3											& bodies						= app.SolarSystem.World;
+	app.SolarSystem.SunFire.Update(secondsLastFrame);
+	::ced::SIntegrator3										& bodies						= app.SolarSystem.World;
 	bodies.Integrate(secondsLastFrame);
 
 	//------------------------------------------- Transform and Draw
@@ -212,7 +307,6 @@ int													update						(SApplication & app)	{
 	::ced::view_grid<::ced::SColorBGRA>						targetPixels				= {framework.Pixels, framework.Window.Size};
 	memset(targetPixels.begin(), 0, sizeof(::ced::SColorBGRA) * targetPixels.size());
 	::ced::SCoord3<float>									lightVector					= camera.Position;
-
 	lightVector.Normalize();
 
 	::ced::SMatrix4<float>									matrixView					= {};
@@ -262,6 +356,8 @@ int													update						(SApplication & app)	{
 			::ced::drawTriangle(targetPixels, scene.Geometry[0], iTriangle, matrixTransform, matrixTransformView, lightVector, iEntity ? ::ced::BLACK : ::ced::WHITE, pixelCoords, pixelVertexWeights, app.SolarSystem.Image[entity.IndexImage], lightPoints, lightColors, depthBuffer);
 		}
 	}
+	::drawDebris(targetPixels, app.SolarSystem.SunFire, matrixView, depthBuffer);
+
 	return framework.Running ? 0 : 1;
 }
 
@@ -281,3 +377,4 @@ int	WINAPI											WinMain
 	::cleanup(app);
 	return 0;
 }
+

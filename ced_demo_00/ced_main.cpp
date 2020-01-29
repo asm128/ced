@@ -55,8 +55,8 @@ int									setup				(SApplication & app)	{
 
 int									update				(SApplication & app)	{
 	::ced::SWindow							& window			= app.Window;
-	double									lastFrameSeconds	= app.Timer.Tick() * .000001;
-	(void)lastFrameSeconds;
+	double									secondsLastFrame	= app.Timer.Tick() * .000001;
+	(void)secondsLastFrame;
 	if(1 == ::ced::windowUpdate(window, app.Pixels))
 		return 1;
 	if(window.Resized) {
@@ -76,7 +76,7 @@ int									update				(SApplication & app)	{
 	::ced::SLine2<int32_t>					lineA				= {{0, 0}, window.Size.Cast<int32_t>() / 2};
 	::ced::SLine2<int32_t>					lineB				= {{(int32_t)window.Size.x / 2, 0}, {0, (int32_t)window.Size.y / 2}};
 	static double							angle				= 0;
-	angle								+= lastFrameSeconds / 10;
+	angle								+= secondsLastFrame / 10;
 	for(uint32_t iRectangle = 0; iRectangle < ::std::size(app.Rectangles); ++iRectangle) {
 		const ::ced::SRectangle<int32_t>		& rectangle			= app.Rectangles[iRectangle];
 		::ced::drawRectangle	(viewTarget, rectangle, app.Colors[iRectangle]);
