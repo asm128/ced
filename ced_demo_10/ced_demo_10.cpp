@@ -88,14 +88,10 @@ int													setup							(SApplication & app)	{
 
 	for(uint32_t iModel = 0; iModel < app.SolarSystem.Scene.Pivot.size(); ++iModel) {
 		int32_t													iPlanet							= iModel - 1;
-		const float												scale							= float(1.0 / PLANET_SCALES[PLANET_EARTH] * PLANET_SCALES[iPlanet]) * 2;
 		{ // Set up rigid body
-			::SModelPivot										& model							= scene.Pivot[iModel];
-			if(0 == iModel)
-				model.Scale											= {10.f, 10.f, 10.f};
-			else {
-				model.Scale											= {scale, scale, scale};
-			}
+			::SModelPivot											& model							= scene.Pivot[iModel];
+			const float												scale							= (0 == iModel) ? 10.0f : float(1.0 / PLANET_SCALES[PLANET_EARTH] * PLANET_SCALES[iPlanet]) * 2;
+			model.Scale											= {scale, scale, scale};
 			model.Position										= {0, 0.5f};
 		}
 		if(iModel) { // Set up rigid body
@@ -115,7 +111,7 @@ int													setup							(SApplication & app)	{
 			axialTilt.MakeFromEulerTaitBryan((float)(::ced::MATH_2PI / 360.0 * PLANET_AXIALTILT[iPlanet]), 0, 0);					// Calculate the axial inclination of the planet IN RADIANS
 			planetTransform.Orientation							= axialTilt;										// Set the calculated axial tilt to the planet
 
-			::ced::SCoord3<float>									rotatedRotation					= { 0.0f, -(float)(::ced::MATH_2PI / PLANET_DAY[iPlanet] * PLANET_DAY[PLANET_EARTH]), 0.0f };	// Calculate the rotation velocity of the planet IN EARTH DAYS
+			::ced::SCoord3<float>									rotatedRotation					= { 0.0f, -(float)(::ced::MATH_2PI / PLANET_DAY[PLANET_EARTH] * PLANET_DAY[iPlanet]), 0.0f };	// Calculate the rotation velocity of the planet IN EARTH DAYS
 			rotatedRotation										= axialTilt.RotateVector( rotatedRotation );		// Rotate our calculated torque in relation to the planetary axis
 			planetForces.Rotation								= rotatedRotation;		// Set the rotation velocity of the planet IN EARTH DAYS
 
@@ -181,9 +177,13 @@ int													updateEntityTransforms		(uint32_t iEntity, ::ced::container<::SE
 	if(-1 == entity.IndexBody)
 		scene.Transform[iEntity]							= (-1 == entity.IndexParent) ? bodies.MatrixIdentity4 : scene.Transform[entity.IndexParent];
 	else {
-		::ced::SMatrix4<float>									matrixBody					= {};
-		bodies.GetTransform(entity.IndexBody, matrixBody);
-		scene.Transform[iEntity]							= (-1 == entity.IndexParent) ? matrixBody : matrixBody * scene.Transform[entity.IndexParent];
+		if(-1 == entity.IndexParent)
+			bodies.GetTransform(entity.IndexBody, scene.Transform[iEntity]);
+		else {
+			::ced::SMatrix4<float>									matrixBody					= {};
+			bodies.GetTransform(entity.IndexBody, matrixBody);
+			scene.Transform[iEntity]							= matrixBody * scene.Transform[entity.IndexParent];
+		}
 	}
 	for(uint32_t iChild = 0; iChild < entity.IndexChild.size(); ++iChild) {
 		const uint32_t											iChildEntity				= entity.IndexChild[iChild];

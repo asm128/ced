@@ -239,16 +239,16 @@ int													draw				(SApplication & app)	{
 	for(uint32_t iModel = 0; iModel < app.Scene.Models.size(); ++iModel) {
 		if(app.Health[iModel] <= 0)
 			continue;
-		::ced::SEntity											& entity				= app.Scene.Entities[iModel];
+		::ced::SEntity											& entity					= app.Scene.Entities[iModel];
 		if(-1 == entity.Parent)
 			continue;
-		::ced::SMatrix4<float>									matrixTransform			= app.Scene.ModelMatricesLocal[iModel];
-		const ::ced::SMatrix4<float>							& matrixTransformParent	= app.Scene.ModelMatricesLocal[entity.Parent];
+		::ced::SMatrix4<float>									matrixTransform				= app.Scene.ModelMatricesLocal[iModel];
+		const ::ced::SMatrix4<float>							& matrixTransformParent		= app.Scene.ModelMatricesLocal[entity.Parent];
 		matrixTransform										= matrixTransform * matrixTransformParent ;
-		::ced::SMatrix4<float>									matrixTransformView		= matrixTransform * matrixView;
+		::ced::SMatrix4<float>									matrixTransformView			= matrixTransform * matrixView;
 		::getLightArrays(matrixTransform.GetTranslation(), lightPointsWorld, lightColorsWorld, lightPointsModel, lightColorsModel);
-		::ced::SGeometryQuads									& mesh					= app.Scene.Geometry[iModel / 7];
-		::ced::view_grid<::ced::SColorBGRA>						image					= app.Scene.Image[iModel / 7];
+		::ced::SGeometryQuads									& mesh						= app.Scene.Geometry[iModel / 7];
+		::ced::view_grid<::ced::SColorBGRA>						image						= app.Scene.Image[iModel / 7];
 		for(uint32_t iTriangle = 0; iTriangle < mesh.Triangles.size(); ++iTriangle) {
 			pixelCoords			.clear();
 			pixelVertexWeights	.clear();

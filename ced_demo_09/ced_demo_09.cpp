@@ -59,7 +59,8 @@ int													setup				(SApplication & app)	{
 
 	app.Scene.Geometry.resize(5);
 	//::ced::geometryBuildCube	(app.Scene.Geometry[0]);
-	::ced::geometryBuildSphere	(app.Scene.Geometry[0],  8U, 7U, 1, {0, 1});
+	::ced::geometryBuildSphere	(app.Scene.Geometry[0], 8U, 5U, 1, {0, 0});
+	//::ced::geometryBuildFigure0	(app.Scene.Geometry[0], 2U, 8U, 1, {});
 	::ced::geometryBuildSphere	(app.Scene.Geometry[1], 16U, 5U, .5f, {0, 0});
 	::ced::geometryBuildFigure0	(app.Scene.Geometry[1], 2U, 8U, 1, {});
 	::ced::geometryBuildCube	(app.Scene.Geometry[2]);
@@ -103,7 +104,6 @@ int													setup				(SApplication & app)	{
 	app.Scene.Camera.Up									= {0, 1, 0};
 	return 0;
 }
-
 
 static	int											handleShotCollision
 	( ::ced::SGeometryQuads				& meshShip
