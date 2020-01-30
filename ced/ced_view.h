@@ -94,7 +94,7 @@ namespace ced
 		int32_t								resize				(uint32_t newCount)								{ return resize(newCount, {}); }
 		int32_t								resize				(uint32_t newCount, const _tValue & newValue)	{
 			if(newCount < Count) {
-				for(uint32_t iElement = Count - 1; iElement < newCount; --iElement)
+				for(int32_t iElement = (int32_t)Count - 1; iElement >= (int32_t)newCount; --iElement)
 					Data[iElement].~_tValue();
 				return Count = newCount;
 			}
@@ -112,7 +112,7 @@ namespace ced
 					oldData[iElement].~_tValue();
 				free(oldData);
 			}
-			else if(newCount > Count) {
+			else { //if(newCount > Count) {
 				for(uint32_t iElement = Count; iElement < newCount; ++iElement)
 					new (&Data[iElement]) _tValue(newValue);
 			}
