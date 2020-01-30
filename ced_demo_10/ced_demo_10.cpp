@@ -48,7 +48,7 @@ struct SEntity {
 };
 
 struct SSolarSystem {
-	::SIntegrator3										World							= {};
+	::SIntegrator3										Bodies							= {};
 	::SScene											Scene							= {};
 	::ced::container<::SEntity>							Entities						= {};
 	::ced::container<::ced::SImage>						Image							= {};
@@ -81,8 +81,8 @@ int													setup							(SApplication & app)	{
 	::ced::geometryBuildSphere(app.SolarSystem.Scene.Geometry[0], 20U, 16U, 1, {});
 
 	app.SolarSystem.Scene.Pivot.resize	(PLANET_COUNT + 1);
-	app.SolarSystem.World.Spawn					(PLANET_COUNT * 2);
-	::SIntegrator3											& bodies						= app.SolarSystem.World;
+	app.SolarSystem.Bodies.Spawn					(PLANET_COUNT * 2);
+	::SIntegrator3											& bodies						= app.SolarSystem.Bodies;
 	::SScene												& scene							= app.SolarSystem.Scene;
 	::ced::SQuaternion<float>								axialTilt, orbitalInclination;
 
@@ -156,7 +156,7 @@ int													setup							(SApplication & app)	{
 			app.SolarSystem.Image[iImage].Pixels[y * app.SolarSystem.Image[iImage].Metrics.x + x]		= colors[iImage % ::std::size(colors)];
 		}
 	}
-	app.SolarSystem.Entities.push_back({-1, 0, 0, 0});
+	app.SolarSystem.Entities.push_back({-1, 0, 0, 0, -1});
 	for(uint32_t iPlanet = 0; iPlanet < PLANET_COUNT; ++iPlanet) {
 		const uint32_t											iBodyOrbit					= iPlanet * 2;
 		const uint32_t											iBodyPlanet					= iBodyOrbit + 1;
@@ -178,16 +178,20 @@ int													setup							(SApplication & app)	{
 int													updateEntityTransforms		(uint32_t iEntity, ::ced::container<::SEntity> & entities, SScene & scene, ::SIntegrator3 & bodies)	{
 	const SEntity											& entity					= entities[iEntity];
 	::ced::SModelMatrices									matrices					= {};
-	::ced::SMatrix4<float>									matrixBody					= {};
-	bodies.GetTransform(entity.IndexBody, matrixBody);
-	::ced::SMatrix4<float>									matrixTransform				= matrixBody;
-	scene.Transform[iEntity]							= (-1 == entity.IndexParent) ? matrixTransform : matrixTransform * scene.Transform[entity.IndexParent];
+	if(-1 == entity.IndexBody)
+		scene.Transform[iEntity]							= (-1 == entity.IndexParent) ? bodies.MatrixIdentity4 : scene.Transform[entity.IndexParent];
+	else {
+		::ced::SMatrix4<float>									matrixBody					= {};
+		bodies.GetTransform(entity.IndexBody, matrixBody);
+		scene.Transform[iEntity]							= (-1 == entity.IndexParent) ? matrixBody : matrixBody * scene.Transform[entity.IndexParent];
+	}
 	for(uint32_t iChild = 0; iChild < entity.IndexChild.size(); ++iChild) {
 		const uint32_t											iChildEntity				= entity.IndexChild[iChild];
-		updateEntityTransforms(iChildEntity, entities, scene, bodies);
+		::updateEntityTransforms(iChildEntity, entities, scene, bodies);
 	}
 	return 0;
 }
+
 int													update						(SApplication & app)	{
 	::ced::SFramework										& framework					= app.Framework;
 	if(1 == ::ced::frameworkUpdate(app.Framework))
@@ -204,7 +208,7 @@ int													update						(SApplication & app)	{
 	if(GetAsyncKeyState('D')) app.SolarSystem.Scene.Camera.Position.RotateY(-(GetAsyncKeyState(VK_SHIFT) ? 100 : 2) * secondsLastFrame);
 
 	// Update physics
-	::SIntegrator3											& bodies						= app.SolarSystem.World;
+	::SIntegrator3											& bodies						= app.SolarSystem.Bodies;
 	bodies.Integrate(secondsLastFrame);
 
 	//------------------------------------------- Transform and Draw
