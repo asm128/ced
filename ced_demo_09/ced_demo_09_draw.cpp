@@ -82,8 +82,12 @@ static	int											drawDebris			(::ced::view_grid<::ced::SColorBGRA> targetPix
 }
 
 static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixels, SShots & shots
-	, const ::ced::SMatrix4<float> & matrixVPV
-	, ::ced::SColorFloat colorShot, ::ced::view_grid<uint32_t> depthBuffer)	{
+	, const ::ced::SMatrix4<float>	& matrixVPV
+	, ::ced::SColorFloat			colorShot
+	, const	double					brightRadius
+	, const	double					intensity
+	, ::ced::view_grid<uint32_t>	depthBuffer
+	) {
 	::ced::container<::ced::SCoord3<float>>					pixelCoords;
 	const ::ced::SColorFloat								starFinalColor	= colorShot;// * shots.Brightness[iShot];
 	for(uint32_t iShot = 0; iShot < shots.Brightness.size(); ++iShot) {
@@ -103,10 +107,9 @@ static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixe
 			 || pixelCoord.x < 0 || pixelCoord.x >= (int32_t)targetPixels.metrics().x
 			)
 				continue;
-			uint32_t												depth				= uint32_t(pixelCoord.z * 0xFFFFFFFFU);
 			targetPixels[(uint32_t)pixelCoord.y][(uint32_t)pixelCoord.x] = starFinalColor;
 
-			const	double											brightRadius		= 6;
+			uint32_t												depth				= uint32_t(pixelCoord.z * 0xFFFFFFFFU);
 			const	double											brightRadiusSquared	= brightRadius * brightRadius;
 			double													brightUnit			= 1.0 / brightRadiusSquared;
 			for(int32_t y = (int32_t)-brightRadius; y < (int32_t)brightRadius; ++y)
@@ -125,7 +128,7 @@ static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixe
 					blendVal											= depth;
 					::ced::SColorBGRA										& pixelVal						= targetPixels[blendPos.y][blendPos.x];
 					double													finalBrightness					= (1.0 - (brightDistance * brightUnit)) * (1.0 / pixelCoords.size() * iPixelCoord);
-					::ced::SColorFloat										pixelColor						= starFinalColor * finalBrightness + pixelVal;
+					::ced::SColorFloat										pixelColor						= starFinalColor * finalBrightness * intensity + pixelVal;
 					pixelVal											= pixelColor;
 				}
 			}
@@ -241,7 +244,7 @@ int													draw				(SApplication & app)	{
 			continue;
 		::ced::SMatrix4<float>									matrixTransform			= app.Scene.ModelMatricesLocal[iModel];
 		const ::ced::SMatrix4<float>							& matrixTransformParent	= app.Scene.ModelMatricesLocal[entity.Parent];
-		matrixTransform										= matrixTransform  * matrixTransformParent ;
+		matrixTransform										= matrixTransform * matrixTransformParent ;
 		::ced::SMatrix4<float>									matrixTransformView		= matrixTransform * matrixView;
 		::getLightArrays(matrixTransform.GetTranslation(), lightPointsWorld, lightColorsWorld, lightPointsModel, lightColorsModel);
 		::ced::SGeometryQuads									& mesh					= app.Scene.Geometry[iModel / 7];
@@ -288,8 +291,8 @@ int													draw				(SApplication & app)	{
 		}
 	}
 
-	::drawShots(targetPixels, app.ShotsPlayer	, matrixView, colorShotPlayer	, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
-	::drawShots(targetPixels, app.ShotsEnemy	, matrixView, colorShotEnemy	, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
+	::drawShots(targetPixels, app.ShotsPlayer	, matrixView, colorShotPlayer	, 4.0,  1, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
+	::drawShots(targetPixels, app.ShotsEnemy	, matrixView, colorShotEnemy	, 8.0, 10, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
 	::drawDebris(targetPixels, app.Debris		, matrixView, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
 	return 0;
 }

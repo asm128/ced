@@ -60,15 +60,16 @@ int													setup				(SApplication & app)	{
 	app.Scene.Geometry.resize(5);
 	//::ced::geometryBuildCube	(app.Scene.Geometry[0]);
 	::ced::geometryBuildSphere	(app.Scene.Geometry[0],  8U, 7U, 1, {0, 1});
+	::ced::geometryBuildSphere	(app.Scene.Geometry[1], 16U, 5U, .5f, {0, 0});
 	::ced::geometryBuildFigure0	(app.Scene.Geometry[1], 2U, 8U, 1, {});
-	::ced::geometryBuildGrid	(app.Scene.Geometry[2], {2U, 2U}, {1U, 1U});
 	::ced::geometryBuildCube	(app.Scene.Geometry[2]);
+	::ced::geometryBuildGrid	(app.Scene.Geometry[2], {2U, 2U}, {1U, 1U});
 	::ced::geometryBuildCube	(app.Scene.Geometry[3]);
 	::ced::geometryBuildSphere	(app.Scene.Geometry[3], 4U, 2U, 1, {0, 0});
 	::ced::geometryBuildSphere	(app.Scene.Geometry[4], 16U, 2U, 1, {0, 0});
 
 	const uint32_t											partHealthPlayer		= 200;
-	const uint32_t											partHealthEnemy			= 1000;
+	const uint32_t											partHealthEnemy			= 2000;
 	app.Scene.Models[::modelCreate(app, partHealthPlayer)].Position	= {-30};
 	app.Scene.Models[::modelCreate(app, partHealthEnemy )].Position	= {+20};
 	app.Scene.Models[::modelCreate(app, partHealthEnemy )].Position	= {+25};
@@ -106,14 +107,14 @@ int													setup				(SApplication & app)	{
 
 static	int											handleShotCollision
 	( ::ced::SGeometryQuads				& meshShip
-	, int32_t							indexShip
-	, int32_t							indexEntityPart
+	, const int32_t						indexShip
+	, const int32_t						indexEntityPart
 	, const ::ced::SCoord3<float>		& collisionPoint
 	, int32_t							& healthParth
 	, int32_t							& healthParent
 	, ::SDebris							& debris
 	, ::ced::container<::SExplosion>	& explosions
-	, void * soundAlias
+	, void								* soundAlias
 	) {
 	PlaySoundA((LPCSTR)soundAlias, GetModuleHandle(0), SND_ALIAS_ID | SND_ASYNC);
 	healthParth											-= 100;
@@ -126,7 +127,7 @@ static	int											handleShotCollision
 		exploded											= true	;
 		if(0 >= healthParent) {
 			debrisSpeed											= 10	;
-			debrisCount											= 100	;
+			debrisCount											= 150	;
 			debrisBright										= 3		;
 		}
 		else {
@@ -170,8 +171,8 @@ static	int											collisionDetect		(::SShots & shots, const ::ced::SCoord3<fl
 	collisionPoints.clear();
 	for(uint32_t iShot = 0; iShot < shots.Particles.Position.size(); ++iShot) {
 		const ::ced::SLine3<float>								shotSegment			= {shots.PositionPrev[iShot], shots.Particles.Position[iShot]};
-		float													t				= 0;
-		::ced::SCoord3<float>									collisionPoint	= {};
+		float													t					= 0;
+		::ced::SCoord3<float>									collisionPoint		= {};
 		if( ::ced::intersectRaySphere(shotSegment.A, (shotSegment.B - shotSegment.A).Normalize(), {modelPosition, 1.2}, t, collisionPoint)
 			&& t < 1
 		) {
@@ -227,7 +228,6 @@ int													update				(SApplication & app)	{
 			}
 		}
 	}
-
 	if(GetAsyncKeyState(VK_SPACE)) {
 		for(uint32_t iEntity = 1; iEntity < 7; ++iEntity) {
 			if(0 >= app.Health[iEntity])
@@ -282,7 +282,7 @@ int													update				(SApplication & app)	{
 		app.Explosions[iExplosion].Update((float)secondsLastFrame);
 
 	::ced::container<::ced::SCoord3<float>>					collisionPoints;
-	for(uint32_t iModel = 0; iModel < app.Scene.Models.size(); ++iModel) {
+	for(uint32_t iModel = 0; iModel < app.Scene.Entities.size(); ++iModel) {
 		const int32_t											indexParent				= app.Scene.Entities[iModel].Parent;
 		if(-1 == indexParent)
 			continue;
@@ -291,13 +291,19 @@ int													update				(SApplication & app)	{
 		::ced::SMatrix4<float>									matrixTransform			= app.Scene.ModelMatricesLocal[iModel] * app.Scene.ModelMatricesLocal[indexParent];
 		if(iModel < 7) {
 			::collisionDetect(app.ShotsEnemy, matrixTransform.GetTranslation(), collisionPoints);
-			for(uint32_t iCollisionPoint = 0; iCollisionPoint < collisionPoints.size(); ++iCollisionPoint)
+			for(uint32_t iCollisionPoint = 0; iCollisionPoint < collisionPoints.size(); ++iCollisionPoint) {
 				::handleShotCollision(app.Scene.Geometry[indexParent / 7], indexParent / 7, iModel, collisionPoints[iCollisionPoint], app.Health[iModel], app.Health[indexParent], app.Debris, app.Explosions, (void*)SND_ALIAS_SYSTEMEXCLAMATION);
+				if(app.Health[iModel] <= 0)
+					break;
+			}
 		}
 		else {
 			::collisionDetect(app.ShotsPlayer, matrixTransform.GetTranslation(), collisionPoints);
-			for(uint32_t iCollisionPoint = 0; iCollisionPoint < collisionPoints.size(); ++iCollisionPoint)
+			for(uint32_t iCollisionPoint = 0; iCollisionPoint < collisionPoints.size(); ++iCollisionPoint) {
 				::handleShotCollision(app.Scene.Geometry[indexParent / 7], indexParent / 7, iModel, collisionPoints[iCollisionPoint], app.Health[iModel], app.Health[indexParent], app.Debris, app.Explosions, (void*)SND_ALIAS_SYSTEMHAND);
+				if(app.Health[iModel] <= 0)
+					break;
+			}
 		}
 	}
 
