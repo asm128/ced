@@ -82,13 +82,14 @@ namespace ced
 		}
 
 		int32_t 										Spawn							(uint32_t bodyCount)	{
-			BodyFrames		.resize(BodyFrames		.size() + bodyCount);
-			BodyFlags		.resize(BodyFlags		.size() + bodyCount);
-			Forces			.resize(Forces			.size() + bodyCount);
-			Masses			.resize(Masses			.size() + bodyCount);
-			Transforms		.resize(Transforms		.size() + bodyCount);
-			TransformsLocal	.resize(TransformsLocal	.size() + bodyCount);
-			return TransformsLocal.size();
+			const uint32_t										indexFirstBody					= BodyFrames.size();
+			BodyFrames		.resize(indexFirstBody + bodyCount);
+			BodyFlags		.resize(indexFirstBody + bodyCount);
+			Forces			.resize(indexFirstBody + bodyCount);
+			Masses			.resize(indexFirstBody + bodyCount);
+			Transforms		.resize(indexFirstBody + bodyCount);
+			TransformsLocal	.resize(indexFirstBody + bodyCount);
+			return indexFirstBody;
 		}
 
 		int32_t 										GetTransform					(uint32_t iBody, ::ced::SMatrix4<float>	& transform)	{
@@ -154,6 +155,18 @@ namespace ced
 			bodyFlags.OutdatedTensorWorld					= true;
 		}
 	};
+
+	int												createOrbiter
+		( ::ced::SIntegrator3	& bodies
+		, double				mass
+		, double				distance
+		, double				axialTilt
+		, double				rotation_period
+		, double				rotation_unit
+		, double				orbital_period
+		, double				orbital_inclination
+		, double				distance_scale
+		);
 } // namespace
 
 #endif // CED_RIGIDBODY_H_23487239847234

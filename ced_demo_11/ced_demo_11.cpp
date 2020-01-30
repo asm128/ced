@@ -48,6 +48,10 @@ struct SEntity {
 	::ced::container<uint32_t>							IndexChild						;
 };
 
+struct SEntitySlice {
+	int32_t												IndexEntity						;
+	::ced::SSlice<uint16_t>								Mesh;
+};
 
 struct SDebris	{
 	::ced::SColorBGRA							Colors[4]			=
@@ -165,8 +169,8 @@ static	int											drawDebris			(::ced::view_grid<::ced::SColorBGRA> targetPix
 	return 0;
 }
 
-int													cleanup							(SApplication & app)	{ return ::ced::frameworkCleanup(app.Framework); }
-int													setup							(SApplication & app)	{
+int													cleanup							(SApplication & app)								{ return ::ced::frameworkCleanup(app.Framework); }
+int													setup							(SApplication & app)								{
 	::ced::SFramework										& framework						= app.Framework;
 	::ced::frameworkSetup(framework);
 
@@ -174,10 +178,10 @@ int													setup							(SApplication & app)	{
 	::ced::geometryBuildSphere(app.SolarSystem.Scene.Geometry[0], 20U, 16U, 1, {});
 
 	app.SolarSystem.Scene.Pivot.resize	(PLANET_COUNT + 1);
-	app.SolarSystem.Bodies.Spawn			(PLANET_COUNT * 2);
+	//app.SolarSystem.Bodies.Spawn		(PLANET_COUNT * 2);
 	::ced::SIntegrator3										& bodies						= app.SolarSystem.Bodies;
 	::SScene												& scene							= app.SolarSystem.Scene;
-	::ced::SQuaternion<float>								axialTilt, orbitalInclination;
+	//::ced::SQuaternion<float>								axialTilt, orbitalInclination;
 
 	for(uint32_t iModel = 0; iModel < app.SolarSystem.Scene.Pivot.size(); ++iModel) {
 		int32_t													iPlanet							= iModel - 1;
@@ -188,30 +192,26 @@ int													setup							(SApplication & app)	{
 			model.Position										= {0, 0.5f};
 		}
 		if(iModel) { // Set up rigid body
-			axialTilt.Identity();
-			orbitalInclination.Identity();
-
-			//::ced::SMass3											& orbitMass						= bodies.Masses		[iPlanet * 2]		= {};
-			::ced::STransform3										& orbitTransform				= bodies.Transforms	[iPlanet * 2]		= {};
-			::ced::SForce3											& orbitForces					= bodies.Forces		[iPlanet * 2]		= {};
-			::ced::SMass3											& planetMass					= bodies.Masses		[iPlanet * 2 + 1]	= {};
-			::ced::STransform3										& planetTransform				= bodies.Transforms	[iPlanet * 2 + 1]	= {};
-			::ced::SForce3											& planetForces					= bodies.Forces		[iPlanet * 2 + 1]	= {};
-			planetMass.InverseMass								= float(1.0 / PLANET_MASSES[iPlanet]);
-			planetTransform.Position.x							= float(1.0 / PLANET_DISTANCE[PLANET_COUNT - 1] * PLANET_DISTANCE[iPlanet] * 2500);
-			planetForces										= {};
-
-			axialTilt.MakeFromEulerTaitBryan((float)(::ced::MATH_2PI / 360.0 * PLANET_AXIALTILT[iPlanet]), 0, 0);					// Calculate the axial inclination of the planet IN RADIANS
-			planetTransform.Orientation							= axialTilt;										// Set the calculated axial tilt to the planet
-
-			::ced::SCoord3<float>									rotatedRotation					= { 0.0f, -(float)(::ced::MATH_2PI / PLANET_DAY[PLANET_EARTH] * PLANET_DAY[iPlanet]), 0.0f };	// Calculate the rotation velocity of the planet IN EARTH DAYS
-			rotatedRotation										= axialTilt.RotateVector( rotatedRotation );		// Rotate our calculated torque in relation to the planetary axis
-			planetForces.Rotation								= rotatedRotation;		// Set the rotation velocity of the planet IN EARTH DAYS
-
-			orbitForces.Rotation								= {0.0f, (float)(::ced::MATH_2PI / PLANET_ORBITALPERIOD[iPlanet]), 0.0f};			// Set the orbital rotation velocity IN EARTH DAYS
-			orbitalInclination.MakeFromEulerTaitBryan( (float)(::ced::MATH_2PI / 360.0 * PLANET_ORBITALINCLINATION[iPlanet]), 0.0f, 0.0f );	// Calculate the orbital tilt IN RADIANS
-			orbitTransform.Orientation							= orbitalInclination;								// Set the calculated inclination to the orbit
+			::ced::createOrbiter(bodies
+				, PLANET_MASSES				[iPlanet]
+				, PLANET_DISTANCE			[iPlanet]
+				, PLANET_AXIALTILT			[iPlanet]
+				, PLANET_DAY				[iPlanet]
+				, PLANET_DAY				[PLANET_EARTH]
+				, PLANET_ORBITALPERIOD		[iPlanet]
+				, PLANET_ORBITALINCLINATION	[iPlanet]
+				, 1.0 / PLANET_DISTANCE		[PLANET_COUNT - 1] * 2500
+				);
 		}
+	}
+	app.SolarSystem.Entities.push_back({-1, 0, 0, 0, -1});
+	for(uint32_t iPlanet = 0; iPlanet < PLANET_COUNT; ++iPlanet) {
+		const uint32_t											iBodyOrbit					= iPlanet * 2;
+		const uint32_t											iBodyPlanet					= iBodyOrbit + 1;
+		int32_t													iEntityOrbit				= app.SolarSystem.Entities.push_back({0, -1, -1, -1, (int32_t)iBodyOrbit});
+		app.SolarSystem.Entities[0].IndexChild.push_back(iEntityOrbit);
+		int32_t													iEntityPlanet				= app.SolarSystem.Entities.push_back({iEntityOrbit, 0, (int32_t)iPlanet + 1, (int32_t)iPlanet + 1, (int32_t)iBodyPlanet});
+		app.SolarSystem.Entities[iEntityOrbit].IndexChild.push_back(iEntityPlanet);
 	}
 
 	::ced::SColorFloat										colors []						=
@@ -244,16 +244,6 @@ int													setup							(SApplication & app)	{
 			app.SolarSystem.Image[iImage].Pixels[y * app.SolarSystem.Image[iImage].Metrics.x + x]		= colors[iImage % ::std::size(colors)];
 		}
 	}
-	app.SolarSystem.Entities.push_back({-1, 0, 0, 0, -1});
-	for(uint32_t iPlanet = 0; iPlanet < PLANET_COUNT; ++iPlanet) {
-		const uint32_t											iBodyOrbit					= iPlanet * 2;
-		const uint32_t											iBodyPlanet					= iBodyOrbit + 1;
-		int32_t													iEntityOrbit				= app.SolarSystem.Entities.push_back({0, -1, -1, -1, (int32_t)iBodyOrbit});
-		app.SolarSystem.Entities[0].IndexChild.push_back(iEntityOrbit);
-		int32_t													iEntityPlanet				= app.SolarSystem.Entities.push_back({iEntityOrbit, 0, (int32_t)iPlanet + 1, (int32_t)iPlanet + 1, (int32_t)iBodyPlanet});
-		app.SolarSystem.Entities[iEntityOrbit].IndexChild.push_back(iEntityPlanet);
-	}
-
 	bodies.Integrate((365 * 4 + 1) * 10);	// Update physics
 
 	app.SolarSystem.Scene.Camera.Target					= {};

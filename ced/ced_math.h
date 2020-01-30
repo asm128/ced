@@ -322,7 +322,12 @@ namespace ced
 				, C.Cast<_tOther>()
 				};
 		}
+	};
 
+	template<typename _tValue>
+	struct SSlice {
+		_tValue								Offset;
+		_tValue								Count;
 	};
 } // namespace
 

@@ -101,6 +101,8 @@ namespace ced
 			else if(newCount > Size) {
 				uint32_t								newSize				= ::std::max(4U, newCount + (newCount / 4));
 				_tValue									* newData			= (_tValue*)malloc(newSize * sizeof(_tValue));
+				if(0 == newData)
+					return -1;
 				for(uint32_t iElement = 0; iElement < Count; ++iElement)
 					new (&newData[iElement]) _tValue(Data[iElement]);
 				for(uint32_t iElement = Count; iElement < newCount; ++iElement)
@@ -120,14 +122,14 @@ namespace ced
 		}
 		int32_t								push_back			(const _tValue & valueToPush)		{
 			uint32_t								newIndex			= Count;
-			resize(Count + 1, valueToPush);
+			if(-1 == resize(Count + 1, valueToPush))
+				return -1;
 			return newIndex;
 		}
 		int32_t								pop_back			(_tValue * valueToPop = 0)		{
 			if(valueToPop)
 				*valueToPop							= Data[Count - 1];
-			resize(Count - 1);
-			return Count - 1;
+			return resize(Count - 1);
 		}
 		int32_t								remove_unordered	(uint32_t indexToRemove)		{ return this->pop_back(&this->operator[](indexToRemove)); }
 	};

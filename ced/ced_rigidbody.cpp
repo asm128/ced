@@ -55,3 +55,36 @@ int32_t												ced::integratePosition				(double duration, double durationHa
 	bodyFlags.OutdatedTransform = bodyFlags.OutdatedTensorWorld	= true;	// Normalize the orientation, and update the matrices with the new position and orientation.
 	return 0;
 }
+
+int													ced::createOrbiter
+	( ::ced::SIntegrator3	& bodies
+	, double				mass
+	, double				distance
+	, double				axialTilt
+	, double				rotation_period
+	, double				rotation_unit
+	, double				orbital_period
+	, double				orbital_inclination
+	, double				distance_scale
+	) {
+	const int32_t											indexFirstBody					= bodies.Spawn(2);
+	{
+		::ced::SMass3											& planetMass					= bodies.Masses		[indexFirstBody + 1]	= {};
+		::ced::STransform3										& planetTransform				= bodies.Transforms	[indexFirstBody + 1]	= {};
+		::ced::SForce3											& planetForces					= bodies.Forces		[indexFirstBody + 1]	= {};
+		planetMass.InverseMass								= float(1.0 / mass);
+		planetTransform.Position.x							= float(distance_scale * distance);
+
+		planetTransform.Orientation.MakeFromEulerTaitBryan((float)(::ced::MATH_2PI / 360.0 * axialTilt), 0, 0);					// Calculate the axial inclination of the planet IN RADIANS
+
+		planetForces.Rotation								= { 0.0f, -(float)(::ced::MATH_2PI / rotation_unit * rotation_period), 0.0f };	// Calculate the rotation velocity of the planet IN EARTH DAYS
+		planetForces.Rotation								= planetTransform.Orientation.RotateVector(planetForces.Rotation);		// Rotate our calculated torque in relation to the planetary axis
+	}
+	{
+		::ced::STransform3										& orbitTransform				= bodies.Transforms	[indexFirstBody]		= {};
+		::ced::SForce3											& orbitForces					= bodies.Forces		[indexFirstBody]		= {};
+		orbitForces.Rotation								= {0.0f, (float)(::ced::MATH_2PI / orbital_period), 0.0f};			// Set the orbital rotation velocity IN EARTH DAYS
+		orbitTransform.Orientation.MakeFromEulerTaitBryan( (float)(::ced::MATH_2PI / 360.0 * orbital_inclination), 0.0f, 0.0f );	// Calculate the orbital tilt IN RADIANS
+	}
+	return indexFirstBody;
+}
