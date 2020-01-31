@@ -202,7 +202,7 @@ int													draw				(SApplication & app)	{
 	::ced::view_grid<::ced::SColorBGRA>						targetPixels		= {framework.Pixels, framework.Window.Size};
 	if(0 == targetPixels.size())
 		return 1;
-	::ced::SColorBGRA										colorBackground		= {0x20, 0x8, 0x4};
+	const ::ced::SColorBGRA									colorBackground		= {0x20, 0x8, 0x4};
 	//colorBackground									+= (colorBackground * (0.5 + (0.5 / 65535 * rand())) * ((rand() % 2) ? -1 : 1)) ;
 	for(uint32_t y = 0; y < framework.Window.Size.y; ++y) // Generate noise color for planet texture
 	for(uint32_t x = 0; x < framework.Window.Size.x; ++x)
@@ -238,7 +238,7 @@ int													draw				(SApplication & app)	{
 	for(uint32_t iModel = 0; iModel < app.Scene.Models.size(); ++iModel) {
 		if(app.Health[iModel] <= 0)
 			continue;
-		::ced::SEntity											& entity					= app.Scene.Entities[iModel];
+		::SEntity												& entity					= app.Scene.Entities[iModel];
 		if(-1 == entity.Parent)
 			continue;
 		::ced::SMatrix4<float>									matrixTransform				= app.Scene.ModelMatricesLocal[iModel];
@@ -257,7 +257,7 @@ int													draw				(SApplication & app)	{
 
 	for(uint32_t iExplosion = 0; iExplosion < app.Explosions.size(); ++iExplosion) {
 		const ::SExplosion							& explosion				= app.Explosions[iExplosion];
-		::ced::SEntity								& entity				= app.Scene.Entities[explosion.IndexEntity];
+		::SEntity									& entity				= app.Scene.Entities[explosion.IndexEntity];
 		if(-1 == entity.Parent)
 			continue;
 

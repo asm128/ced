@@ -6,21 +6,16 @@
 
 namespace ced
 {
-	struct SModel3 {
-		::ced::SCoord3<float>								Scale		;
-		::ced::SCoord3<float>								Rotation	;
-		::ced::SCoord3<float>								Position	;
-	};
-
 	struct SModelMatrices {
 		::ced::SMatrix4<float>								Scale		;
 		::ced::SMatrix4<float>								Rotation	;
 		::ced::SMatrix4<float>								Position	;
 	};
 
-	struct SEntity {
-		int32_t												Parent;
-		::ced::container<int32_t>							Children			= {};
+	struct SModel3 {
+		::ced::SCoord3<float>								Scale		;
+		::ced::SCoord3<float>								Rotation	;
+		::ced::SCoord3<float>								Position	;
 	};
 
 	struct SCamera {

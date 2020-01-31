@@ -164,7 +164,7 @@ int													draw				(SApplication & app)	{
 		matrices.Rotation	.Rotation		(model.Rotation);
 		matrices.Position	.SetTranslation	(model.Position, true);
 
-		::ced::SEntity											& entity				= app.Scene.Entities[iModel];
+		::SEntity												& entity				= app.Scene.Entities[iModel];
 		if(-1 == entity.Parent)
 			continue;
 		matricesParent.Scale	.Scale			(app.Scene.Models[entity.Parent].Scale, true);

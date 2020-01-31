@@ -8,12 +8,17 @@
 #include <cstdint>
 #include <algorithm>
 
+struct SEntity {
+	int32_t												Parent;
+	::ced::container<int32_t>							Children			= {};
+};
+
 struct SApplication {
 	::ced::SFramework									Framework;
 
 	::ced::SImage										Image				= {};
 	::ced::container<::ced::SModel3>					Models				= {};
-	::ced::container<::ced::SEntity>					Entities			= {};
+	::ced::container<::SEntity>							Entities			= {};
 	::ced::SGeometryTriangles							Geometry			= {};
 };
 
@@ -38,7 +43,7 @@ int													setup				(SApplication & app)	{
 		//model.Rotation										= {0, 1, 0};
 		model.Position										= {4, 0.5};
 		model.Position.RotateY(::ced::MATH_2PI / (app.Models.size() - 1)* iModel);
-		::ced::SEntity											& entity		= app.Entities[iModel];
+		::SEntity												& entity		= app.Entities[iModel];
 		entity.Parent										= 0;
  		app.Entities[0].Children.push_back(iModel);
 	}
@@ -109,7 +114,7 @@ int													update				(SApplication & app)	{
 		matrices.Rotation	.Rotation		(app.Models[iModel].Rotation);
 		matrices.Position	.SetTranslation	(app.Models[iModel].Position, true);
 
-		::ced::SEntity											& entity				= app.Entities[iModel];
+		::SEntity												& entity				= app.Entities[iModel];
 
 		matricesParent.Scale	.Scale			(app.Models[entity.Parent].Scale, true);
 		matricesParent.Rotation.Rotation		(app.Models[entity.Parent].Rotation);

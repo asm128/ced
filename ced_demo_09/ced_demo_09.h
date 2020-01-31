@@ -7,12 +7,17 @@
 #ifndef CED_DEMO_08_H_298837492837
 #define CED_DEMO_08_H_298837492837
 
+struct SEntity {
+	int32_t												Parent;
+	::ced::container<int32_t>							Children			= {};
+};
+
 struct SScene	{
 	::ced::container<::ced::SImage>						Image					= {};
 	::ced::container<::ced::SMatrix4<float>>			ModelMatricesLocal		= {};
 	::ced::container<::ced::SMatrix4<float>>			ModelMatricesGlobal		= {};
 	::ced::container<::ced::SModel3>					Models					= {};
-	::ced::container<::ced::SEntity>					Entities				= {};
+	::ced::container<::SEntity>							Entities				= {};
 	::ced::container<int32_t>							GeometryIndex			= {};
 	::ced::container<::ced::SGeometryQuads>				Geometry				= {};
 	::ced::SCamera										Camera					= {};

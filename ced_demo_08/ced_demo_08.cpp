@@ -38,7 +38,7 @@ int													modelCreate			(SApplication & app)	{
 		//model.Rotation										= {0, 1, 0};
 		model.Position										= {2, 0.5};
 		model.Position.RotateY(::ced::MATH_2PI / (app.Scene.Models.size() - 1)* iModel);
-		::ced::SEntity											& entity		= app.Scene.Entities[iModel];
+		::SEntity												& entity		= app.Scene.Entities[iModel];
 		entity.Parent										= indexModel;
 		app.Health[iModel]									= 1000;
  		app.Scene.Entities[indexModel].Children.push_back(iModel);
