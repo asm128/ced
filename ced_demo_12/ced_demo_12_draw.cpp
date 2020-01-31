@@ -57,6 +57,7 @@ static	int											drawDebris			(::ced::view_grid<::ced::SColorBGRA> targetPix
 		const	double											brightRadius		= 3.0;
 		const	double											brightRadiusSquared	= brightRadius * brightRadius;
 		double													brightUnit			= 1.0 / brightRadiusSquared;
+
 		for(int32_t y = (int32_t)-brightRadius; y < (int32_t)brightRadius; ++y)
 		for(int32_t x = (int32_t)-brightRadius; x < (int32_t)brightRadius; ++x) {
 			::ced::SCoord2<float>									brightPos			= {(float)x, (float)y};
@@ -73,8 +74,7 @@ static	int											drawDebris			(::ced::view_grid<::ced::SColorBGRA> targetPix
 				blendVal											= depth;
 				double													finalBrightness					= 1.0-(brightDistance * brightUnit);
 				::ced::SColorBGRA										& pixelVal						= targetPixels[blendPos.y][blendPos.x];
-				::ced::SColorFloat										pixelColor						= starFinalColor * finalBrightness + pixelVal;
-				pixelVal											= pixelColor;
+				pixelVal											= starFinalColor * finalBrightness + pixelVal;
 			}
 		}
 	}
@@ -154,13 +154,13 @@ static	int											getLightArrays
 	::ced::SColorBGRA										colorLightEnemy			= ::ced::SColorBGRA{0xFF, 0xFF, 0xFF}  * .2;
 	lightPoints.resize(app.ShotsEnemy.Particles.Position.size() + app.ShotsPlayer.Particles.Position.size() + app.Debris.Particles.Position.size() + 4);
 	lightColors.resize(app.ShotsEnemy.Particles.Position.size() + app.ShotsPlayer.Particles.Position.size() + app.Debris.Particles.Position.size() + 4);
-	lightPoints[0]										= app.Scene.Models[0].Position;
+	lightPoints[0]										= app.Scene.Transforms[0].Position;
 	lightColors[0]										= colorLightPlayer;
 	for(uint32_t iEnemy = 1; iEnemy < 4; ++iEnemy) {
 		uint32_t iModelEnemy = 7 * iEnemy;
-		if(iModelEnemy >= app.Scene.Models.size())
+		if(iModelEnemy >= app.Scene.Transforms.size())
 			continue;
-		lightPoints[iEnemy]									= app.Scene.Models[iModelEnemy].Position;
+		lightPoints[iEnemy]									= app.Scene.Transforms[iModelEnemy].Position;
 		lightColors[iEnemy]									= colorLightEnemy;
 	}
 	uint32_t												iOffset					= 4;
@@ -242,10 +242,10 @@ int													draw				(SApplication & app)	{
 	::getLightArrays(solarSystem, lightPointsWorld, lightColorsWorld);
 
 	::ced::view_grid<uint32_t>								depthBuffer					= {framework.DepthBuffer.begin(), framework.Window.Size};
-	for(uint32_t iModel = 0; iModel < solarSystem.Scene.Models.size(); ++iModel) {
+	for(uint32_t iModel = 0; iModel < solarSystem.Scene.Transforms.size(); ++iModel) {
 		if(solarSystem.Health[iModel] <= 0)
 			continue;
-		::SEntity												& entity					= solarSystem.Scene.Entities[iModel];
+		::SEntity												& entity					= solarSystem.Entities[iModel];
 		if(-1 == entity.Parent)
 			continue;
 		::ced::SMatrix4<float>									matrixTransform				= solarSystem.Scene.ModelMatricesLocal[iModel];
@@ -253,8 +253,8 @@ int													draw				(SApplication & app)	{
 		matrixTransform										= matrixTransform * matrixTransformParent ;
 		::ced::SMatrix4<float>									matrixTransformView			= matrixTransform * matrixView;
 		::getLightArrays(matrixTransform.GetTranslation(), lightPointsWorld, lightColorsWorld, lightPointsModel, lightColorsModel);
-		::ced::SGeometryQuads									& mesh						= solarSystem.Scene.Geometry[iModel / 7];
-		::ced::view_grid<::ced::SColorBGRA>						image						= solarSystem.Scene.Image[iModel / 7];
+		::ced::SGeometryQuads									& mesh						= solarSystem.Scene.Geometry[entity.Geometry];
+		::ced::view_grid<::ced::SColorBGRA>						image						= solarSystem.Scene.Image	[entity.Image];
 		for(uint32_t iTriangle = 0; iTriangle < mesh.Triangles.size(); ++iTriangle) {
 			pixelCoords			.clear();
 			pixelVertexWeights	.clear();

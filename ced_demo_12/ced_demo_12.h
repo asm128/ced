@@ -11,7 +11,7 @@
 struct SEntity {
 	int32_t												Parent						;
 	int32_t												Geometry					;
-	int32_t												Model						;
+	int32_t												Transform					;
 	int32_t												Image						;
 	int32_t												Body						;
 	::ced::container<uint32_t>							Children					;
@@ -21,8 +21,7 @@ struct SShipScene	{
 	::ced::container<::ced::SImage>						Image						= {};
 	::ced::container<::ced::SMatrix4<float>>			ModelMatricesLocal			= {};
 	::ced::container<::ced::SMatrix4<float>>			ModelMatricesGlobal			= {};
-	::ced::container<::ced::SModel3>					Models						= {};
-	::ced::container<::SEntity>							Entities					= {};
+	::ced::container<::ced::SModel3>					Transforms					= {};
 	::ced::container<::ced::SGeometryQuads>				Geometry					= {};
 	::ced::SCamera										Camera						= {};
 	::ced::SCoord3<float>								LightVector					= {15, 12, 0};
@@ -34,13 +33,13 @@ struct SShip {
 
 struct SSolarSystem {
 	::SShipScene										Scene						;
+	::ced::container<::SEntity>							Entities					= {};
 	::SStars											Stars						;
 	::SShots											ShotsPlayer					;
 	::SShots											ShotsEnemy					;
 	::SDebris											Debris						;
 	::SDebris											SunFire						= {};
 	::ced::SIntegrator3									Bodies						= {};
-	::ced::container<::SEntity>							Entities					= {};
 	::ced::container<::ced::SImage>						Image						= {};
 	::ced::container<::SExplosion>						Explosions;
 

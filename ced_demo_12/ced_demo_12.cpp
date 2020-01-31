@@ -19,36 +19,44 @@ static	int											setupStars			(SStars & stars, ::ced::SCoord2<uint32_t> targ
 	return 0;
 }
 
-static	int											modelCreate			(::SSolarSystem & solarSystem, uint32_t partHealth)	{
+static	int											shipCreate			(::SSolarSystem & solarSystem, uint32_t partHealth, int32_t iGeometry, int32_t iImage)	{
 	::SShipScene											& scene				= solarSystem.Scene;
-	int32_t													indexModel			= scene.ModelMatricesLocal.size();
+	int32_t													indexEntity			= scene.ModelMatricesLocal.size();
 	uint32_t												countParts			= 6;
-	solarSystem.Health		.resize(indexModel + 1 + countParts);
-	scene.ModelMatricesLocal	.resize(indexModel + 1 + countParts);
-	scene.ModelMatricesGlobal	.resize(indexModel + 1 + countParts);
-	scene.Models				.resize(indexModel + 1 + countParts);
-	scene.Entities				.resize(indexModel + 1 + countParts);
+	solarSystem.Health			.resize(indexEntity + 1 + countParts);
+	scene.ModelMatricesLocal	.resize(indexEntity + 1 + countParts);
+	scene.ModelMatricesGlobal	.resize(indexEntity + 1 + countParts);
+	scene.Transforms			.resize(indexEntity + 1 + countParts);
+	solarSystem.Entities		.resize(indexEntity + 1 + countParts);
 
-	scene.Models	[indexModel]					= {};
-	scene.Models	[indexModel].Scale				= {1, 1, 1};
-	if(0 == indexModel)
-		scene.Models	[indexModel].Rotation.z			= (float)(-::ced::MATH_PI_2);
+	scene.Transforms	[indexEntity]					= {};
+	scene.Transforms	[indexEntity].Scale				= {1, 1, 1};
+	if(0 == indexEntity)
+		scene.Transforms	[indexEntity].Rotation.z			= (float)(-::ced::MATH_PI_2);
 	else
-		scene.Models	[indexModel].Rotation.z			= (float)(::ced::MATH_PI_2);
-	scene.Entities	[indexModel]					= {-1};
-	solarSystem.Health[indexModel]								= partHealth * countParts;
-	for(uint32_t iModel = indexModel + 1; iModel < scene.Models.size(); ++iModel) {
-		::ced::SModel3											& model			= scene.Models[iModel];
+		scene.Transforms	[indexEntity].Rotation.z			= (float)(::ced::MATH_PI_2);
+	solarSystem.Entities[indexEntity]					= {-1};
+	solarSystem.Entities[indexEntity].Geometry			= iGeometry;
+	solarSystem.Entities[indexEntity].Transform			= indexEntity;
+	solarSystem.Entities[indexEntity].Image				= iImage;
+	solarSystem.Entities[indexEntity].Body				= -1;
+	solarSystem.Health	[indexEntity]					= partHealth * countParts;
+	for(uint32_t iModel = indexEntity + 1; iModel < scene.Transforms.size(); ++iModel) {
+		::ced::SModel3											& model			= scene.Transforms[iModel];
 		model.Scale											= {1, 1, 1};
 		model.Rotation										= {0, 0, 0};
 		model.Position										= {2, 0.5};
 		model.Position.RotateY(::ced::MATH_2PI / countParts * iModel);
-		::SEntity												& entity		= scene.Entities[iModel];
-		entity.Parent										= indexModel;
+		::SEntity												& entity		= solarSystem.Entities[iModel];
+		entity.Parent										= indexEntity;
+		entity.Geometry										= iGeometry;
+		entity.Transform									= iModel;
+		entity.Image										= iImage;
+		entity.Body											= -1;
 		solarSystem.Health[iModel]									= partHealth;
- 		scene.Entities[indexModel].Children.push_back(iModel);
+ 		solarSystem.Entities[indexEntity].Children.push_back(iModel);
 	}
-	return indexModel;
+	return indexEntity;
 }
 
 int													solarSystemSetup	(::SSolarSystem & solarSystem, ::ced::SCoord2<uint32_t> windowSize)	{
@@ -70,11 +78,11 @@ int													solarSystemSetup	(::SSolarSystem & solarSystem, ::ced::SCoord2<u
 
 	const uint32_t											partHealthPlayer		= 200;
 	const uint32_t											partHealthEnemy			= 2000;
-	scene.Models[::modelCreate(solarSystem, partHealthPlayer)].Position	= {-30};
-	scene.Models[::modelCreate(solarSystem, partHealthEnemy )].Position	= {+20};
-	scene.Models[::modelCreate(solarSystem, partHealthEnemy )].Position	= {+25};
-	scene.Models[::modelCreate(solarSystem, partHealthEnemy )].Position	= {+30};
-	scene.Models[::modelCreate(solarSystem, partHealthEnemy )].Position	= {+35};
+	scene.Transforms[solarSystem.Entities[::shipCreate(solarSystem, partHealthPlayer, 0, 0)].Transform].Position	= {-30};
+	scene.Transforms[solarSystem.Entities[::shipCreate(solarSystem, partHealthEnemy , 1, 1)].Transform].Position	= {+20};
+	scene.Transforms[solarSystem.Entities[::shipCreate(solarSystem, partHealthEnemy , 2, 2)].Transform].Position	= {+25};
+	scene.Transforms[solarSystem.Entities[::shipCreate(solarSystem, partHealthEnemy , 3, 3)].Transform].Position	= {+30};
+	scene.Transforms[solarSystem.Entities[::shipCreate(solarSystem, partHealthEnemy , 4, 4)].Transform].Position	= {+35};
 
 	::ced::SColorFloat										baseColor	[4]			=
 		{ ::ced::LIGHTGREEN
@@ -171,9 +179,9 @@ int													handleCollisionPoint	(SSolarSystem & solarSystem, int32_t iEntit
 		::explosionSlicesSetup(solarSystem.Explosions, indexMesh, countTriangles, collisionPoint, 50);
 		solarSystem.Debris.SpawnSpherical(40, collisionPoint, 60, 2);
 		if(0 >= solarSystem.Health[indexParent]) {
-			const ::ced::SCoord3<float>							& parentPosition	= solarSystem.Scene.Models[indexParent].Position;
+			const ::ced::SCoord3<float>							& parentPosition	= solarSystem.Scene.Transforms[indexParent].Position;
 			::explosionSlicesSetup(solarSystem.Explosions, indexMesh, countTriangles, parentPosition, 10);
-			solarSystem.Debris.SpawnSpherical(150, parentPosition, 12.5, 3.5);
+			solarSystem.Debris.SpawnSpherical(150, parentPosition, 10, 3);
 		}
 		return 1;
 	}
@@ -188,29 +196,29 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 	solarSystem.AnimationTime									+= secondsLastFrame;
 	//solarSystem.ShotsPlayer.Delay								+= secondsLastFrame * 20;
 	::ced::SModelMatrices									matrices;
-	solarSystem.Scene.ModelMatricesLocal.resize(solarSystem.Scene.Models.size());
-	for(uint32_t iModel = 0; iModel < solarSystem.Scene.Models.size(); ++iModel) {
-		::ced::SModel3											& model				= solarSystem.Scene.Models[iModel];
+	solarSystem.Scene.ModelMatricesLocal.resize(solarSystem.Scene.Transforms.size());
+	for(uint32_t iTransform = 0; iTransform < solarSystem.Scene.Transforms.size(); ++iTransform) {
+		::ced::SModel3											& model				= solarSystem.Scene.Transforms[iTransform];
 		matrices.Scale		.Scale			(model.Scale	, true);
 		matrices.Rotation	.Rotation		(model.Rotation);
 		matrices.Position	.SetTranslation	(model.Position, true);
-		solarSystem.Scene.ModelMatricesLocal[iModel]				= matrices.Scale * matrices.Rotation * matrices.Position;
+		solarSystem.Scene.ModelMatricesLocal[iTransform]				= matrices.Scale * matrices.Rotation * matrices.Position;
 	}
 
 	::ced::SModelMatrices									matricesParent;
-	::ced::SModel3											& modelPlayer			= solarSystem.Scene.Models[0];
-	for(uint32_t iEnemy = 7; iEnemy < solarSystem.Scene.Models.size(); ++iEnemy) {
-		const int32_t											indexParent				= solarSystem.Scene.Entities[iEnemy].Parent;
+	::ced::SModel3											& modelPlayer			= solarSystem.Scene.Transforms[solarSystem.Entities[0].Transform];
+	for(uint32_t iEnemy = 7; iEnemy < solarSystem.Entities.size(); ++iEnemy) {
+		const int32_t											indexParent				= solarSystem.Entities[iEnemy].Parent;
 		if(0 >= solarSystem.Health[iEnemy])
 			continue;
-		::ced::SModel3											& modelEnemy			= solarSystem.Scene.Models[iEnemy];
+		::ced::SModel3											& modelEnemy			= solarSystem.Scene.Transforms[iEnemy];
 		if(-1 == indexParent) {
 			modelEnemy.Position.z								= (float)(sin(solarSystem.AnimationTime) * iEnemy * 3) * ((iEnemy % 2) ? -1 : 1);
 		}
 		else {
-			solarSystem.Scene.Models[iEnemy].Rotation.y					+= (float)secondsLastFrame * 1;
+			solarSystem.Scene.Transforms[iEnemy].Rotation.y		+= (float)secondsLastFrame * 1;
 			matricesParent										= {};
-			solarSystem.ShotsEnemy.Delay								+= secondsLastFrame * .5;
+			solarSystem.ShotsEnemy.Delay						+= secondsLastFrame * .5;
 			::ced::SCoord3<float>									positionGlobal			= solarSystem.Scene.ModelMatricesLocal[indexParent].Transform(modelEnemy.Position);
 			if(1 < (modelPlayer.Position - positionGlobal).LengthSquared()) {
 				::ced::SCoord3<float>									direction			= modelPlayer.Position - positionGlobal;
@@ -224,8 +232,8 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 			if(0 >= solarSystem.Health[iEntity])
 				continue;
 			matricesParent										= {};
-			const int32_t											indexParent				= solarSystem.Scene.Entities[iEntity].Parent;
-			::ced::SModel3											& modelEnemy			= solarSystem.Scene.Models[iEntity];
+			const int32_t											indexParent				= solarSystem.Entities[iEntity].Parent;
+			::ced::SModel3											& modelEnemy			= solarSystem.Scene.Transforms[iEntity];
 			::ced::SCoord3<float>									positionGlobal			= solarSystem.Scene.ModelMatricesLocal[indexParent].Transform(modelEnemy.Position);
 			//positionGlobal.x									+= 1.5;
 			solarSystem.ShotsPlayer.Delay								+= secondsLastFrame * 10;
@@ -255,10 +263,10 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 
 	if(solarSystem.Health[0])
 		modelPlayer.Rotation.y								+= (float)secondsLastFrame * .5f;
-	for(uint32_t iEnemy = 1; iEnemy < solarSystem.Scene.Models.size(); ++iEnemy) {
+	for(uint32_t iEnemy = 1; iEnemy < solarSystem.Scene.Transforms.size(); ++iEnemy) {
 		if(0 == solarSystem.Health[iEnemy])
 			continue;
-		solarSystem.Scene.Models[iEnemy].Rotation.y						+= (float)secondsLastFrame * (.1f * iEnemy);
+		solarSystem.Scene.Transforms[iEnemy].Rotation.y						+= (float)secondsLastFrame * (.1f * iEnemy);
 	}
 
 	solarSystem.Scene.LightVector									= solarSystem.Scene.LightVector.RotateY(secondsLastFrame * 2);
@@ -271,8 +279,8 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 		solarSystem.Explosions[iExplosion].Update((float)secondsLastFrame);
 
 	::ced::container<::ced::SCoord3<float>>					collisionPoints;
-	for(uint32_t iEntity = 0; iEntity < solarSystem.Scene.Entities.size(); ++iEntity) {
-		const int32_t											iEntityParent				= solarSystem.Scene.Entities[iEntity].Parent;
+	for(uint32_t iEntity = 0; iEntity < solarSystem.Entities.size(); ++iEntity) {
+		const int32_t											iEntityParent				= solarSystem.Entities[iEntity].Parent;
 		if(-1 == iEntityParent)
 			continue;
 		if(solarSystem.Health[iEntity] <= 0)
