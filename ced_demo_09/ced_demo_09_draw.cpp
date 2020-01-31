@@ -89,7 +89,6 @@ static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixe
 	, ::ced::view_grid<uint32_t>	depthBuffer
 	) {
 	::ced::container<::ced::SCoord3<float>>					pixelCoords;
-	const ::ced::SColorFloat								starFinalColor	= colorShot;// * shots.Brightness[iShot];
 	for(uint32_t iShot = 0; iShot < shots.Brightness.size(); ++iShot) {
 		pixelCoords.clear();
 		::ced::SCoord3<float>									starPosPrev		= shots.PositionPrev[iShot];
@@ -107,7 +106,7 @@ static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixe
 			 || pixelCoord.x < 0 || pixelCoord.x >= (int32_t)targetPixels.metrics().x
 			)
 				continue;
-			targetPixels[(uint32_t)pixelCoord.y][(uint32_t)pixelCoord.x] = starFinalColor;
+			targetPixels[(uint32_t)pixelCoord.y][(uint32_t)pixelCoord.x] = colorShot;
 
 			uint32_t												depth				= uint32_t(pixelCoord.z * 0xFFFFFFFFU);
 			const	double											brightRadiusSquared	= brightRadius * brightRadius;
@@ -128,7 +127,7 @@ static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixe
 					blendVal											= depth;
 					::ced::SColorBGRA										& pixelVal						= targetPixels[blendPos.y][blendPos.x];
 					double													finalBrightness					= (1.0 - (brightDistance * brightUnit)) * (1.0 / pixelCoords.size() * iPixelCoord);
-					::ced::SColorFloat										pixelColor						= starFinalColor * finalBrightness * intensity + pixelVal;
+					::ced::SColorFloat										pixelColor						= colorShot * finalBrightness * intensity + pixelVal;
 					pixelVal											= pixelColor;
 				}
 			}

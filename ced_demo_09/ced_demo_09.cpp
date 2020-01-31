@@ -192,7 +192,7 @@ int													update				(SApplication & app)	{
 	//------------------------------------------- Handle input
 	double													speed				= 10;
 	double													secondsLastFrame	= framework.Timer.ElapsedMicroseconds * .000001;
-	secondsLastFrame									= ::std::min(secondsLastFrame, 0.200);
+	secondsLastFrame									= ::std::min(secondsLastFrame, 0.200) * app.TimeScale;
 
 	app.AnimationTime									+= secondsLastFrame;
 	//app.ShotsPlayer.Delay								+= secondsLastFrame * 20;

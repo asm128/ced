@@ -33,6 +33,7 @@ struct SApplication {
 	::ced::container<SExplosion>						Explosions;
 
 	double												AnimationTime			= 0;
+	double												TimeScale				= 1;
 };
 
 int													draw					(SApplication & app);

@@ -178,11 +178,8 @@ int													setup							(SApplication & app)								{
 	::ced::geometryBuildSphere(app.SolarSystem.Scene.Geometry[0], 20U, 16U, 1, {});
 
 	app.SolarSystem.Scene.Pivot.resize	(PLANET_COUNT + 1);
-	//app.SolarSystem.Bodies.Spawn		(PLANET_COUNT * 2);
 	::ced::SIntegrator3										& bodies						= app.SolarSystem.Bodies;
 	::SScene												& scene							= app.SolarSystem.Scene;
-	//::ced::SQuaternion<float>								axialTilt, orbitalInclination;
-
 	for(uint32_t iModel = 0; iModel < app.SolarSystem.Scene.Pivot.size(); ++iModel) {
 		int32_t													iPlanet							= iModel - 1;
 		{ // Set up rigid body
@@ -299,7 +296,13 @@ int													update						(SApplication & app)	{
 	const ::ced::SCamera									& camera					= app.SolarSystem.Scene.Camera;
 	::ced::view_grid<::ced::SColorBGRA>						targetPixels				= {framework.Pixels, framework.Window.Size};
 	memset(targetPixels.begin(), 0, sizeof(::ced::SColorBGRA) * targetPixels.size());
-	::ced::SCoord3<float>									lightVector					= camera.Position;
+		::ced::SColorBGRA										colorBackground		= {0x20, 0x8, 0x4};
+	//colorBackground									+= (colorBackground * (0.5 + (0.5 / 65535 * rand())) * ((rand() % 2) ? -1 : 1)) ;
+	for(uint32_t y = 0; y < framework.Window.Size.y; ++y) // Generate noise color for planet texture
+	for(uint32_t x = 0; x < framework.Window.Size.x; ++x)
+		framework.Pixels[y * framework.Window.Size.x + x]	= colorBackground;
+
+::ced::SCoord3<float>									lightVector					= camera.Position;
 	lightVector.Normalize();
 
 	::ced::SMatrix4<float>									matrixView					= {};
