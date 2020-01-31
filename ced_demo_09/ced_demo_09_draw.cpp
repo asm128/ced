@@ -257,9 +257,6 @@ int													draw				(SApplication & app)	{
 
 	for(uint32_t iExplosion = 0; iExplosion < app.Explosions.size(); ++iExplosion) {
 		const ::SExplosion							& explosion				= app.Explosions[iExplosion];
-		::SEntity									& entity				= app.Scene.Entities[explosion.IndexEntity];
-		if(-1 == entity.Parent)
-			continue;
 
 		::ced::view_grid<::ced::SColorBGRA>			image					= app.Scene.Image	[explosion.IndexMesh];
 		const ::ced::SGeometryQuads					& mesh					= app.Scene.Geometry[explosion.IndexMesh];

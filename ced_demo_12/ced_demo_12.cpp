@@ -112,65 +112,35 @@ int													setup				(SApplication & app)	{
 	return 0;
 }
 
-static	int											handleShotCollision
-	( ::ced::SGeometryQuads				& meshShip
-	, const int32_t						indexShip
-	, const int32_t						indexEntityPart
-	, const ::ced::SCoord3<float>		& collisionPoint
-	, int32_t							& healthParth
-	, int32_t							& healthParent
-	, ::SDebris							& debris
-	, ::ced::container<::SExplosion>	& explosions
-	, void								* soundAlias
-	) {
-	PlaySoundA((LPCSTR)soundAlias, GetModuleHandle(0), SND_ALIAS_ID | SND_ASYNC);
-	healthParth											-= 100;
-	healthParent										-= 100;
-	float													debrisSpeed					= 50;
-	float													debrisBright				= 1;
-	uint32_t												debrisCount					= 5;
-	bool													exploded					= false;
-	if(0 >= healthParth) {
-		exploded											= true	;
-		if(0 >= healthParent) {
-			debrisSpeed											= 10	;
-			debrisCount											= 150	;
-			debrisBright										= 3		;
-		}
-		else {
-			debrisSpeed											= 60	;
-			debrisCount											= 40	;
-			debrisBright										= 2		;
+static	int											explosionSlicesSetup		(::ced::container<::SExplosion> & explosions, int32_t indexMesh, uint32_t triangleCount, const ::ced::SCoord3<float> &collisionPoint, double debrisSpeed) {
+	::SExplosion											newExplosion				= {};
+	newExplosion.IndexMesh								= indexMesh;
+	for(uint32_t iQuad = 0, countQuads = triangleCount / 6; iQuad < countQuads; ++iQuad) {
+		newExplosion.Slices.push_back({(uint16_t)iQuad, (uint16_t)(rand() % 4 + 3)});
+		::ced::SCoord3<float>									direction					= {0, 1, 0};
+		direction.RotateX(rand() * (::ced::MATH_2PI / RAND_MAX));
+		direction.RotateY(rand() * (::ced::MATH_2PI / RAND_MAX));
+		direction.RotateZ(rand() * (::ced::MATH_2PI / RAND_MAX));
+		direction.Normalize();
+		newExplosion.Particles.Spawn(collisionPoint, direction, (float)debrisSpeed);
+	}
+	for(uint32_t iExplosion = 0; iExplosion < explosions.size(); ++iExplosion) {
+		SExplosion												& explosion					= explosions[iExplosion];
+		if(0 == explosion.Slices.size()) {
+			explosion										= newExplosion;
+			return iExplosion;
 		}
 	}
-	debris.SpawnSpherical(debrisCount, collisionPoint, debrisSpeed, debrisBright);
+	return explosions.push_back(newExplosion);
+}
 
-	if(exploded) {
-		::SExplosion											newExplosion				= {};
-		newExplosion.IndexMesh								= indexShip;
-		newExplosion.IndexEntity							= indexEntityPart;
-		for(uint32_t iQuad = 0, countQuads = meshShip.Triangles.size() / 6; iQuad < countQuads; ++iQuad) {
-			newExplosion.Slices.push_back({(uint16_t)iQuad, (uint16_t)(rand() % 4 + 3)});
-			::ced::SCoord3<float>									direction					= {0, 1, 0};
-			direction.RotateX(rand() * (::ced::MATH_2PI / RAND_MAX));
-			direction.RotateY(rand() * (::ced::MATH_2PI / RAND_MAX));
-			direction.RotateZ(rand() * (::ced::MATH_2PI / RAND_MAX));
-			direction.Normalize();
-			newExplosion.Particles.Spawn(collisionPoint, direction, debrisSpeed);
-		}
-		bool													add							= true;
-		for(uint32_t iExplosion = 0; iExplosion < explosions.size(); ++iExplosion) {
-			SExplosion												& explosion					= explosions[iExplosion];
-			if(0 == explosion.Slices.size()) {
-				explosion										= newExplosion;
-				add												= false;
-				break;
-			}
-		}
-		if(add)
-			explosions.push_back(newExplosion);
-	}
-	return exploded ? 1 : 0;
+static	int											applyDamage
+	( int32_t							& healthPart
+	, int32_t							& healthParent
+	) {
+	healthPart											-= 100;
+	healthParent										-= 100;
+	return 0 >= healthPart;
 }
 
 static	int											collisionDetect		(::SShots & shots, const ::ced::SCoord3<float> & modelPosition, ::ced::container<::ced::SCoord3<float>> & collisionPoints)	{
@@ -192,6 +162,23 @@ static	int											collisionDetect		(::SShots & shots, const ::ced::SCoord3<fl
 	return 0;
 }
 
+int													handleCollisionPoint	(SSolarSystem & solarSystem, int32_t iEntity, int32_t indexParent, const ::ced::SCoord3<float> & collisionPoint, void* soundAlias)	{
+	PlaySoundA((LPCSTR)soundAlias, GetModuleHandle(0), SND_ALIAS_ID | SND_ASYNC);
+	solarSystem.Debris.SpawnSpherical(5, collisionPoint, 50, 1);
+	if(::applyDamage(solarSystem.Health[iEntity], solarSystem.Health[indexParent])) {	// returns true if health reaches zero
+		const int32_t										indexMesh			= indexParent / 7;
+		const uint32_t										countTriangles		= solarSystem.Scene.Geometry[indexMesh].Triangles.size();
+		::explosionSlicesSetup(solarSystem.Explosions, indexMesh, countTriangles, collisionPoint, 50);
+		solarSystem.Debris.SpawnSpherical(40, collisionPoint, 60, 2);
+		if(0 >= solarSystem.Health[indexParent]) {
+			const ::ced::SCoord3<float>							& parentPosition	= solarSystem.Scene.Models[indexParent].Position;
+			::explosionSlicesSetup(solarSystem.Explosions, indexMesh, countTriangles, parentPosition, 10);
+			solarSystem.Debris.SpawnSpherical(150, parentPosition, 12.5, 3.5);
+		}
+		return 1;
+	}
+	return 0;
+}
 int													solarSystemUpdate				(SSolarSystem & solarSystem, double secondsLastFrame, ::ced::SCoord2<uint32_t> screenSize)	{
 	//------------------------------------------- Handle input
 	double													speed				= 10;
@@ -284,29 +271,25 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 		solarSystem.Explosions[iExplosion].Update((float)secondsLastFrame);
 
 	::ced::container<::ced::SCoord3<float>>					collisionPoints;
-	for(uint32_t iModel = 0; iModel < solarSystem.Scene.Entities.size(); ++iModel) {
-		const int32_t											indexParent				= solarSystem.Scene.Entities[iModel].Parent;
-		if(-1 == indexParent)
+	for(uint32_t iEntity = 0; iEntity < solarSystem.Scene.Entities.size(); ++iEntity) {
+		const int32_t											iEntityParent				= solarSystem.Scene.Entities[iEntity].Parent;
+		if(-1 == iEntityParent)
 			continue;
-		if(solarSystem.Health[iModel] <= 0)
+		if(solarSystem.Health[iEntity] <= 0)
 			continue;
-		::ced::SMatrix4<float>									matrixTransform			= solarSystem.Scene.ModelMatricesLocal[iModel] * solarSystem.Scene.ModelMatricesLocal[indexParent];
-		if(iModel < 7) {
+		::ced::SMatrix4<float>									matrixTransform			= solarSystem.Scene.ModelMatricesLocal[iEntity] * solarSystem.Scene.ModelMatricesLocal[iEntityParent];
+		void													* soundAlias;
+		if(iEntity < 7) {
 			::collisionDetect(solarSystem.ShotsEnemy, matrixTransform.GetTranslation(), collisionPoints);
-			for(uint32_t iCollisionPoint = 0; iCollisionPoint < collisionPoints.size(); ++iCollisionPoint) {
-				::handleShotCollision(solarSystem.Scene.Geometry[indexParent / 7], indexParent / 7, iModel, collisionPoints[iCollisionPoint], solarSystem.Health[iModel], solarSystem.Health[indexParent], solarSystem.Debris, solarSystem.Explosions, (void*)SND_ALIAS_SYSTEMEXCLAMATION);
-				if(solarSystem.Health[iModel] <= 0)
-					break;
-			}
+			soundAlias										= (void*)SND_ALIAS_SYSTEMEXCLAMATION;
 		}
 		else {
 			::collisionDetect(solarSystem.ShotsPlayer, matrixTransform.GetTranslation(), collisionPoints);
-			for(uint32_t iCollisionPoint = 0; iCollisionPoint < collisionPoints.size(); ++iCollisionPoint) {
-				::handleShotCollision(solarSystem.Scene.Geometry[indexParent / 7], indexParent / 7, iModel, collisionPoints[iCollisionPoint], solarSystem.Health[iModel], solarSystem.Health[indexParent], solarSystem.Debris, solarSystem.Explosions, (void*)SND_ALIAS_SYSTEMHAND);
-				if(solarSystem.Health[iModel] <= 0)
-					break;
-			}
+			soundAlias										= (void*)SND_ALIAS_SYSTEMHAND;
 		}
+		for(uint32_t iCollisionPoint = 0; iCollisionPoint < collisionPoints.size(); ++iCollisionPoint)
+			if(::handleCollisionPoint(solarSystem, iEntity, iEntityParent, collisionPoints[iCollisionPoint], soundAlias))	// returns true if part health reaches zero.
+				break;
 	}
 	return 0;
 }

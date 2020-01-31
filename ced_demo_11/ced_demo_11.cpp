@@ -48,11 +48,6 @@ struct SEntity {
 	::ced::container<uint32_t>							IndexChild						;
 };
 
-struct SEntitySlice {
-	int32_t												IndexEntity						;
-	::ced::SSlice<uint16_t>								Mesh;
-};
-
 struct SDebris	{
 	::ced::SColorBGRA							Colors[4]			=
 		{ {0x80, 0xAF, 0xFF, }

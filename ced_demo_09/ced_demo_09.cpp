@@ -108,7 +108,6 @@ int													setup				(SApplication & app)	{
 static	int											handleShotCollision
 	( ::ced::SGeometryQuads				& meshShip
 	, const int32_t						indexShip
-	, const int32_t						indexEntityPart
 	, const ::ced::SCoord3<float>		& collisionPoint
 	, int32_t							& healthParth
 	, int32_t							& healthParent
@@ -141,7 +140,6 @@ static	int											handleShotCollision
 	if(exploded) {
 		::SExplosion											newExplosion				= {};
 		newExplosion.IndexMesh								= indexShip;
-		newExplosion.IndexEntity							= indexEntityPart;
 		for(uint32_t iQuad = 0, countQuads = meshShip.Triangles.size() / 6; iQuad < countQuads; ++iQuad) {
 			newExplosion.Slices.push_back({(uint16_t)iQuad, (uint16_t)(rand() % 4 + 3)});
 			::ced::SCoord3<float>									direction					= {0, 1, 0};
@@ -292,7 +290,7 @@ int													update				(SApplication & app)	{
 		if(iModel < 7) {
 			::collisionDetect(app.ShotsEnemy, matrixTransform.GetTranslation(), collisionPoints);
 			for(uint32_t iCollisionPoint = 0; iCollisionPoint < collisionPoints.size(); ++iCollisionPoint) {
-				::handleShotCollision(app.Scene.Geometry[indexParent / 7], indexParent / 7, iModel, collisionPoints[iCollisionPoint], app.Health[iModel], app.Health[indexParent], app.Debris, app.Explosions, (void*)SND_ALIAS_SYSTEMEXCLAMATION);
+				::handleShotCollision(app.Scene.Geometry[indexParent / 7], indexParent / 7, collisionPoints[iCollisionPoint], app.Health[iModel], app.Health[indexParent], app.Debris, app.Explosions, (void*)SND_ALIAS_SYSTEMEXCLAMATION);
 				if(app.Health[iModel] <= 0)
 					break;
 			}
@@ -300,7 +298,7 @@ int													update				(SApplication & app)	{
 		else {
 			::collisionDetect(app.ShotsPlayer, matrixTransform.GetTranslation(), collisionPoints);
 			for(uint32_t iCollisionPoint = 0; iCollisionPoint < collisionPoints.size(); ++iCollisionPoint) {
-				::handleShotCollision(app.Scene.Geometry[indexParent / 7], indexParent / 7, iModel, collisionPoints[iCollisionPoint], app.Health[iModel], app.Health[indexParent], app.Debris, app.Explosions, (void*)SND_ALIAS_SYSTEMHAND);
+				::handleShotCollision(app.Scene.Geometry[indexParent / 7], indexParent / 7, collisionPoints[iCollisionPoint], app.Health[iModel], app.Health[indexParent], app.Debris, app.Explosions, (void*)SND_ALIAS_SYSTEMHAND);
 				if(app.Health[iModel] <= 0)
 					break;
 			}

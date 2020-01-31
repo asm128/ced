@@ -129,7 +129,6 @@ struct SSlice {
 
 struct SExplosion {
 	int32_t										IndexMesh;
-	int32_t										IndexEntity;
 	::ced::container<SSlice>					Slices;
 	::SParticles3								Particles;
 
