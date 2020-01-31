@@ -310,7 +310,7 @@ int													update						(SApplication & app)	{
 	matrixView											*= matrixViewport;
 
 	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords					= {};
-	::ced::container<::ced::STriangleWeights<double>>		pixelVertexWeights			= {};
+	::ced::container<::ced::STriangleWeights<float>>		pixelVertexWeights			= {};
 	::ced::SModelMatrices									matrices					= {};
 	::ced::view_grid<uint32_t>								depthBuffer					= {framework.DepthBuffer.begin(), app.Framework.Window.Size};
 	::SScene												& scene						= app.SolarSystem.Scene;

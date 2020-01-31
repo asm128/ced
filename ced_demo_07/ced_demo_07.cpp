@@ -106,7 +106,7 @@ int													update				(SApplication & app)	{
 	matrixView											= matrixView * matrixViewport;
 
 	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
-	::ced::container<::ced::STriangleWeights<double>>		pixelVertexWeights;
+	::ced::container<::ced::STriangleWeights<float>>		pixelVertexWeights;
 	::ced::SModelMatrices									matrices;
 	::ced::SModelMatrices									matricesParent;
 	for(uint32_t iModel = 1; iModel < app.Models.size(); ++iModel) {

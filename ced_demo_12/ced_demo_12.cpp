@@ -31,10 +31,6 @@ static	int											shipCreate			(::SSolarSystem & solarSystem, uint32_t partHe
 
 	scene.Transforms	[indexEntity]					= {};
 	scene.Transforms	[indexEntity].Scale				= {1, 1, 1};
-	if(0 == indexEntity)
-		scene.Transforms	[indexEntity].Rotation.z			= (float)(-::ced::MATH_PI_2);
-	else
-		scene.Transforms	[indexEntity].Rotation.z			= (float)(::ced::MATH_PI_2);
 	solarSystem.Entities[indexEntity]					= {-1};
 	solarSystem.Entities[indexEntity].Geometry			= iGeometry;
 	solarSystem.Entities[indexEntity].Transform			= indexEntity;
@@ -59,15 +55,12 @@ static	int											shipCreate			(::SSolarSystem & solarSystem, uint32_t partHe
 	return indexEntity;
 }
 
-int													solarSystemSetup	(::SSolarSystem & solarSystem, ::ced::SCoord2<uint32_t> windowSize)	{
-	::setupStars(solarSystem.Stars, windowSize);
-	::SShipScene											& scene				= solarSystem.Scene;
-
-
+int													modelsSetup	(::SShipScene & scene)			{
 	scene.Geometry.resize(5);
 	//::ced::geometryBuildCube	(scene.Geometry[0]);
 	::ced::geometryBuildSphere	(scene.Geometry[0], 8U, 5U, 1, {0, 0});
 	//::ced::geometryBuildFigure0	(scene.Geometry[0], 2U, 8U, 1, {});
+
 	::ced::geometryBuildSphere	(scene.Geometry[1], 16U, 5U, .5f, {0, 0});
 	::ced::geometryBuildFigure0	(scene.Geometry[1], 2U, 8U, 1, {});
 	::ced::geometryBuildCube	(scene.Geometry[2]);
@@ -76,39 +69,72 @@ int													solarSystemSetup	(::SSolarSystem & solarSystem, ::ced::SCoord2<u
 	::ced::geometryBuildSphere	(scene.Geometry[3], 4U, 2U, 1, {0, 0});
 	::ced::geometryBuildSphere	(scene.Geometry[4], 16U, 2U, 1, {0, 0});
 
-	const uint32_t											partHealthPlayer		= 200;
-	const uint32_t											partHealthEnemy			= 2000;
-	scene.Transforms[solarSystem.Entities[::shipCreate(solarSystem, partHealthPlayer, 0, 0)].Transform].Position	= {-30};
-	scene.Transforms[solarSystem.Entities[::shipCreate(solarSystem, partHealthEnemy , 1, 1)].Transform].Position	= {+20};
-	scene.Transforms[solarSystem.Entities[::shipCreate(solarSystem, partHealthEnemy , 2, 2)].Transform].Position	= {+25};
-	scene.Transforms[solarSystem.Entities[::shipCreate(solarSystem, partHealthEnemy , 3, 3)].Transform].Position	= {+30};
-	scene.Transforms[solarSystem.Entities[::shipCreate(solarSystem, partHealthEnemy , 4, 4)].Transform].Position	= {+35};
+	{
+		::ced::SColorFloat										baseColor	[4]			=
+			{ ::ced::LIGHTGREEN
+			, ::ced::LIGHTBLUE
+			, ::ced::LIGHTRED
+			, ::ced::LIGHTCYAN
+			};
 
-	::ced::SColorFloat										baseColor	[4]			=
-		{ ::ced::LIGHTGREEN
-		, ::ced::LIGHTBLUE
-		, ::ced::LIGHTRED
-		, ::ced::LIGHTCYAN
-		};
-
-	scene.Image.resize(5);
-	//::ced::bmpFileLoad("../ced_data/mars_color.bmp", solarSystem.Scene.Image[0], true);
-	for(uint32_t iImage = 0; iImage < scene.Image.size(); ++iImage) {
-		if(scene.Image[iImage].Pixels.size())
-			continue;
-		scene.Image[iImage].Metrics						= {24, 6};
-		scene.Image[iImage].Pixels.resize(scene.Image[iImage].Metrics.x * scene.Image[iImage].Metrics.y);
-		for(uint32_t y = 0; y < scene.Image[iImage].Metrics.y; ++y) {// Generate noise color for planet texture
-			bool													xAffect						= (y % 2);
-			::ced::SColorFloat										lineColor					= baseColor[rand() % ::std::size(baseColor)];
-			for(uint32_t x = 0; x < scene.Image[iImage].Metrics.x; ++x) {
-				scene.Image[iImage].Pixels[y * scene.Image[iImage].Metrics.x + x] = lineColor * (xAffect ? ::std::max(.5, sin(x)) : 1);
+		scene.Image.resize(5);
+		//::ced::bmpFileLoad("../ced_data/mars_color.bmp", solarSystem.Scene.Image[0], true);
+		for(uint32_t iImage = 0; iImage < scene.Image.size(); ++iImage) {
+			if(scene.Image[iImage].Pixels.size())
+				continue;
+			scene.Image[iImage].Metrics							= {24, 6};
+			scene.Image[iImage].Pixels.resize(scene.Image[iImage].Metrics.x * scene.Image[iImage].Metrics.y);
+			for(uint32_t y = 0; y < scene.Image[iImage].Metrics.y; ++y) {// Generate noise color for planet texture
+				bool													xAffect						= (y % 2);
+				::ced::SColorFloat										lineColor					= baseColor[rand() % ::std::size(baseColor)];
+				for(uint32_t x = 0; x < scene.Image[iImage].Metrics.x; ++x) {
+					scene.Image[iImage].Pixels[y * scene.Image[iImage].Metrics.x + x] = lineColor * (xAffect ? ::std::max(.5, sin(x)) : 1);
+				}
 			}
 		}
 	}
-	scene.Camera.Target								= {};
-	scene.Camera.Position							= {-0.000001f, 100, 0};
-	scene.Camera.Up									= {0, 1, 0};
+
+	return 0;
+}
+
+
+int													solarSystemSetupBackgroundImage	(::ced::SImage & backgroundImage, ::ced::SCoord2<uint32_t> windowSize)	{
+	backgroundImage.Resize(windowSize);
+	const ::ced::SColorBGRA									colorBackground		= {0x20, 0x8, 0x4};
+	//colorBackground									+= (colorBackground * (0.5 + (0.5 / 65535 * rand())) * ((rand() % 2) ? -1 : 1)) ;
+	for(uint32_t y = 0; y < windowSize.y; ++y) // Generate noise color for planet texture
+	for(uint32_t x = 0; x < windowSize.x; ++x)
+		backgroundImage.Pixels[y * windowSize.x + x]		= colorBackground;
+	return 0;
+}
+
+int													solarSystemSetup	(::SSolarSystem & solarSystem, ::ced::SCoord2<uint32_t> windowSize)	{
+	::solarSystemSetupBackgroundImage(solarSystem.BackgroundImage, windowSize);
+	::setupStars(solarSystem.Stars, windowSize);
+	::SShipScene											& scene				= solarSystem.Scene;
+	::modelsSetup(scene);
+	::ced::container<int32_t>								indicesShips;
+	{	// Set up player ship
+		static constexpr	const uint32_t						partHealthPlayer		= 200;
+		indicesShips.push_back(::shipCreate(solarSystem, partHealthPlayer, 0, 0));
+		const int32_t											shipIndex				= indicesShips[0];
+		::ced::SModel3											& shipTransform			= scene.Transforms[solarSystem.Entities[shipIndex].Transform];
+		shipTransform.Rotation.z							= (float)(-::ced::MATH_PI_2);
+		shipTransform.Position								= {-30};
+	}
+	{	// Set up enemy ships
+		static constexpr	const uint32_t						partHealthEnemy			= 1000;
+		for(uint32_t iEnemy = 0; iEnemy < 4; ++iEnemy) {
+			indicesShips.push_back(::shipCreate(solarSystem, partHealthEnemy , iEnemy + 1, iEnemy + 1));
+			const int32_t											shipIndex				= indicesShips[iEnemy + 1];
+			::ced::SModel3											& shipTransform			= scene.Transforms[solarSystem.Entities[shipIndex].Transform];
+			shipTransform.Rotation.z		= (float)(::ced::MATH_PI_2);
+			shipTransform.Position			= {20.0f + 5 * iEnemy};
+		}
+	}
+	scene.Camera.Target									= {};
+	scene.Camera.Position								= {-0.000001f, 100, 0};
+	scene.Camera.Up										= {0, 1, 0};
 	return 0;
 }
 
@@ -120,7 +146,7 @@ int													setup				(SApplication & app)	{
 	return 0;
 }
 
-static	int											explosionSlicesSetup		(::ced::container<::SExplosion> & explosions, int32_t indexMesh, uint32_t triangleCount, const ::ced::SCoord3<float> &collisionPoint, double debrisSpeed) {
+static	int											explosionAdd		(::ced::container<::SExplosion> & explosions, int32_t indexMesh, uint32_t triangleCount, const ::ced::SCoord3<float> &collisionPoint, double debrisSpeed) {
 	::SExplosion											newExplosion				= {};
 	newExplosion.IndexMesh								= indexMesh;
 	for(uint32_t iQuad = 0, countQuads = triangleCount / 6; iQuad < countQuads; ++iQuad) {
@@ -135,7 +161,7 @@ static	int											explosionSlicesSetup		(::ced::container<::SExplosion> & exp
 	for(uint32_t iExplosion = 0; iExplosion < explosions.size(); ++iExplosion) {
 		SExplosion												& explosion					= explosions[iExplosion];
 		if(0 == explosion.Slices.size()) {
-			explosion										= newExplosion;
+			explosion											= newExplosion;
 			return iExplosion;
 		}
 	}
@@ -170,18 +196,20 @@ static	int											collisionDetect		(::SShots & shots, const ::ced::SCoord3<fl
 	return 0;
 }
 
-int													handleCollisionPoint	(SSolarSystem & solarSystem, int32_t iEntity, int32_t indexParent, const ::ced::SCoord3<float> & collisionPoint, void* soundAlias)	{
+int													handleCollisionPoint	(SSolarSystem & solarSystem, int32_t iEntity, int32_t iEntityParent, const ::ced::SCoord3<float> & sphereCenter, const ::ced::SCoord3<float> & collisionPoint, void* soundAlias)	{
 	PlaySoundA((LPCSTR)soundAlias, GetModuleHandle(0), SND_ALIAS_ID | SND_ASYNC);
-	solarSystem.Debris.SpawnSpherical(5, collisionPoint, 50, 1);
-	if(::applyDamage(solarSystem.Health[iEntity], solarSystem.Health[indexParent])) {	// returns true if health reaches zero
-		const int32_t										indexMesh			= indexParent / 7;
+	const ::ced::SCoord3<float>							bounceVector		= (collisionPoint - sphereCenter).Normalize();
+	solarSystem.Debris.SpawnDirected(5, bounceVector, collisionPoint, 50, 1);
+	if(::applyDamage(solarSystem.Health[iEntity], solarSystem.Health[iEntityParent])) {	// returns true if health reaches zero
+		const int32_t										indexMesh			= solarSystem.Entities[iEntityParent].Geometry;
 		const uint32_t										countTriangles		= solarSystem.Scene.Geometry[indexMesh].Triangles.size();
-		::explosionSlicesSetup(solarSystem.Explosions, indexMesh, countTriangles, collisionPoint, 50);
+		::explosionAdd(solarSystem.Explosions, indexMesh, countTriangles, collisionPoint, 50);
 		solarSystem.Debris.SpawnSpherical(40, collisionPoint, 60, 2);
-		if(0 >= solarSystem.Health[indexParent]) {
-			const ::ced::SCoord3<float>							& parentPosition	= solarSystem.Scene.Transforms[indexParent].Position;
-			::explosionSlicesSetup(solarSystem.Explosions, indexMesh, countTriangles, parentPosition, 10);
-			solarSystem.Debris.SpawnSpherical(150, parentPosition, 10, 3);
+		if(0 >= solarSystem.Health[iEntityParent]) {
+			const ::ced::SCoord3<float>							& parentPosition	= solarSystem.Scene.Transforms[solarSystem.Entities[iEntityParent].Transform].Position;
+			::explosionAdd(solarSystem.Explosions, indexMesh, countTriangles, parentPosition, 10);
+			solarSystem.Debris.SpawnSpherical(150, parentPosition, 13, 2.8f);
+			solarSystem.Slowing								= true;
 		}
 		return 1;
 	}
@@ -189,12 +217,21 @@ int													handleCollisionPoint	(SSolarSystem & solarSystem, int32_t iEntit
 }
 int													solarSystemUpdate				(SSolarSystem & solarSystem, double secondsLastFrame, ::ced::SCoord2<uint32_t> screenSize)	{
 	//------------------------------------------- Handle input
-	double													speed				= 10;
-	secondsLastFrame									= ::std::min(secondsLastFrame, 0.200);
+	double													speed							= 10;
+	secondsLastFrame									= ::std::min(secondsLastFrame, 0.3);
+	if(solarSystem.Slowing) {
+		solarSystem.TimeScale								-= secondsLastFrame * .35;
+		if(solarSystem.TimeScale < .1)
+			solarSystem.Slowing									= false;
+	}
+	else {
+		if(solarSystem.TimeScale < .99)
+			solarSystem.TimeScale							= ::ced::min(1.0, solarSystem.TimeScale += secondsLastFrame * .45);
+	}
 	secondsLastFrame									*= solarSystem.TimeScale;
 
-	solarSystem.AnimationTime									+= secondsLastFrame;
-	//solarSystem.ShotsPlayer.Delay								+= secondsLastFrame * 20;
+
+	solarSystem.AnimationTime							+= secondsLastFrame;
 	::ced::SModelMatrices									matrices;
 	solarSystem.Scene.ModelMatricesLocal.resize(solarSystem.Scene.Transforms.size());
 	for(uint32_t iTransform = 0; iTransform < solarSystem.Scene.Transforms.size(); ++iTransform) {
@@ -211,23 +248,24 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 		const int32_t											indexParent				= solarSystem.Entities[iEnemy].Parent;
 		if(0 >= solarSystem.Health[iEnemy])
 			continue;
-		::ced::SModel3											& modelEnemy			= solarSystem.Scene.Transforms[iEnemy];
+		::ced::SModel3											& modelEnemy			= solarSystem.Scene.Transforms[solarSystem.Entities[iEnemy].Transform];
 		if(-1 == indexParent) {
-			modelEnemy.Position.z								= (float)(sin(solarSystem.AnimationTime) * iEnemy * 3) * ((iEnemy % 2) ? -1 : 1);
+			modelEnemy.Position.z								= (float)(sin(solarSystem.AnimationTime) * (iEnemy * 3) * ((iEnemy % 2) ? -1 : 1));
 		}
 		else {
-			solarSystem.Scene.Transforms[iEnemy].Rotation.y		+= (float)secondsLastFrame * 1;
+			modelEnemy.Rotation.y		+= (float)(secondsLastFrame * 1);
 			matricesParent										= {};
 			solarSystem.ShotsEnemy.Delay						+= secondsLastFrame * .5;
 			::ced::SCoord3<float>									positionGlobal			= solarSystem.Scene.ModelMatricesLocal[indexParent].Transform(modelEnemy.Position);
 			if(1 < (modelPlayer.Position - positionGlobal).LengthSquared()) {
 				::ced::SCoord3<float>									direction			= modelPlayer.Position - positionGlobal;
-				direction.RotateY(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
+				direction.RotateY(rand() * (1.0 / RAND_MAX) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
 				solarSystem.ShotsEnemy.Spawn(positionGlobal, direction.Normalize(), 25, 1);
 			}
 		}
 	}
-	if(GetAsyncKeyState(VK_SPACE)) {
+	//if(GetAsyncKeyState(VK_SPACE))
+	{
 		for(uint32_t iEntity = 1; iEntity < 7; ++iEntity) {
 			if(0 >= solarSystem.Health[iEntity])
 				continue;
@@ -238,8 +276,8 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 			//positionGlobal.x									+= 1.5;
 			solarSystem.ShotsPlayer.Delay								+= secondsLastFrame * 10;
 			::ced::SCoord3<float>									direction				= {1, 0, 0};
-			direction.RotateY(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
-			direction.RotateZ(rand() * (1.0 / 65535) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
+			direction.RotateY(rand() * (1.0 / RAND_MAX) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
+			direction.RotateZ(rand() * (1.0 / RAND_MAX) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
 			solarSystem.ShotsPlayer.Spawn(positionGlobal, direction, 100, .2f);
 		}
 	}
@@ -247,10 +285,10 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 	if(GetAsyncKeyState('Q')) solarSystem.Scene.Camera.Position.y	-= (float)secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
 	if(GetAsyncKeyState('E')) solarSystem.Scene.Camera.Position.y	+= (float)secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
 
-	if(GetAsyncKeyState('W')) modelPlayer.Position.x		+= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
-	if(GetAsyncKeyState('S')) modelPlayer.Position.x		-= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
-	if(GetAsyncKeyState('A')) modelPlayer.Position.z		+= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
-	if(GetAsyncKeyState('D')) modelPlayer.Position.z		-= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
+	if(GetAsyncKeyState('W')) modelPlayer.Position.x			+= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
+	if(GetAsyncKeyState('S')) modelPlayer.Position.x			-= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
+	if(GetAsyncKeyState('A')) modelPlayer.Position.z			+= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
+	if(GetAsyncKeyState('D')) modelPlayer.Position.z			-= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
 
 	if(GetAsyncKeyState(VK_NUMPAD5))
 		modelPlayer.Rotation									= {0, 0, (float)-::ced::MATH_PI_2};
@@ -287,16 +325,17 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 			continue;
 		::ced::SMatrix4<float>									matrixTransform			= solarSystem.Scene.ModelMatricesLocal[iEntity] * solarSystem.Scene.ModelMatricesLocal[iEntityParent];
 		void													* soundAlias;
+		const ::ced::SCoord3<float>								entityPosition			= matrixTransform.GetTranslation();
 		if(iEntity < 7) {
-			::collisionDetect(solarSystem.ShotsEnemy, matrixTransform.GetTranslation(), collisionPoints);
+			::collisionDetect(solarSystem.ShotsEnemy, entityPosition, collisionPoints);
 			soundAlias										= (void*)SND_ALIAS_SYSTEMEXCLAMATION;
 		}
 		else {
-			::collisionDetect(solarSystem.ShotsPlayer, matrixTransform.GetTranslation(), collisionPoints);
+			::collisionDetect(solarSystem.ShotsPlayer, entityPosition, collisionPoints);
 			soundAlias										= (void*)SND_ALIAS_SYSTEMHAND;
 		}
 		for(uint32_t iCollisionPoint = 0; iCollisionPoint < collisionPoints.size(); ++iCollisionPoint)
-			if(::handleCollisionPoint(solarSystem, iEntity, iEntityParent, collisionPoints[iCollisionPoint], soundAlias))	// returns true if part health reaches zero.
+			if(::handleCollisionPoint(solarSystem, iEntity, iEntityParent, entityPosition, collisionPoints[iCollisionPoint], soundAlias))	// returns true if part health reaches zero.
 				break;
 	}
 	return 0;
@@ -306,10 +345,19 @@ int													update				(SApplication & app)	{
 	::ced::SFramework										& framework			= app.Framework;
 	if(1 == ::ced::frameworkUpdate(app.Framework))
 		framework.Running = false;
-	if(framework.Window.Resized)
-		::setupStars(app.SolarSystem.Stars, framework.Window.Size);
+	if(framework.Window.Resized) {
+		::ced::SMatrix4<float>									& matrixProjection	= app.SolarSystem.Scene.MatrixProjection;
+		matrixProjection.FieldOfView(::ced::MATH_PI * .25, framework.Window.Size.x / (double)framework.Window.Size.y, 0.1, 1000);
+		::ced::SMatrix4<float>									matrixViewport		= {};
+		matrixViewport.Viewport(framework.Window.Size);
+		matrixProjection									*= matrixViewport;
 
-	::solarSystemUpdate(app.SolarSystem, framework.Timer.ElapsedMicroseconds * .000001, framework.Window.Size);
+		::solarSystemSetupBackgroundImage(app.SolarSystem.BackgroundImage, framework.Window.Size);
+		::setupStars(app.SolarSystem.Stars, framework.Window.Size);
+	}
+	double													secondsLastFrame	= framework.Timer.ElapsedMicroseconds * .001;
+	secondsLastFrame									*= .001;
+	::solarSystemUpdate(app.SolarSystem, secondsLastFrame, framework.Window.Size);
 	::draw(app);
 	Sleep(1);
 	return framework.Running ? 0 : 1;

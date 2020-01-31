@@ -178,7 +178,7 @@ int													update				(SApplication & app)	{
 
 		::ced::SMatrix4<float>									matrixTransform		= matrixScale * matrixPosition * matrixRotation * matrixView;
 		::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
-		::ced::container<::ced::STriangleWeights<double>>		pixelVertexWeights;
+		::ced::container<::ced::STriangleWeights<float>>		pixelVertexWeights;
 		for(uint32_t iTriangle = 0; iTriangle < app.Geometry.Triangles.size(); ++iTriangle) {
 			pixelCoords			.clear();
 			pixelVertexWeights	.clear();

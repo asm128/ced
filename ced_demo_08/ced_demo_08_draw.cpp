@@ -151,7 +151,7 @@ int													draw				(SApplication & app)	{
 	matrixView											= matrixView * matrixViewport;
 
 	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
-	::ced::container<::ced::STriangleWeights<double>>		pixelVertexWeights;
+	::ced::container<::ced::STriangleWeights<float>>		pixelVertexWeights;
 	::ced::SModelMatrices									matrices;
 	::ced::SModelMatrices									matricesParent;
 	::ced::SColorBGRA											colorShotPlayer			= {0x20, 0xfF, 0x40};

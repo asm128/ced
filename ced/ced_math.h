@@ -329,6 +329,12 @@ namespace ced
 		_tValue								Offset;
 		_tValue								Count;
 	};
+
+	template<typename _tValue>
+	::ced::SCoord3<_tValue>				triangleWeight		(const STriangleWeights<_tValue> & weights, const STriangle3<_tValue> & values)	{ return values.A * weights.A + values.B * weights.B + values.C * weights.C; }
+	template<typename _tValue>
+	::ced::SCoord2<_tValue>				triangleWeight		(const STriangleWeights<_tValue> & weights, const STriangle2<_tValue> & values)	{ return values.A * weights.A + values.B * weights.B + values.C * weights.C; }
+
 } // namespace
 
 #endif // CED_MATH_H_2983492837498

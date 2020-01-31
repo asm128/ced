@@ -25,6 +25,7 @@ struct SShipScene	{
 	::ced::container<::ced::SGeometryQuads>				Geometry					= {};
 	::ced::SCamera										Camera						= {};
 	::ced::SCoord3<float>								LightVector					= {15, 12, 0};
+	::ced::SMatrix4<float>								MatrixProjection			= {};
 };
 
 struct SShip {
@@ -38,7 +39,6 @@ struct SSolarSystem {
 	::SShots											ShotsPlayer					;
 	::SShots											ShotsEnemy					;
 	::SDebris											Debris						;
-	::SDebris											SunFire						= {};
 	::ced::SIntegrator3									Bodies						= {};
 	::ced::container<::ced::SImage>						Image						= {};
 	::ced::container<::SExplosion>						Explosions;
@@ -46,6 +46,10 @@ struct SSolarSystem {
 	double												AnimationTime				= 0;
 	double												TimeScale					= 1;
 	::ced::container<int32_t>							Health						= {};
+	::ced::SCoord2<uint32_t>							ViewportSize				= {};
+
+	::ced::SImage										BackgroundImage				= {};
+	bool												Slowing						= false;
 };
 
 struct SApplication {

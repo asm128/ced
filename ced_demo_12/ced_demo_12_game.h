@@ -66,12 +66,21 @@ struct SDebris	{
 	}
 	int											SpawnSpherical		(uint32_t countDebris, const ::ced::SCoord3<float> & position, float speedDebris, float brightness)	{
 		for(uint32_t iDebris = 0; iDebris < countDebris; ++iDebris) {
-			::ced::SCoord3<float>									direction				= {0, 1, 0};
+			::ced::SCoord3<float>							direction			= {0, 1, 0};
 			direction.RotateX(rand() * (::ced::MATH_2PI / RAND_MAX));
 			direction.RotateY(rand() * (::ced::MATH_2PI / RAND_MAX));
-			direction.RotateZ(rand() * (::ced::MATH_2PI / RAND_MAX));
 			direction.Normalize();
 			Spawn(position, direction, speedDebris, brightness);
+		}
+		return 0;
+	}
+	int											SpawnDirected		(uint32_t countDebris, const ::ced::SCoord3<float> & direction, const ::ced::SCoord3<float> & position, float speedDebris, float brightness)	{
+		for(uint32_t iDebris = 0; iDebris < countDebris; ++iDebris) {
+			::ced::SCoord3<float>							finalDirection	= {0, 1, 0};
+			finalDirection.RotateX(rand() * (::ced::MATH_2PI / RAND_MAX));
+			finalDirection.RotateY(rand() * (::ced::MATH_2PI / RAND_MAX));
+			finalDirection.Normalize();
+			Spawn(position, (direction * .7) + (finalDirection * .3), speedDebris, brightness);
 		}
 		return 0;
 	}
@@ -81,8 +90,9 @@ struct SDebris	{
 			float											& speed				= Particles.Speed		[iShot];
 			float											& brightness 		= Brightness			[iShot];
 			brightness									-= secondsLastFrame;
-			speed										-= secondsLastFrame * (rand() % 16);
-			if(brightness < 0) {
+			speed										-= (0 > speed) ? secondsLastFrame * (rand() % 16)  * 5 : secondsLastFrame * (rand() % 16);
+
+			if(0 > brightness) {
 				Particles.Remove(iShot);
 				Brightness.remove_unordered(iShot--);
 			}

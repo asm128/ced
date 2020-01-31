@@ -1,7 +1,7 @@
 #include "ced_demo_12.h"
 #include <algorithm>
 
-static constexpr	const uint32_t					MAX_LIGHT_RANGE				= 10;
+static constexpr	const uint32_t					MAX_LIGHT_RANGE		= 10;
 
 static	int											drawStars			(SStars & stars, ::ced::view_grid<::ced::SColorBGRA> targetPixels)	{
 	::ced::SColorBGRA										colors[]			=
@@ -146,9 +146,9 @@ static constexpr	const ::ced::SColorBGRA			colorShotEnemy			= ::ced::SColorBGRA{
 
 
 static	int											getLightArrays
-	( const ::SSolarSystem									& app
-	, ::ced::container<::ced::SCoord3<float>>				& lightPoints
-	, ::ced::container<::ced::SColorBGRA>					& lightColors
+	( const ::SSolarSystem						& app
+	, ::ced::container<::ced::SCoord3<float>>	& lightPoints
+	, ::ced::container<::ced::SColorBGRA>		& lightColors
 	)						{
 	::ced::SColorBGRA										colorLightPlayer		= ::ced::SColorBGRA{0xFF, 0xFF, 0xFF}  * .2;
 	::ced::SColorBGRA										colorLightEnemy			= ::ced::SColorBGRA{0xFF, 0xFF, 0xFF}  * .2;
@@ -192,8 +192,9 @@ static	int											getLightArrays
 	lightPointsModel.clear();
 	lightColorsModel.clear();
 	for(uint32_t iLightPoint = 0; iLightPoint < lightPointsWorld.size(); ++iLightPoint) {
-		if((lightPointsWorld[iLightPoint] - modelPosition).LengthSquared() < (MAX_LIGHT_RANGE * MAX_LIGHT_RANGE)) {
-			lightPointsModel.push_back(lightPointsWorld[iLightPoint]);
+		const ::ced::SCoord3<float>								& lightPoint		=	lightPointsWorld[iLightPoint];
+		if((lightPoint - modelPosition).LengthSquared() < (MAX_LIGHT_RANGE * MAX_LIGHT_RANGE)) {
+			lightPointsModel.push_back(lightPoint);
 			lightColorsModel.push_back(lightColorsWorld[iLightPoint]);
 		}
 	}
@@ -206,50 +207,39 @@ int													draw				(SApplication & app)	{
 	::ced::view_grid<::ced::SColorBGRA>						targetPixels		= {framework.Pixels, framework.Window.Size};
 	if(0 == targetPixels.size())
 		return 1;
-	const ::ced::SColorBGRA									colorBackground		= {0x20, 0x8, 0x4};
-	//colorBackground									+= (colorBackground * (0.5 + (0.5 / 65535 * rand())) * ((rand() % 2) ? -1 : 1)) ;
-	for(uint32_t y = 0; y < framework.Window.Size.y; ++y) // Generate noise color for planet texture
-	for(uint32_t x = 0; x < framework.Window.Size.x; ++x)
-		framework.Pixels[y * framework.Window.Size.x + x]	= colorBackground;
+	memcpy(targetPixels.begin(), app.SolarSystem.BackgroundImage.Pixels.begin(), sizeof(::ced::SColorBGRA) * targetPixels.size());
 
 	::SSolarSystem											& solarSystem		= app.SolarSystem;
 
-
-	drawStars(app.SolarSystem.Stars, {framework.Pixels, framework.Window.Size});
+	::drawStars(app.SolarSystem.Stars, {framework.Pixels, framework.Window.Size});
 
 	solarSystem.Scene.LightVector.Normalize();
 
 	::ced::SMatrix4<float>									matrixView			= {};
 	matrixView.LookAt(solarSystem.Scene.Camera.Position, solarSystem.Scene.Camera.Target, solarSystem.Scene.Camera.Up);
-	{
-		::ced::SMatrix4<float>									matrixProjection	= {};
-		matrixProjection.FieldOfView(::ced::MATH_PI * .25, targetPixels.metrics().x / (double)targetPixels.metrics().y, 0.1, 1000);
-		matrixView											*= matrixProjection;
-	}
-	{
-		::ced::SMatrix4<float>									matrixViewport		= {};
-		matrixViewport.Viewport(targetPixels.metrics());
-		matrixView											*= matrixViewport;
-	}
-
+	matrixView											*= solarSystem.Scene.MatrixProjection;
 	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
-	::ced::container<::ced::STriangleWeights<double>>		pixelVertexWeights;
+	::ced::container<::ced::STriangleWeights<float>>		pixelVertexWeights;
 
 	::ced::container<::ced::SCoord3<float>>					lightPointsWorld			= {};
 	::ced::container<::ced::SColorBGRA>						lightColorsWorld			= {};
 	::ced::container<::ced::SCoord3<float>>					lightPointsModel			= {};
 	::ced::container<::ced::SColorBGRA>						lightColorsModel			= {};
 	::getLightArrays(solarSystem, lightPointsWorld, lightColorsWorld);
+	lightPointsModel.resize(lightPointsWorld.size());
+	lightColorsModel.resize(lightColorsWorld.size());
+	lightPointsModel.clear();
+	lightColorsModel.clear();
 
 	::ced::view_grid<uint32_t>								depthBuffer					= {framework.DepthBuffer.begin(), framework.Window.Size};
-	for(uint32_t iModel = 0; iModel < solarSystem.Scene.Transforms.size(); ++iModel) {
-		if(solarSystem.Health[iModel] <= 0)
+	for(uint32_t iEntity = 0; iEntity < solarSystem.Entities.size(); ++iEntity) {
+		if(solarSystem.Health[iEntity] <= 0)
 			continue;
-		::SEntity												& entity					= solarSystem.Entities[iModel];
+		::SEntity												& entity					= solarSystem.Entities[iEntity];
 		if(-1 == entity.Parent)
 			continue;
-		::ced::SMatrix4<float>									matrixTransform				= solarSystem.Scene.ModelMatricesLocal[iModel];
-		const ::ced::SMatrix4<float>							& matrixTransformParent		= solarSystem.Scene.ModelMatricesLocal[entity.Parent];
+		::ced::SMatrix4<float>									matrixTransform				= solarSystem.Scene.ModelMatricesLocal[entity.Transform];
+		const ::ced::SMatrix4<float>							& matrixTransformParent		= solarSystem.Scene.ModelMatricesLocal[solarSystem.Entities[entity.Parent].Transform];
 		matrixTransform										= matrixTransform * matrixTransformParent ;
 		::ced::SMatrix4<float>									matrixTransformView			= matrixTransform * matrixView;
 		::getLightArrays(matrixTransform.GetTranslation(), lightPointsWorld, lightColorsWorld, lightPointsModel, lightColorsModel);
@@ -304,7 +294,7 @@ int													draw				(SApplication & app)	{
 		}
 	}
 
-	::drawShots	(targetPixels, solarSystem.ShotsPlayer	, matrixView, colorShotPlayer	, 4.0,  1, true, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
+	::drawShots	(targetPixels, solarSystem.ShotsPlayer	, matrixView, colorShotPlayer	, 4.0,  1, true	, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
 	::drawShots	(targetPixels, solarSystem.ShotsEnemy	, matrixView, colorShotEnemy	, 7.0, 10, false, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
 	::drawDebris(targetPixels, solarSystem.Debris		, matrixView, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
 	return 0;

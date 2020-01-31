@@ -226,7 +226,7 @@ int													draw				(SApplication & app)	{
 	}
 
 	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
-	::ced::container<::ced::STriangleWeights<double>>		pixelVertexWeights;
+	::ced::container<::ced::STriangleWeights<float>>		pixelVertexWeights;
 
 	::ced::container<::ced::SCoord3<float>>					lightPointsWorld			= {};
 	::ced::container<::ced::SColorBGRA>						lightColorsWorld			= {};
