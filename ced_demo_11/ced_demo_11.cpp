@@ -177,7 +177,7 @@ int													setup							(SApplication & app)								{
 	app.SolarSystem.Scene.Geometry.resize(1);
 	::ced::geometryBuildSphere(app.SolarSystem.Scene.Geometry[0], 20U, 16U, 1, {});
 
-	app.SolarSystem.Scene.Pivot.resize	(PLANET_COUNT + 1);
+	app.SolarSystem.Scene.Pivot.resize(PLANET_COUNT + 1);
 	::ced::SIntegrator3										& bodies						= app.SolarSystem.Bodies;
 	::SScene												& scene							= app.SolarSystem.Scene;
 	for(uint32_t iModel = 0; iModel < app.SolarSystem.Scene.Pivot.size(); ++iModel) {
@@ -302,7 +302,7 @@ int													update						(SApplication & app)	{
 	for(uint32_t x = 0; x < framework.Window.Size.x; ++x)
 		framework.Pixels[y * framework.Window.Size.x + x]	= colorBackground;
 
-::ced::SCoord3<float>									lightVector					= camera.Position;
+	::ced::SCoord3<float>									lightVector					= camera.Position;
 	lightVector.Normalize();
 
 	::ced::SMatrix4<float>									matrixView					= {};

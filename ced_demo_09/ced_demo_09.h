@@ -18,7 +18,6 @@ struct SScene	{
 	::ced::container<::ced::SMatrix4<float>>			ModelMatricesGlobal		= {};
 	::ced::container<::ced::SModel3>					Models					= {};
 	::ced::container<::SEntity>							Entities				= {};
-	::ced::container<int32_t>							GeometryIndex			= {};
 	::ced::container<::ced::SGeometryQuads>				Geometry				= {};
 	::ced::SCamera										Camera					= {};
 	::ced::SCoord3<float>								LightVector				= {15, 12, 0};
