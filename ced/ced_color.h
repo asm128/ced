@@ -171,7 +171,7 @@ namespace ced
 									SColorFloat		operator +		(const SColorBGR& color)								const	noexcept	{ return ::ced::SColorFloat{r + (color.r * (1/255.0f)), g + (color.g * (1/255.0f)), b + (color.b * (1/255.0f)), a}.Clamp();																				}
 		constexpr					SColorFloat		operator *		(const SColorFloat& color)								const	noexcept	{ return ::ced::SColorFloat{::ced::clamp(r * color.r, 0.0f, 1.0f), ::ced::clamp(g * color.g, 0.0f, 1.0f),	::ced::clamp(b * color.b, 0.0f, 1.0f), a};													}
 		constexpr					SColorFloat		operator +		(const SColorFloat& color)								const	noexcept	{ return ::ced::SColorFloat{::ced::clamp(r + color.r, 0.0f, 1.0f), ::ced::clamp(g + color.g, 0.0f, 1.0f),	::ced::clamp(b + color.b, 0.0f, 1.0f), a};													}
-		constexpr					SColorFloat		operator -		(const SColorFloat& color)								const	noexcept	{ return ::ced::SColorFloat(::ced::clamp(b - color.b, 0.0f, 1.0f), ::ced::clamp(g - color.g, 0.0f, 1.0f),	::ced::clamp(r - color.r, 0.0f, 1.0f), a);	}
+		constexpr					SColorFloat		operator -		(const SColorFloat& color)								const	noexcept	{ return ::ced::SColorFloat(::ced::clamp(r - color.r, 0.0f, 1.0f), ::ced::clamp(g - color.g, 0.0f, 1.0f),	::ced::clamp(b - color.b, 0.0f, 1.0f), a);	}
 		constexpr					SColorFloat		operator *		(double scalar)											const	noexcept	{ return ::ced::SColorFloat{(float)::ced::clamp(r * scalar, 0.0, 1.0), (float)::ced::clamp(g * scalar, 0.0, 1.0), (float)::ced::clamp(b * scalar, 0.0, 1.0), a};											}
 		constexpr					SColorFloat		operator /		(double scalar)											const				{ return ::ced::SColorFloat{(float)::ced::clamp(r / scalar, 0.0, 1.0), (float)::ced::clamp(g / scalar, 0.0, 1.0), (float)::ced::clamp(b / scalar, 0.0, 1.0), a};											}
 									SColorFloat&	operator *=		(float scalar)													noexcept	{ r = r * scalar;					g = g * scalar;					b = b * scalar;					return Clamp();																					}
@@ -191,6 +191,8 @@ namespace ced
 	static constexpr	const ::ced::SColorFloat	MAGENTA			= {1.0f, 0.0f, 1.0f, 1.0f					};
 	static constexpr	const ::ced::SColorFloat	CYAN			= {0.0f, 1.0f, 1.0f, 1.0f					};
 	static constexpr	const ::ced::SColorFloat	ORANGE			= {1.0f, 0.647f, 0.0f, 1.0f					};
+	static constexpr	const ::ced::SColorFloat	TURQUOISE		= {0.3f, 0.647f, 1.0f, 1.0f					};
+	static constexpr	const ::ced::SColorFloat	PANOCHE			= {0.1f, 1.0, 0.647f, 1.0f					};
 	static constexpr	const ::ced::SColorFloat	BROWN			= ::ced::SColorBGRA{0xFF, 0x00, 0x4B, 0x96};
 	static constexpr	const ::ced::SColorFloat	GRAY			= {0.5f, 0.5f, 0.5f, 1.0f					};
 	static constexpr	const ::ced::SColorFloat	DARKGRAY		= {0.25f, 0.25f, 0.25f, 1.0f				};
