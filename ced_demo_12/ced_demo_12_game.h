@@ -106,6 +106,7 @@ struct SDebris	{
 
 struct SShots	{
 	double										Delay				= 0;
+	int32_t										Damage				= 1;
 	::ced::container<float>						Brightness			= {};
 	::ced::container<::ced::SCoord3<float>>		PositionPrev		= {};
 	::SParticles3								Particles;

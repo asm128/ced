@@ -131,7 +131,7 @@ namespace ced
 				*valueToPop							= Data[Count - 1];
 			return resize(Count - 1);
 		}
-		int32_t								remove_unordered	(uint32_t indexToRemove)		{ return this->pop_back(&this->operator[](indexToRemove)); }
+		int32_t								remove_unordered	(uint32_t indexToRemove)		{ if(Count > 1) return this->pop_back(&this->operator[](indexToRemove)); this->pop_back(); return Count; }
 	};
 
 } // namespace

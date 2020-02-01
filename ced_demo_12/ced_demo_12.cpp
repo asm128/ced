@@ -105,7 +105,7 @@ int													modelsSetup	(::SShipScene & scene)			{
 		for(uint32_t iImage = 0; iImage < scene.Image.size(); ++iImage) {
 			if(scene.Image[iImage].Pixels.size())
 				continue;
-			scene.Image[iImage].Metrics							= {24, 6};
+			scene.Image[iImage].Metrics							= {16, 5};
 			scene.Image[iImage].Pixels.resize(scene.Image[iImage].Metrics.x * scene.Image[iImage].Metrics.y);
 			for(uint32_t y = 0; y < scene.Image[iImage].Metrics.y; ++y) {// Generate noise color for planet texture
 				bool													xAffect						= (y % 2);
@@ -131,9 +131,15 @@ int													solarSystemSetupBackgroundImage	(::ced::SImage & backgroundImage
 }
 
 int													stageSetup						(::SSolarSystem & solarSystem)	{	// Set up enemy ships
-	static constexpr	const uint32_t						partHealthPlayer				= 200;
-	static constexpr	const uint32_t						partHealthEnemy					= 750;
-	{
+	static constexpr	const uint32_t						partHealthPlayer				= 1;
+	static constexpr	const uint32_t						partHealthEnemy					= 10;
+	if(0 == solarSystem.Ships.size()) {	// Set up player ship
+		const int32_t											shipIndex						= ::shipCreate(solarSystem, 0, partHealthPlayer, 0, 0);
+		::ced::SModel3											& shipTransform					= solarSystem.Scene.Transforms[solarSystem.Entities[solarSystem.Ships[shipIndex].Entity].Transform];
+		shipTransform.Rotation.z							= (float)(-::ced::MATH_PI_2);
+		shipTransform.Position								= {-30};
+	}
+	else {
 		::SShip													& playerShip					= solarSystem.Ships[0];
 		for(uint32_t iPart = 0; iPart < playerShip.Parts.size(); ++iPart) {
 			playerShip.Parts[iPart].Shots.Delay					= 1.0 / playerShip.Parts.size() * iPart;
@@ -163,15 +169,6 @@ int													solarSystemSetup	(::SSolarSystem & solarSystem, ::ced::SCoord2<u
 	::setupStars(solarSystem.Stars, windowSize);
 	::SShipScene											& scene				= solarSystem.Scene;
 	::modelsSetup(scene);
-	::ced::container<int32_t>								indicesShips;
-	{	// Set up player ship
-		static constexpr	const uint32_t						partHealthPlayer		= 200;
-		indicesShips.push_back(::shipCreate(solarSystem, 0, partHealthPlayer, 0, 0));
-		const int32_t											shipIndex				= indicesShips[0];
-		::ced::SModel3											& shipTransform			= scene.Transforms[solarSystem.Entities[solarSystem.Ships[shipIndex].Entity].Transform];
-		shipTransform.Rotation.z							= (float)(-::ced::MATH_PI_2);
-		shipTransform.Position								= {-30};
-	}
 	::stageSetup(solarSystem);
 	scene.Camera.Target									= {};
 	scene.Camera.Position								= {-0.000001f, 125, 0};
@@ -211,10 +208,11 @@ static	int											explosionAdd		(::ced::container<::SExplosion> & explosions,
 }
 
 static	int											applyDamage
-	( int32_t							& healthPart
+	( const int32_t						weaponDamage
+	, int32_t							& healthPart
 	, int32_t							& healthParent
 	) {
-	const uint32_t											finalDamage					= ::ced::min(100, healthPart);
+	const uint32_t											finalDamage					= ::ced::min(weaponDamage, healthPart);
 	healthParent										-= finalDamage;
 	healthPart											-= finalDamage;
 	return 0 >= healthPart;
@@ -239,11 +237,11 @@ static	int											collisionDetect		(::SShots & shots, const ::ced::SCoord3<fl
 	return 0;
 }
 
-int													handleCollisionPoint	(SSolarSystem & solarSystem, int32_t iEntity, int32_t iEntityParent, const ::ced::SCoord3<float> & sphereCenter, const ::ced::SCoord3<float> & collisionPoint, void* soundAlias)	{
+int													handleCollisionPoint	(SSolarSystem & solarSystem, int32_t weaponDamage, int32_t iEntity, int32_t iEntityParent, const ::ced::SCoord3<float> & sphereCenter, const ::ced::SCoord3<float> & collisionPoint, void* soundAlias)	{
 	PlaySoundA((LPCSTR)soundAlias, GetModuleHandle(0), SND_ALIAS_ID | SND_ASYNC);
 	const ::ced::SCoord3<float>							bounceVector		= (collisionPoint - sphereCenter).Normalize();
 	solarSystem.Debris.SpawnDirected(5, bounceVector, collisionPoint, 50, 1);
-	if(::applyDamage(solarSystem.Health[iEntity], solarSystem.Health[iEntityParent])) {	// returns true if health reaches zero
+	if(::applyDamage(weaponDamage, solarSystem.Health[iEntity], solarSystem.Health[iEntityParent])) {	// returns true if health reaches zero
 		const ::SEntity										& entityParent		= solarSystem.Entities[iEntityParent];
 		const int32_t										indexMesh			= entityParent.Geometry;
 		const uint32_t										countTriangles		= solarSystem.Scene.Geometry[indexMesh].Triangles.size();
@@ -306,7 +304,7 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 			::ced::SModel3											& partTransform			= solarSystem.Scene.Transforms[entityPart.Transform];
 			partTransform.Rotation.y							+= (float)(secondsLastFrame * 1);
 			matricesParent										= {};
-			shipPart.Shots.Delay								+= secondsLastFrame * .05 * (1 + iPart);
+			shipPart.Shots.Delay								+= secondsLastFrame * .1 * (1 + iPart);
 			::ced::SCoord3<float>									positionGlobal			= solarSystem.Scene.ModelMatricesLocal[indexParent].Transform(partTransform.Position);
 			if(1 < (modelPlayer.Position - positionGlobal).LengthSquared()) {
 				::ced::SCoord3<float>									direction			= modelPlayer.Position - positionGlobal;
@@ -426,7 +424,7 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 						const ::ced::SCoord3<float>								entityPosition			= matrixTransform.GetTranslation();
 						::collisionDetect(shipPart.Shots, entityPosition, collisionPoints);
 						for(uint32_t iCollisionPoint = 0; iCollisionPoint < collisionPoints.size(); ++iCollisionPoint)
-							if(::handleCollisionPoint(solarSystem, shipPart2.Entity, ship2.Entity, entityPosition, collisionPoints[iCollisionPoint], soundAlias))	// returns true if part health reaches zero.
+							if(::handleCollisionPoint(solarSystem, shipPart.Shots.Damage, shipPart2.Entity, ship2.Entity, entityPosition, collisionPoints[iCollisionPoint], soundAlias))	// returns true if part health reaches zero.
 								break;
 					}
 				}
@@ -442,7 +440,7 @@ int													update				(SApplication & app)	{
 		framework.Running = false;
 	if(framework.Window.Resized) {
 		::ced::SMatrix4<float>									& matrixProjection	= app.SolarSystem.Scene.MatrixProjection;
-		matrixProjection.FieldOfView(::ced::MATH_PI * .25, framework.Window.Size.x / (double)framework.Window.Size.y, 0.1, 1000);
+		matrixProjection.FieldOfView(::ced::MATH_PI * .25, framework.Window.Size.x / (double)framework.Window.Size.y, 0.01, 500);
 		::ced::SMatrix4<float>									matrixViewport		= {};
 		matrixViewport.Viewport(framework.Window.Size);
 		matrixProjection									*= matrixViewport;
