@@ -12,6 +12,7 @@
 struct SEntityFlags {
 	int32_t												Padding						:1;
 };
+#pragma pack(pop)
 
 struct SEntity {
 	int32_t												Parent						;
@@ -24,10 +25,10 @@ struct SEntity {
 };
 
 struct SShipPart {
-	int32_t												Entity;
-	int32_t												Health;
+	int32_t												Entity	;
+	int32_t												Health	;
+	::SShots											Shots	;
 };
-#pragma pack(pop)
 
 struct SShip {
 	int32_t												Entity	;
@@ -52,8 +53,6 @@ struct SSolarSystem {
 	::ced::container<::SEntity>							Entities					= {};
 	::ced::container<::SShip>							Ships						= {};
 	::SStars											Stars						;
-	::SShots											ShotsPlayer					;
-	::SShots											ShotsEnemy					;
 	::SDebris											Debris						;
 	::ced::SIntegrator3									ShipPhysics					= {};
 	::ced::container<::ced::SImage>						Image						= {};

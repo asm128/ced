@@ -81,7 +81,7 @@ static	int											drawDebris			(::ced::view_grid<::ced::SColorBGRA> targetPix
 	return 0;
 }
 
-static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixels, SShots & shots
+static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixels, const SShots & shots
 	, const ::ced::SMatrix4<float>	& matrixVPV
 	, ::ced::SColorFloat			colorShot
 	, const	double					brightRadius
@@ -92,8 +92,8 @@ static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixe
 	::ced::container<::ced::SCoord3<float>>					pixelCoords;
 	for(uint32_t iShot = 0; iShot < shots.Brightness.size(); ++iShot) {
 		pixelCoords.clear();
-		::ced::SCoord3<float>									starPosPrev		= shots.PositionPrev[iShot];
-		::ced::SCoord3<float>									starPos			= shots.Particles.Position[iShot];
+		const ::ced::SCoord3<float>								& starPosPrev		= shots.PositionPrev[iShot];
+		const ::ced::SCoord3<float>								& starPos			= shots.Particles.Position[iShot];
 		::ced::SLine3<float>									raySegmentWorld	= {starPosPrev, starPos};
 
 		::ced::SLine3<float>									raySegment		= raySegmentWorld;
@@ -145,38 +145,28 @@ static constexpr	const ::ced::SColorBGRA			colorShotPlayer			= ::ced::SColorBGRA
 static constexpr	const ::ced::SColorBGRA			colorShotEnemy			= ::ced::SColorBGRA{0x40, 0x20, 0xfF};// *.2;
 
 static	int											getLightArrays
-	( const ::SSolarSystem						& app
+	( const ::SSolarSystem						& solarSystem
 	, ::ced::container<::ced::SCoord3<float>>	& lightPoints
 	, ::ced::container<::ced::SColorBGRA>		& lightColors
 	)						{
 	::ced::SColorBGRA										colorLightPlayer		= ::ced::SColorBGRA{0xFF, 0xFF, 0xFF}  * .2;
 	::ced::SColorBGRA										colorLightEnemy			= ::ced::SColorBGRA{0xFF, 0xFF, 0xFF}  * .2;
-	lightPoints.resize(app.ShotsEnemy.Particles.Position.size() + app.ShotsPlayer.Particles.Position.size() + app.Debris.Particles.Position.size() + 4);
-	lightColors.resize(app.ShotsEnemy.Particles.Position.size() + app.ShotsPlayer.Particles.Position.size() + app.Debris.Particles.Position.size() + 4);
-	lightPoints[0]										= app.Scene.Transforms[0].Position;
-	lightColors[0]										= colorLightPlayer;
-	for(uint32_t iEnemy = 1; iEnemy < 4; ++iEnemy) {
-		uint32_t iModelEnemy = 7 * iEnemy;
-		if(iModelEnemy >= app.Scene.Transforms.size())
-			continue;
-		lightPoints[iEnemy]									= app.Scene.Transforms[iModelEnemy].Position;
-		lightColors[iEnemy]									= colorLightEnemy;
+	for(uint32_t iShip = 0; iShip < solarSystem.Ships.size(); ++iShip) {
+		const ::SShip											& ship					= solarSystem.Ships[iShip];
+		lightPoints.push_back(solarSystem.Scene.Transforms[ship.Entity].Position);
+		lightColors.push_back(iShip ? colorLightEnemy : colorLightPlayer);
+		for(uint32_t iPart = 0; iPart < ship.Parts.size(); ++iPart) {
+			const ::SShipPart										& shipPart				= ship.Parts[iPart];
+			for(uint32_t iShot = 0; iShot < shipPart.Shots.Particles.Position.size(); ++iShot) {
+				lightPoints.push_back(shipPart.Shots.Particles.Position[iShot]);
+				lightColors.push_back(iShip ? colorShotEnemy : colorShotPlayer);
+			}
+		}
 	}
-	uint32_t												iOffset					= 4;
-	for(uint32_t iShot = 0; iShot < app.ShotsEnemy.Particles.Position.size(); ++iShot) {
-		lightPoints[iOffset + iShot]						= app.ShotsEnemy.Particles.Position[iShot];
-		lightColors[iOffset + iShot]						= colorShotEnemy;
-	}
-	iOffset												+= app.ShotsEnemy.Particles.Position.size();
-	for(uint32_t iShot = 0; iShot < app.ShotsPlayer.Particles.Position.size(); ++iShot) {
-		lightPoints[iOffset + iShot]						= app.ShotsPlayer.Particles.Position[iShot];
-		lightColors[iOffset + iShot]						= colorShotPlayer;
-	}
-	iOffset												+= app.ShotsPlayer.Particles.Position.size();
-	for(uint32_t iParticle = 0; iParticle < app.Debris.Particles.Position.size(); ++iParticle) {
-		lightPoints[iOffset + iParticle]					= app.Debris.Particles.Position[iParticle];
-		::ced::SColorFloat										colorShot			= app.Debris.Colors[iParticle % ::std::size(app.Debris.Colors)];
-		lightColors[iOffset + iParticle]					= colorShot * app.Debris.Brightness[iParticle];
+	for(uint32_t iParticle = 0; iParticle < solarSystem.Debris.Particles.Position.size(); ++iParticle) {
+		lightPoints.push_back(solarSystem.Debris.Particles.Position[iParticle]);
+		::ced::SColorFloat										colorShot			= solarSystem.Debris.Colors[iParticle % ::std::size(solarSystem.Debris.Colors)];
+		lightColors.push_back(colorShot * solarSystem.Debris.Brightness[iParticle]);
 	}
 	return 0;
 }
@@ -293,8 +283,14 @@ int													draw				(SApplication & app)	{
 		}
 	}
 
-	::drawShots	(targetPixels, solarSystem.ShotsPlayer	, matrixView, colorShotPlayer	, 4.0,  1, true	, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
-	::drawShots	(targetPixels, solarSystem.ShotsEnemy	, matrixView, colorShotEnemy	, 7.0, 10, false, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
+	for(uint32_t iShip = 0; iShip < solarSystem.Ships.size(); ++iShip) {
+		const ::SShip										& ship					= solarSystem.Ships[iShip];
+		for(uint32_t iPart = 0; iPart < ship.Parts.size(); ++iPart)
+			if(iShip)
+				::drawShots(targetPixels, ship.Parts[iPart].Shots, matrixView, colorShotEnemy, 7.0, 10, false, depthBuffer);
+			else
+				::drawShots(targetPixels, ship.Parts[iPart].Shots, matrixView, colorShotPlayer, 4.0, 1, true, depthBuffer);
+	}
 	::drawDebris(targetPixels, solarSystem.Debris		, matrixView, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
 	return 0;
 }
