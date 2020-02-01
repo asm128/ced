@@ -71,7 +71,7 @@ namespace ced
 
 			if(newCount <= Count) {
 				for(uint32_t iElement = 0; iElement < newCount; ++iElement)
-					Data[iElement]					= other.Data[iElement];
+					new(&Data[iElement]) _tValue(other.Data[iElement]);
 			}
 			else if(newCount > Size) {
 				uint32_t								newSize				= ::std::max(4U, newCount + (newCount / 4));
