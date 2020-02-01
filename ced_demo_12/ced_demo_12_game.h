@@ -10,11 +10,12 @@ struct SStars	{
 	::ced::container<float>						Brightness			= {};
 
 	int											Update				(uint32_t yMax, float secondsLastFrame)	{
+		static constexpr const double					randUnit			= 1.0 / RAND_MAX;
 		for(uint32_t iStar = 0; iStar < Brightness.size(); ++iStar) {
 			::ced::SCoord2<float>							& starPos			= Position[iStar];
 			float											& starSpeed			= Speed[iStar];
 			starPos.y									+= starSpeed * secondsLastFrame;
-			Brightness[iStar]							= float(1.0 / RAND_MAX * rand());
+			Brightness[iStar]							= float(randUnit * rand());
 			if(starPos.y >= yMax) {
 				starSpeed									= float(16 + (rand() % 64));
 				starPos.y									= 0;
@@ -65,20 +66,22 @@ struct SDebris	{
 		return Brightness.push_back(brightness);
 	}
 	int											SpawnSpherical		(uint32_t countDebris, const ::ced::SCoord3<float> & position, float speedDebris, float brightness)	{
+		static constexpr const double					randUnit			= ::ced::MATH_2PI / RAND_MAX;
 		for(uint32_t iDebris = 0; iDebris < countDebris; ++iDebris) {
 			::ced::SCoord3<float>							direction			= {0, 1, 0};
-			direction.RotateX(rand() * (::ced::MATH_2PI / RAND_MAX));
-			direction.RotateY(rand() * (::ced::MATH_2PI / RAND_MAX));
+			direction.RotateX(rand() * randUnit);
+			direction.RotateY(rand() * randUnit);
 			direction.Normalize();
 			Spawn(position, direction, speedDebris, brightness);
 		}
 		return 0;
 	}
 	int											SpawnDirected		(uint32_t countDebris, const ::ced::SCoord3<float> & direction, const ::ced::SCoord3<float> & position, float speedDebris, float brightness)	{
+		static constexpr const double					randUnit			= ::ced::MATH_2PI / RAND_MAX;
 		for(uint32_t iDebris = 0; iDebris < countDebris; ++iDebris) {
 			::ced::SCoord3<float>							finalDirection	= {0, 1, 0};
-			finalDirection.RotateX(rand() * (::ced::MATH_2PI / RAND_MAX));
-			finalDirection.RotateY(rand() * (::ced::MATH_2PI / RAND_MAX));
+			finalDirection.RotateX(rand() * randUnit);
+			finalDirection.RotateY(rand() * randUnit);
 			finalDirection.Normalize();
 			Spawn(position, (direction * .7) + (finalDirection * .3), speedDebris, brightness);
 		}
@@ -90,7 +93,7 @@ struct SDebris	{
 			float											& speed				= Particles.Speed		[iShot];
 			float											& brightness 		= Brightness			[iShot];
 			brightness									-= secondsLastFrame;
-			speed										-= (0 > speed) ? secondsLastFrame * (rand() % 16)  * 5 : secondsLastFrame * (rand() % 16);
+			speed										-= secondsLastFrame * ((0 > speed) ? (rand() % 16) * 5 : (rand() % 16));
 
 			if(0 > brightness) {
 				Particles.Remove(iShot);
@@ -117,10 +120,12 @@ struct SShots	{
 	}
 
 	int											Update				(float secondsLastFrame)	{
+		static constexpr	const uint32_t				maxRange			= 200;
+		static constexpr	const uint32_t				maxRangeSquared		= maxRange * maxRange;
 		memcpy(PositionPrev.begin(), Particles.Position.begin(), Particles.Position.size() * sizeof(::ced::SCoord3<float>));
 		Particles.IntegrateSpeed(secondsLastFrame);
 		for(uint32_t iShot = 0; iShot < Particles.Position.size(); ++iShot) {
-			if (Particles.Position[iShot].LengthSquared() > (100 * 100))
+			if (Particles.Position[iShot].LengthSquared() > maxRangeSquared)
 				Remove(iShot--);
 		}
 		return 0;
@@ -132,14 +137,9 @@ struct SShots	{
 	}
 };
 
-struct SSlice {
-	uint16_t									Offset;
-	uint16_t									Count;
-};
-
 struct SExplosion {
 	int32_t										IndexMesh;
-	::ced::container<SSlice>					Slices;
+	::ced::container<::ced::SSlice<uint16_t>>	Slices;
 	::SParticles3								Particles;
 
 	int											Update				(float secondsLastFrame)	{
@@ -154,7 +154,7 @@ struct SExplosion {
 	}
 	int											Remove				(uint32_t iSlice)			{
 		Particles.Remove(iSlice);
-		return Slices.remove_unordered(iSlice);;
+		return Slices.remove_unordered(iSlice);
 	}
 };
 

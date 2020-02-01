@@ -7,6 +7,7 @@
 
 namespace ced
 {
+#pragma pack(push, 1)
 	struct			SPairSinCos			{ double Sin, Cos; };
 
 	static inline	SPairSinCos			getSinCos				(double theta)																noexcept	{ return {sin(theta), cos(theta)};						}
@@ -334,7 +335,7 @@ namespace ced
 	::ced::SCoord3<_tValue>				triangleWeight		(const STriangleWeights<_tValue> & weights, const STriangle3<_tValue> & values)	{ return values.A * weights.A + values.B * weights.B + values.C * weights.C; }
 	template<typename _tValue>
 	::ced::SCoord2<_tValue>				triangleWeight		(const STriangleWeights<_tValue> & weights, const STriangle2<_tValue> & values)	{ return values.A * weights.A + values.B * weights.B + values.C * weights.C; }
-
+#pragma pack(pop)
 } // namespace
 
 #endif // CED_MATH_H_2983492837498

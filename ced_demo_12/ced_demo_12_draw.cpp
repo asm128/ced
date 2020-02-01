@@ -54,12 +54,12 @@ static	int											drawDebris			(::ced::view_grid<::ced::SColorBGRA> targetPix
 		starFinalColor.g										= ::std::max(0.0f, starFinalColor.g - (1.0f - ::std::min(1.0f, debris.Brightness[iParticle] * 2.5f * (1.0f / debris.Brightness.size() * iParticle * 2))));
 		starFinalColor.b										= ::std::max(0.0f, starFinalColor.b - (1.0f - ::std::min(1.0f, debris.Brightness[iParticle] * 2.5f * (1.0f / debris.Brightness.size() * iParticle * 1))));
 		//::ced::setPixel(targetPixels, pixelCoord, starFinalColor);
-		const	double											brightRadius		= 3.0;
+		const	double											brightRadius		= 1.5;
 		const	double											brightRadiusSquared	= brightRadius * brightRadius;
 		double													brightUnit			= 1.0 / brightRadiusSquared;
 
-		for(int32_t y = (int32_t)-brightRadius; y < (int32_t)brightRadius; ++y)
-		for(int32_t x = (int32_t)-brightRadius; x < (int32_t)brightRadius; ++x) {
+		for(int32_t y = (int32_t)-brightRadius - 1; y < (int32_t)brightRadius + 1; ++y)
+		for(int32_t x = (int32_t)-brightRadius - 1; x < (int32_t)brightRadius + 1; ++x) {
 			::ced::SCoord2<float>									brightPos			= {(float)x, (float)y};
 			const double											brightDistance		= brightPos.LengthSquared();
 			if(brightDistance <= brightRadiusSquared) {
@@ -143,7 +143,6 @@ static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixe
 
 static constexpr	const ::ced::SColorBGRA			colorShotPlayer			= ::ced::SColorBGRA{0x40, 0xfF, 0x80};// *.2;
 static constexpr	const ::ced::SColorBGRA			colorShotEnemy			= ::ced::SColorBGRA{0x40, 0x20, 0xfF};// *.2;
-
 
 static	int											getLightArrays
 	( const ::SSolarSystem						& app
@@ -258,7 +257,7 @@ int													draw				(SApplication & app)	{
 		::ced::view_grid<::ced::SColorBGRA>			image					= solarSystem.Scene.Image	[explosion.IndexMesh];
 		const ::ced::SGeometryQuads					& mesh					= solarSystem.Scene.Geometry[explosion.IndexMesh];
 		for(uint32_t iExplosionPart = 0; iExplosionPart < explosion.Particles.Position.size(); ++iExplosionPart) {
-			const SSlice								& sliceMesh				= explosion.Slices[iExplosionPart];
+			const ::ced::SSlice<uint16_t>				& sliceMesh				= explosion.Slices[iExplosionPart];
 			::ced::SMatrix4<float>						matrixPart				= {};
 			matrixPart.Identity();
 			matrixPart.RotationX(solarSystem.AnimationTime * 2);
