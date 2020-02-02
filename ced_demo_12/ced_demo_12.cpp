@@ -375,7 +375,7 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 			if(1 < (modelPlayer.Position - positionGlobal).LengthSquared()) {
 				::ced::SCoord3<float>									direction			= modelPlayer.Position - positionGlobal;
 				direction.RotateY(rand() * (1.0 / RAND_MAX) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
-				//shipPart.Shots.Spawn(positionGlobal, direction.Normalize(), 25, 1);
+				shipPart.Shots.Spawn(positionGlobal, direction.Normalize(), 25, 1);
 			}
 		}
 	}
@@ -408,12 +408,6 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 			shipPart.Shots.Spawn(positionGlobal, direction, 100, .2f);
 		}
 	}
-	//solarSystem.Scene.Camera.Position								= solarSystem.Scene.Transforms[0].Position;
-	//solarSystem.Scene.Camera.Position.y								+= 10 * 4;
-	//solarSystem.Scene.Camera.Position.x								-= 20 * 4;
-	//solarSystem.Scene.Camera.Target.z								= solarSystem.Scene.Camera.Position.z;
-	//solarSystem.Scene.Camera.Target.x								= solarSystem.Scene.Transforms[0].Position.x + 10;
-
 
 	if(GetAsyncKeyState('Q')) solarSystem.Scene.Camera.Position.y	-= (float)secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
 	if(GetAsyncKeyState('E')) solarSystem.Scene.Camera.Position.y	+= (float)secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
@@ -449,11 +443,6 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 		if(GetAsyncKeyState(VK_NUMPAD6)) modelPlayer.Rotation.x		-= (float)(secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
 		if(GetAsyncKeyState(VK_NUMPAD4)) modelPlayer.Rotation.x		+= (float)(secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
 	}
-
-	//if(solarSystem.Ships[0].Health)
-	//	modelPlayer.Rotation.y								+= (float)secondsLastFrame * .5f;
-	//for(uint32_t iEnemy = 1; iEnemy < solarSystem.Scene.Transforms.size(); ++iEnemy)
-	//	solarSystem.Scene.Transforms[iEnemy].Rotation.y						+= (float)secondsLastFrame * (.1f * iEnemy);
 
 	solarSystem.Scene.LightVector									= solarSystem.Scene.LightVector.RotateY(secondsLastFrame * 2);
 

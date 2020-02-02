@@ -52,8 +52,8 @@ static constexpr const ::ced::SCoord3<int8_t>		geometryNormals	[6]		=
 	};
 
 int													ced::geometryBuildCube	(SGeometryQuads & geometry)	{
-	geometry.Triangles	.resize((uint32_t)::std::size(geometryCube));
-	geometry.Normals	.resize((uint32_t)::std::size(geometryNormals));
+	geometry.Triangles		.resize((uint32_t)::std::size(geometryCube));
+	geometry.Normals		.resize((uint32_t)::std::size(geometryNormals));
 	geometry.TextureCoords	.resize((uint32_t)::std::size(texCoordCubeYUp));
 
 	for(uint32_t iTriangle = 0; iTriangle < geometry.Triangles.size(); ++iTriangle) {
@@ -63,8 +63,8 @@ int													ced::geometryBuildCube	(SGeometryQuads & geometry)	{
 		newTriangle.B										-= {.5, .5, .5};
 		newTriangle.C										-= {.5, .5, .5};
 
-		::ced::STriangle2<float>									& newTriangleTex	= geometry.TextureCoords[iTriangle];
-		newTriangleTex											= ::texCoordCubeYUp[iTriangle].Cast<float>();
+		::ced::STriangle2<float>								& newTriangleTex	= geometry.TextureCoords[iTriangle];
+		newTriangleTex										= ::texCoordCubeYUp[iTriangle].Cast<float>();
 
 		::ced::SCoord3<float>									& newNormal			= geometry.Normals[iTriangle / 2];
 		newNormal											= geometryNormals[iTriangle / 2].Cast<float>();
