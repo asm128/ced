@@ -69,6 +69,12 @@ int													ced::createOrbiter
 	) {
 	const int32_t											indexFirstBody					= bodies.Spawn(2);
 	{
+		::ced::STransform3										& orbitTransform				= bodies.Transforms	[indexFirstBody]		= {};
+		::ced::SForce3											& orbitForces					= bodies.Forces		[indexFirstBody]		= {};
+		orbitForces.Rotation								= {0.0f, (float)(::ced::MATH_2PI / orbital_period), 0.0f};			// Set the orbital rotation velocity IN EARTH DAYS
+		orbitTransform.Orientation.MakeFromEulerTaitBryan( (float)(::ced::MATH_2PI / 360.0 * orbital_inclination), 0.0f, 0.0f );	// Calculate the orbital tilt IN RADIANS
+	}
+	{
 		::ced::SMass3											& planetMass					= bodies.Masses		[indexFirstBody + 1]	= {};
 		::ced::STransform3										& planetTransform				= bodies.Transforms	[indexFirstBody + 1]	= {};
 		::ced::SForce3											& planetForces					= bodies.Forces		[indexFirstBody + 1]	= {};
@@ -79,12 +85,6 @@ int													ced::createOrbiter
 
 		planetForces.Rotation								= { 0.0f, -(float)(::ced::MATH_2PI / rotation_unit * rotation_period), 0.0f };	// Calculate the rotation velocity of the planet IN EARTH DAYS
 		planetForces.Rotation								= planetTransform.Orientation.RotateVector(planetForces.Rotation);		// Rotate our calculated torque in relation to the planetary axis
-	}
-	{
-		::ced::STransform3										& orbitTransform				= bodies.Transforms	[indexFirstBody]		= {};
-		::ced::SForce3											& orbitForces					= bodies.Forces		[indexFirstBody]		= {};
-		orbitForces.Rotation								= {0.0f, (float)(::ced::MATH_2PI / orbital_period), 0.0f};			// Set the orbital rotation velocity IN EARTH DAYS
-		orbitTransform.Orientation.MakeFromEulerTaitBryan( (float)(::ced::MATH_2PI / 360.0 * orbital_inclination), 0.0f, 0.0f );	// Calculate the orbital tilt IN RADIANS
 	}
 	return indexFirstBody;
 }

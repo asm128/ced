@@ -86,13 +86,13 @@ static	int											drawDebris
 }
 
 static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixels, const SShots & shots
-	, const ::ced::SMatrix4<float>							& matrixVPV
-	, ::ced::SColorFloat									colorShot
-	, const	double											brightRadius
-	, const	double											intensity
-	, const	bool											line
-	, ::ced::view_grid<uint32_t>							depthBuffer
-	, ::ced::container<::ced::SCoord3<float>>				pixelCoordsCache
+	, const ::ced::SMatrix4<float>				& matrixVPV
+	, ::ced::SColorFloat						colorShot
+	, const	double								brightRadius
+	, const	double								intensity
+	, const	bool								line
+	, ::ced::view_grid<uint32_t>				depthBuffer
+	, ::ced::container<::ced::SCoord3<float>>	pixelCoordsCache
 	) {
 	for(uint32_t iShot = 0; iShot < shots.Brightness.size(); ++iShot) {
 		pixelCoordsCache.clear();
@@ -114,7 +114,7 @@ static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixe
 			 || pixelCoord.x < 0 || pixelCoord.x >= (int32_t)targetPixels.metrics().x
 			)
 				continue;
-			targetPixels[(uint32_t)pixelCoord.y][(uint32_t)pixelCoord.x] = colorShot;
+			targetPixels[(uint32_t)pixelCoord.y][(uint32_t)pixelCoord.x]	= colorShot;
 
 			uint32_t												depth				= uint32_t(pixelCoord.z * 0xFFFFFFFFU);
 			const	double											brightRadiusSquared	= brightRadius * brightRadius;
@@ -211,8 +211,8 @@ int													draw				(SApplication & app)	{
 	::ced::SMatrix4<float>									matrixView			= {};
 	matrixView.LookAt(solarSystem.Scene.Camera.Position, solarSystem.Scene.Camera.Target, solarSystem.Scene.Camera.Up);
 	matrixView											*= solarSystem.Scene.MatrixProjection;
-	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
-	::ced::container<::ced::STriangleWeights<float>>		pixelVertexWeights;
+	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords					= {};
+	::ced::container<::ced::STriangleWeights<float>>		pixelVertexWeights			= {};
 
 	::ced::container<::ced::SCoord3<float>>					lightPointsWorld			= {};
 	::ced::container<::ced::SColorBGRA>						lightColorsWorld			= {};
@@ -234,19 +234,22 @@ int													draw				(SApplication & app)	{
 			if(shipPart.Health <= 0)
 				continue;
 			::SEntity												& entity					= solarSystem.Entities[shipPart.Entity];
-			if(-1 == entity.Parent)
-				continue;
-			::ced::SMatrix4<float>									matrixTransform				= solarSystem.Scene.ModelMatricesLocal[entity.Transform];
-			const ::ced::SMatrix4<float>							& matrixTransformParent		= solarSystem.Scene.ModelMatricesLocal[solarSystem.Entities[entity.Parent].Transform];
-			matrixTransform										= matrixTransform * matrixTransformParent ;
-			::ced::SMatrix4<float>									matrixTransformView			= matrixTransform * matrixView;
-			::getLightArrays(matrixTransform.GetTranslation(), lightPointsWorld, lightColorsWorld, lightPointsModel, lightColorsModel);
-			::ced::SGeometryQuads									& mesh						= solarSystem.Scene.Geometry[entity.Geometry];
-			::ced::view_grid<::ced::SColorBGRA>						image						= solarSystem.Scene.Image	[entity.Image];
-			for(uint32_t iTriangle = 0; iTriangle < mesh.Triangles.size(); ++iTriangle) {
-				pixelCoords			.clear();
-				pixelVertexWeights	.clear();
-				::ced::drawQuadTriangle(targetPixels, mesh, iTriangle, matrixTransform, matrixTransformView, solarSystem.Scene.LightVector, pixelCoords, pixelVertexWeights, image, lightPointsModel, lightColorsModel, depthBuffer);
+			for(uint32_t iEntity = 0; iEntity < entity.Children.size(); ++iEntity) {
+				::SEntity												& entityChild				= solarSystem.Entities[entity.Children[iEntity]];
+				if(-1 == entityChild.Parent)
+					continue;
+				if(-1 == entityChild.Geometry)
+					continue;
+				::ced::SMatrix4<float>									matrixTransform				= solarSystem.Scene.ModelMatricesGlobal[entityChild.Transform];
+				::ced::SMatrix4<float>									matrixTransformView			= matrixTransform * matrixView;
+				::getLightArrays(matrixTransform.GetTranslation(), lightPointsWorld, lightColorsWorld, lightPointsModel, lightColorsModel);
+				::ced::SGeometryQuads									& mesh						= solarSystem.Scene.Geometry[entityChild.Geometry];
+				::ced::view_grid<::ced::SColorBGRA>						image						= solarSystem.Scene.Image	[entityChild.Image];
+				for(uint32_t iTriangle = 0; iTriangle < mesh.Triangles.size(); ++iTriangle) {
+					pixelCoords			.clear();
+					pixelVertexWeights	.clear();
+					::ced::drawQuadTriangle(targetPixels, mesh, iTriangle, matrixTransform, matrixTransformView, solarSystem.Scene.LightVector, pixelCoords, pixelVertexWeights, image, lightPointsModel, lightColorsModel, depthBuffer);
+				}
 			}
 		}
 	}

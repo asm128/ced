@@ -23,8 +23,8 @@ namespace ced
 	};
 
 	struct STransform3 {
-		::ced::SQuaternion	<float>						Orientation						= {0, 0, 0, 1};
 		::ced::SCoord3		<float>						Position						= {};
+		::ced::SQuaternion	<float>						Orientation						= {0, 0, 0, 1};
 	};
 
 	struct SRigidBodyFlags {
@@ -83,12 +83,12 @@ namespace ced
 
 		int32_t 										Spawn							(uint32_t bodyCount)	{
 			const uint32_t										indexFirstBody					= BodyFrames.size();
-			BodyFrames		.resize(indexFirstBody + bodyCount);
-			BodyFlags		.resize(indexFirstBody + bodyCount);
-			Forces			.resize(indexFirstBody + bodyCount);
-			Masses			.resize(indexFirstBody + bodyCount);
-			Transforms		.resize(indexFirstBody + bodyCount);
-			TransformsLocal	.resize(indexFirstBody + bodyCount);
+			BodyFrames		.resize(indexFirstBody + bodyCount, {});
+			BodyFlags		.resize(indexFirstBody + bodyCount, {});
+			Forces			.resize(indexFirstBody + bodyCount, {});
+			Masses			.resize(indexFirstBody + bodyCount, {});
+			Transforms		.resize(indexFirstBody + bodyCount, {});
+			TransformsLocal	.resize(indexFirstBody + bodyCount, {});
 			return indexFirstBody;
 		}
 
