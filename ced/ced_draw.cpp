@@ -301,7 +301,7 @@ int													ced::drawQuadTriangle
 			double														invAttenuation			= ::std::max(0.0, 1.0 - (distanceToLight * rangeUnit));
 			fragmentColor											+= ::ced::SColorFloat{texelColor * lightColors[iLight] * invAttenuation * .5};
 		}
-		::ced::setPixel(targetPixels, pixelCoord, texelColor *.5 + fragmentColor);
+		::ced::setPixel(targetPixels, pixelCoord, texelColor *.25 + fragmentColor);
 		(void)lightVector;
 	}
 	return 0;

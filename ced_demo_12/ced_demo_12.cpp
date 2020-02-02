@@ -65,6 +65,7 @@ static	int											shipCreate			(::SSolarSystem & solarSystem, int32_t teamId,
 		shipPart.Health										= partHealth;
 		shipPart.Entity										= solarSystem.Entities.push_back(entity);
 		shipPart.Shots.Delay								= 1.0 / countParts * iPart;
+		shipPart.Shots.MaxDelay								= 1 + iPart;
 		::SEntity												& parentEntity			= solarSystem.Entities[ship.Entity];
  		parentEntity.Children.push_back(shipPart.Entity);
 
@@ -137,11 +138,17 @@ int													stageSetup						(::SSolarSystem & solarSystem)	{	// Set up enemy
 		::ced::SModel3											& shipTransform					= solarSystem.Scene.Transforms[solarSystem.Entities[solarSystem.Ships[shipIndex].Entity].Transform];
 		shipTransform.Rotation.z							= (float)(-::ced::MATH_PI_2);
 		shipTransform.Position								= {-30};
+		::SShip													& playerShip					= solarSystem.Ships[shipIndex];
+		for(uint32_t iPart = 0; iPart < playerShip.Parts.size(); ++iPart) {
+			playerShip.Parts[iPart].Shots.Delay					= 1.0 / playerShip.Parts.size() * iPart;
+			playerShip.Parts[iPart].Shots.MaxDelay				= .1;
+		}
 	}
 	else {
 		::SShip													& playerShip					= solarSystem.Ships[0];
 		for(uint32_t iPart = 0; iPart < playerShip.Parts.size(); ++iPart) {
 			playerShip.Parts[iPart].Shots.Delay					= 1.0 / playerShip.Parts.size() * iPart;
+			playerShip.Parts[iPart].Shots.MaxDelay				= .1;
 			playerShip.Parts[iPart].Health						= partHealthPlayer;
 		}
 		playerShip.Health									= partHealthPlayer * playerShip.Parts.size();
@@ -150,6 +157,7 @@ int													stageSetup						(::SSolarSystem & solarSystem)	{	// Set up enemy
 		::SShip													& enemyShip					= solarSystem.Ships[iShip];
 		for(uint32_t iPart = 0; iPart < enemyShip.Parts.size(); ++iPart) {
 			enemyShip.Parts[iPart].Shots.Delay					= 1.0 / enemyShip.Parts.size() * iPart;
+			enemyShip.Parts[iPart].Shots.MaxDelay				= 1 + iPart;
 			enemyShip.Parts[iPart].Health						= partHealthEnemy;
 		}
 		enemyShip.Health									= partHealthEnemy * enemyShip.Parts.size();
@@ -187,9 +195,9 @@ int													setup				(SApplication & app)	{
 static	int											explosionAdd		(::ced::container<::SExplosion> & explosions, int32_t indexMesh, uint32_t triangleCount, const ::ced::SCoord3<float> &collisionPoint, double debrisSpeed) {
 	::SExplosion											newExplosion				= {};
 	newExplosion.IndexMesh								= indexMesh;
-	newExplosion.Slices.reserve(triangleCount / 6);
+	newExplosion.Slices.resize(triangleCount / 6);
 	for(uint32_t iSlice = 0, countSlices = newExplosion.Slices.size(); iSlice < countSlices; ++iSlice) {
-		newExplosion.Slices.push_back({(uint16_t)iSlice, (uint16_t)(rand() % 4 + 3)});
+		newExplosion.Slices[iSlice]							= {(uint16_t)iSlice, (uint16_t)(rand() % 4 + 3)};
 		::ced::SCoord3<float>									direction					= {0, 1, 0};
 		direction.RotateX(rand() * (::ced::MATH_2PI / RAND_MAX));
 		direction.RotateY(rand() * (::ced::MATH_2PI / RAND_MAX));
@@ -213,8 +221,8 @@ static	int											applyDamage
 	, int32_t							& healthParent
 	) {
 	const uint32_t											finalDamage					= ::ced::min(weaponDamage, healthPart);
-	healthParent										-= finalDamage;
 	healthPart											-= finalDamage;
+	healthParent										-= finalDamage;
 	return 0 >= healthPart;
 }
 
@@ -304,7 +312,7 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 			::ced::SModel3											& partTransform			= solarSystem.Scene.Transforms[entityPart.Transform];
 			partTransform.Rotation.y							+= (float)(secondsLastFrame * 1);
 			matricesParent										= {};
-			shipPart.Shots.Delay								+= secondsLastFrame * .1 * (1 + iPart);
+			shipPart.Shots.Delay								+= secondsLastFrame;// * .1 * (1 + iPart);
 			::ced::SCoord3<float>									positionGlobal			= solarSystem.Scene.ModelMatricesLocal[indexParent].Transform(partTransform.Position);
 			if(1 < (modelPlayer.Position - positionGlobal).LengthSquared()) {
 				::ced::SCoord3<float>									direction			= modelPlayer.Position - positionGlobal;
@@ -338,7 +346,7 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 			const int32_t											indexParent				= solarSystem.Entities[shipPart.Entity].Parent;
 			::ced::SModel3											& modelEnemy			= solarSystem.Scene.Transforms[shipPart.Entity];
 			::ced::SCoord3<float>									positionGlobal			= solarSystem.Scene.ModelMatricesLocal[indexParent].Transform(modelEnemy.Position);
-			shipPart.Shots.Delay								+= secondsLastFrame * 7.5;// * (1 + iPart);;
+			shipPart.Shots.Delay								+= secondsLastFrame;// * 7.5;// * (1 + iPart);;
 			::ced::SCoord3<float>									direction				= {1, 0, 0};
 			//direction.RotateY(rand() * (1.0 / RAND_MAX) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
 			//direction.RotateZ(rand() * (1.0 / RAND_MAX) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));

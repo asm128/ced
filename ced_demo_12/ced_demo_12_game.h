@@ -105,14 +105,18 @@ struct SDebris	{
 };
 
 struct SShots	{
+	int32_t										Weapon				= 0;
 	double										Delay				= 0;
 	int32_t										Damage				= 1;
+	double										MaxDelay			= 1;
+
 	::ced::container<float>						Brightness			= {};
 	::ced::container<::ced::SCoord3<float>>		PositionPrev		= {};
 	::SParticles3								Particles;
 
+
 	int											Spawn				(const ::ced::SCoord3<float> & position, const ::ced::SCoord3<float> & direction, float speed, float brightness)	{
-		if(Delay < 1)
+		if(Delay < MaxDelay)
 			return 0;
 		Delay										= 0;
 		Particles.Spawn(position, direction, speed);

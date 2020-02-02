@@ -34,8 +34,12 @@ static	int											drawStars			(SStars & stars, ::ced::view_grid<::ced::SColor
 }
 
 
-static	int											drawDebris			(::ced::view_grid<::ced::SColorBGRA> targetPixels, SDebris & debris, const ::ced::SMatrix4<float> & matrixVPV, ::ced::view_grid<uint32_t> depthBuffer)	{
-	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords;
+static	int											drawDebris
+	( ::ced::view_grid<::ced::SColorBGRA>		targetPixels
+	, SDebris									& debris
+	, const ::ced::SMatrix4<float>				& matrixVPV
+	, ::ced::view_grid<uint32_t>				depthBuffer
+	)	{
 	for(uint32_t iParticle = 0; iParticle < debris.Brightness.size(); ++iParticle) {
 		::ced::SColorFloat										colorShot			= debris.Colors[iParticle % ::std::size(debris.Colors)];
 		::ced::SCoord3<float>									starPos				= debris.Particles.Position[iParticle];
@@ -82,16 +86,16 @@ static	int											drawDebris			(::ced::view_grid<::ced::SColorBGRA> targetPix
 }
 
 static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixels, const SShots & shots
-	, const ::ced::SMatrix4<float>	& matrixVPV
-	, ::ced::SColorFloat			colorShot
-	, const	double					brightRadius
-	, const	double					intensity
-	, const	bool					line
-	, ::ced::view_grid<uint32_t>	depthBuffer
+	, const ::ced::SMatrix4<float>							& matrixVPV
+	, ::ced::SColorFloat									colorShot
+	, const	double											brightRadius
+	, const	double											intensity
+	, const	bool											line
+	, ::ced::view_grid<uint32_t>							depthBuffer
+	, ::ced::container<::ced::SCoord3<float>>				pixelCoordsCache
 	) {
-	::ced::container<::ced::SCoord3<float>>					pixelCoords;
 	for(uint32_t iShot = 0; iShot < shots.Brightness.size(); ++iShot) {
-		pixelCoords.clear();
+		pixelCoordsCache.clear();
 		const ::ced::SCoord3<float>								& starPosPrev		= shots.PositionPrev[iShot];
 		const ::ced::SCoord3<float>								& starPos			= shots.Particles.Position[iShot];
 		::ced::SLine3<float>									raySegmentWorld	= {starPosPrev, starPos};
@@ -100,12 +104,12 @@ static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixe
 		raySegment.A										= matrixVPV.Transform(raySegment.A);
 		raySegment.B										= matrixVPV.Transform(raySegment.B);
 		if(line)
-			::ced::drawLine(targetPixels, raySegment, pixelCoords, depthBuffer);
+			::ced::drawLine(targetPixels, raySegment, pixelCoordsCache, depthBuffer);
 		else
-			pixelCoords.push_back(raySegment.A);
+			pixelCoordsCache.push_back(raySegment.A);
 
-		for(uint32_t iPixelCoord = 0; iPixelCoord < pixelCoords.size(); ++iPixelCoord) {
-			const ::ced::SCoord3<float>							& pixelCoord		= pixelCoords[iPixelCoord];
+		for(uint32_t iPixelCoord = 0; iPixelCoord < pixelCoordsCache.size(); ++iPixelCoord) {
+			const ::ced::SCoord3<float>							& pixelCoord		= pixelCoordsCache[iPixelCoord];
 			if( pixelCoord.y < 0 || pixelCoord.y >= (int32_t)targetPixels.metrics().y
 			 || pixelCoord.x < 0 || pixelCoord.x >= (int32_t)targetPixels.metrics().x
 			)
@@ -130,7 +134,7 @@ static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixe
 						continue;
 					blendVal											= depth;
 					::ced::SColorBGRA										& pixelVal						= targetPixels[blendPos.y][blendPos.x];
-					double													finalBrightness					= (1.0 - (brightDistance * brightUnit)) * (line ? (1.0 / pixelCoords.size() * iPixelCoord) : 1);
+					double													finalBrightness					= (1.0 - (brightDistance * brightUnit)) * (line ? (1.0 / pixelCoordsCache.size() * iPixelCoord) : 1);
 					::ced::SColorFloat										pixelColor						= colorShot * finalBrightness * intensity + pixelVal;
 					pixelVal											= pixelColor;
 				}
@@ -149,8 +153,8 @@ static	int											getLightArrays
 	, ::ced::container<::ced::SCoord3<float>>	& lightPoints
 	, ::ced::container<::ced::SColorBGRA>		& lightColors
 	)						{
-	::ced::SColorBGRA										colorLightPlayer		= ::ced::SColorBGRA{0xFF, 0xFF, 0xFF}  * .2;
-	::ced::SColorBGRA										colorLightEnemy			= ::ced::SColorBGRA{0xFF, 0xFF, 0xFF}  * .2;
+	::ced::SColorBGRA										colorLightPlayer		= ::ced::SColorBGRA{0xFF, 0xFF, 0xFF};
+	::ced::SColorBGRA										colorLightEnemy			= ::ced::SColorBGRA{0xFF, 0xFF, 0xFF};
 	for(uint32_t iShip = 0; iShip < solarSystem.Ships.size(); ++iShip) {
 		const ::SShip											& ship					= solarSystem.Ships[iShip];
 		lightPoints.push_back(solarSystem.Scene.Transforms[ship.Entity].Position);
@@ -289,13 +293,15 @@ int													draw				(SApplication & app)	{
 		}
 	}
 
+	::ced::container<::ced::SCoord3<float>>					pixelCoordsCache;
+	pixelCoordsCache.reserve(512);
 	for(uint32_t iShip = 0; iShip < solarSystem.Ships.size(); ++iShip) {
 		const ::SShip										& ship					= solarSystem.Ships[iShip];
 		for(uint32_t iPart = 0; iPart < ship.Parts.size(); ++iPart)
 			if(iShip)
-				::drawShots(targetPixels, ship.Parts[iPart].Shots, matrixView, colorShotEnemy, 7.0, 10, false, depthBuffer);
+				::drawShots(targetPixels, ship.Parts[iPart].Shots, matrixView, colorShotEnemy, 7.0, 10, false, depthBuffer, pixelCoordsCache);
 			else
-				::drawShots(targetPixels, ship.Parts[iPart].Shots, matrixView, colorShotPlayer, 4.0, 1, true, depthBuffer);
+				::drawShots(targetPixels, ship.Parts[iPart].Shots, matrixView, colorShotPlayer, 4.0, 1, true , depthBuffer, pixelCoordsCache);
 	}
 	::drawDebris(targetPixels, solarSystem.Debris		, matrixView, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
 	return 0;
