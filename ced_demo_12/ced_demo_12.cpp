@@ -107,7 +107,7 @@ int													modelsSetup	(::SShipScene & scene)			{
 	//::ced::geometryBuildCube	(scene.Geometry[0]);
 	::ced::geometryBuildCylinder	(scene.Geometry[0], 2U, 8U, .25f, {0, 0});
 	::ced::geometryBuildSphere		(scene.Geometry[0], 8U, 5U, .7f, {0, 0});
-	//::ced::geometryBuildFigure0	(scene.Geometry[0], 2U, 8U, 1, {});
+	::ced::geometryBuildFigure0		(scene.Geometry[0], 2U, 8U, 1, {});
 
 	::ced::geometryBuildSphere	(scene.Geometry[1], 8U, 5U, .5f, {0, 0});
 	::ced::geometryBuildFigure0	(scene.Geometry[1], 2U, 8U, 1, {});
@@ -364,7 +364,8 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 		::ced::SModel3											& shipTransform			= solarSystem.Scene.Transforms[solarSystem.Entities[enemyShip.Entity].Transform];
 		if(iShip)
 			shipTransform.Position.z							= (float)(sin(iShip + solarSystem.AnimationTime) * (iShip * 5.0) * ((iShip % 2) ? -1 : 1));
-		playing												= true;
+		if(iShip)
+			playing												= true;
 		for(uint32_t iPart = 0; iPart < enemyShip.Parts.size(); ++iPart) {
 			::SShipPart												& shipPart				= enemyShip.Parts[iPart];
 			if(0 >= shipPart.Health)
