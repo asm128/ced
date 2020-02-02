@@ -105,8 +105,9 @@ static	int											shipCreate			(::SSolarSystem & solarSystem, int32_t teamId,
 int													modelsSetup	(::SShipScene & scene)			{
 	scene.Geometry.resize(5);
 	//::ced::geometryBuildCube	(scene.Geometry[0]);
-	::ced::geometryBuildSphere	(scene.Geometry[0], 8U, 5U, .7f, {0, 0});
-	::ced::geometryBuildFigure0	(scene.Geometry[0], 2U, 8U, 1, {});
+	::ced::geometryBuildCylinder	(scene.Geometry[0], 2U, 8U, .25f, {0, 0});
+	::ced::geometryBuildSphere		(scene.Geometry[0], 8U, 5U, .7f, {0, 0});
+	//::ced::geometryBuildFigure0	(scene.Geometry[0], 2U, 8U, 1, {});
 
 	::ced::geometryBuildSphere	(scene.Geometry[1], 8U, 5U, .5f, {0, 0});
 	::ced::geometryBuildFigure0	(scene.Geometry[1], 2U, 8U, 1, {});
@@ -114,7 +115,7 @@ int													modelsSetup	(::SShipScene & scene)			{
 	::ced::geometryBuildGrid	(scene.Geometry[2], {2U, 2U}, {1U, 1U});
 	::ced::geometryBuildCube	(scene.Geometry[3]);
 	::ced::geometryBuildSphere	(scene.Geometry[3], 4U, 2U, 1, {0, 0});
-	::ced::geometryBuildSphere	(scene.Geometry[4], 16U, 2U, 1, {0, 0});
+	::ced::geometryBuildSphere	(scene.Geometry[4], 8U, 2U, 1, {0, 0});
 
 	{
 		::ced::SColorFloat										baseColor	[4]			=
@@ -375,7 +376,7 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 			if(1 < (modelPlayer.Position - positionGlobal).LengthSquared()) {
 				::ced::SCoord3<float>									direction			= modelPlayer.Position - positionGlobal;
 				direction.RotateY(rand() * (1.0 / RAND_MAX) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
-				shipPart.Shots.Spawn(positionGlobal, direction.Normalize(), 25, 1);
+				//shipPart.Shots.Spawn(positionGlobal, direction.Normalize(), 25, 1);
 			}
 		}
 	}
