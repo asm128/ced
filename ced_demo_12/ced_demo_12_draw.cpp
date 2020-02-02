@@ -54,13 +54,13 @@ static	int											drawDebris
 		uint32_t												depth				= uint32_t(starPos.z * 0xFFFFFFFFU);
 		if(depth > depthBuffer[pixelCoord.y][pixelCoord.x])
 			continue;
-		::ced::SColorFloat											starFinalColor	= colorShot * debris.Brightness[iParticle];
-		starFinalColor.g										= ::std::max(0.0f, starFinalColor.g - (1.0f - ::std::min(1.0f, debris.Brightness[iParticle] * 2.5f * (1.0f / debris.Brightness.size() * iParticle * 2))));
-		starFinalColor.b										= ::std::max(0.0f, starFinalColor.b - (1.0f - ::std::min(1.0f, debris.Brightness[iParticle] * 2.5f * (1.0f / debris.Brightness.size() * iParticle * 1))));
+		::ced::SColorFloat										starFinalColor	= colorShot * debris.Brightness[iParticle];
+		starFinalColor.g									= ::std::max(0.0f, starFinalColor.g - (1.0f - ::std::min(1.0f, debris.Brightness[iParticle] * 2.5f * (1.0f / debris.Brightness.size() * iParticle * 2))));
+		starFinalColor.b									= ::std::max(0.0f, starFinalColor.b - (1.0f - ::std::min(1.0f, debris.Brightness[iParticle] * 2.5f * (1.0f / debris.Brightness.size() * iParticle * 1))));
 		//::ced::setPixel(targetPixels, pixelCoord, starFinalColor);
-		const	double											brightRadius		= 1.5;
-		const	double											brightRadiusSquared	= brightRadius * brightRadius;
-		double													brightUnit			= 1.0 / brightRadiusSquared;
+		static constexpr	const double						brightRadius		= 1.5;
+		static constexpr	const double						brightRadiusSquared	= brightRadius * brightRadius;
+		static constexpr	const double						brightUnit			= 1.0 / brightRadiusSquared;
 
 		for(int32_t y = (int32_t)-brightRadius - 1; y < (int32_t)brightRadius + 1; ++y)
 		for(int32_t x = (int32_t)-brightRadius - 1; x < (int32_t)brightRadius + 1; ++x) {

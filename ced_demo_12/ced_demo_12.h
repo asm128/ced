@@ -64,7 +64,7 @@ struct SSolarSystem {
 	::ced::SImage										BackgroundImage				= {};
 	bool												Slowing						= true;
 
-	uint32_t											Stage						= 20;
+	uint32_t											Stage						= 0;
 };
 
 struct SApplication {
