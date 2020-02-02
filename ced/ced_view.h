@@ -92,6 +92,23 @@ namespace ced
 		}
 		int32_t								clear				()												{ return resize(0); }
 		int32_t								resize				(uint32_t newCount)								{ return resize(newCount, {}); }
+		int32_t								reserve				(uint32_t newCount)								{
+			if(newCount > Size) {
+				uint32_t								newSize				= ::std::max(4U, newCount + (newCount / 4));
+				_tValue									* newData			= (_tValue*)malloc(newSize * sizeof(_tValue));
+				if(0 == newData)
+					return -1;
+				for(uint32_t iElement = 0; iElement < Count; ++iElement)
+					new (&newData[iElement]) _tValue(Data[iElement]);
+				_tValue								* oldData			= Data;
+				Size								= newSize;
+				Data								= newData;
+				for(uint32_t iElement = 0; iElement < Count; ++iElement)
+					oldData[iElement].~_tValue();
+				free(oldData);
+			}
+			return 0;
+		}
 		int32_t								resize				(uint32_t newCount, const _tValue & newValue)	{
 			if(newCount < Count) {
 				for(int32_t iElement = (int32_t)Count - 1; iElement >= (int32_t)newCount; --iElement)

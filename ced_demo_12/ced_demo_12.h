@@ -38,11 +38,11 @@ struct SShip {
 };
 
 struct SShipScene	{
+	::ced::container<::ced::SGeometryQuads>				Geometry					= {};
 	::ced::container<::ced::SImage>						Image						= {};
 	::ced::container<::ced::SMatrix4<float>>			ModelMatricesLocal			= {};
 	::ced::container<::ced::SMatrix4<float>>			ModelMatricesGlobal			= {};
 	::ced::container<::ced::SModel3>					Transforms					= {};
-	::ced::container<::ced::SGeometryQuads>				Geometry					= {};
 	::ced::SCamera										Camera						= {};
 	::ced::SCoord3<float>								LightVector					= {0, -12, 0};
 	::ced::SMatrix4<float>								MatrixProjection			= {};
@@ -54,14 +54,11 @@ struct SSolarSystem {
 	::ced::container<::SShip>							Ships						= {};
 	::SStars											Stars						;
 	::SDebris											Debris						;
-	::ced::SIntegrator3									ShipPhysics					= {};
-	::ced::container<::ced::SImage>						Image						= {};
 	::ced::container<::SExplosion>						Explosions;
+	//::ced::SIntegrator3									ShipPhysics					= {};
 
 	double												AnimationTime				= 0;
 	double												TimeScale					= 1;
-	::ced::container<int32_t>							Health						= {};
-	::ced::SCoord2<uint32_t>							ViewportSize				= {};
 
 	::ced::SImage										BackgroundImage				= {};
 	bool												Slowing						= true;

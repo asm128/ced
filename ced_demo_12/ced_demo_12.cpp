@@ -42,11 +42,11 @@ static	int											shipCreate			(::SSolarSystem & solarSystem, int32_t teamId,
 		ship.Team											= teamId;
 		ship.Health											= entityHealth;
 
-		solarSystem.Health			.push_back(entityHealth);
 		scene.ModelMatricesLocal	.push_back({});
 		scene.ModelMatricesGlobal	.push_back({});
 	}
 	const int32_t											indexShip			= solarSystem.Ships.push_back(ship);
+	ship.Parts.reserve(countParts);
 	for(uint32_t iPart = 0; iPart < countParts; ++iPart) {	// Create child parts
 
 		::ced::SModel3											transform				= {};
@@ -71,7 +71,6 @@ static	int											shipCreate			(::SSolarSystem & solarSystem, int32_t teamId,
 		::SShip													& parentShip			= solarSystem.Ships[indexShip];
 		parentShip.Parts.push_back(shipPart);
 
-		solarSystem.Health			.push_back(partHealth);
 		scene.ModelMatricesLocal	.push_back({});
 		scene.ModelMatricesGlobal	.push_back({});
 	}
@@ -122,7 +121,7 @@ int													modelsSetup	(::SShipScene & scene)			{
 
 int													solarSystemSetupBackgroundImage	(::ced::SImage & backgroundImage, ::ced::SCoord2<uint32_t> windowSize)	{
 	backgroundImage.Resize(windowSize);
-	const ::ced::SColorBGRA									colorBackground		= {0x20, 0x8, 0x4};
+	const ::ced::SColorBGRA									colorBackground					= {0x20, 0x8, 0x4};
 	//colorBackground									+= (colorBackground * (0.5 + (0.5 / 65535 * rand())) * ((rand() % 2) ? -1 : 1)) ;
 	for(uint32_t y = 0; y < windowSize.y; ++y) // Generate noise color for planet texture
 	for(uint32_t x = 0; x < windowSize.x; ++x)
@@ -143,17 +142,17 @@ int													stageSetup						(::SSolarSystem & solarSystem)	{	// Set up enemy
 		::SShip													& playerShip					= solarSystem.Ships[0];
 		for(uint32_t iPart = 0; iPart < playerShip.Parts.size(); ++iPart) {
 			playerShip.Parts[iPart].Shots.Delay					= 1.0 / playerShip.Parts.size() * iPart;
-			solarSystem.Health[playerShip.Parts[iPart].Entity]	= partHealthPlayer;
+			playerShip.Parts[iPart].Health						= partHealthPlayer;
 		}
-		solarSystem.Health[playerShip.Entity]				= partHealthPlayer * playerShip.Parts.size();
+		playerShip.Health									= partHealthPlayer * playerShip.Parts.size();
 	}
 	for(uint32_t iShip = 1; iShip < solarSystem.Ships.size(); ++iShip) {
 		::SShip													& enemyShip					= solarSystem.Ships[iShip];
 		for(uint32_t iPart = 0; iPart < enemyShip.Parts.size(); ++iPart) {
 			enemyShip.Parts[iPart].Shots.Delay					= 1.0 / enemyShip.Parts.size() * iPart;
-			solarSystem.Health[enemyShip.Parts[iPart].Entity]	= partHealthEnemy;
+			enemyShip.Parts[iPart].Health						= partHealthEnemy;
 		}
-		solarSystem.Health[enemyShip.Entity]				= partHealthEnemy * enemyShip.Parts.size();
+		enemyShip.Health									= partHealthEnemy * enemyShip.Parts.size();
 	}
 	int32_t													indexShip				= ::shipCreate(solarSystem, 1, partHealthEnemy, solarSystem.Stage + solarSystem.Ships.size(), solarSystem.Stage + solarSystem.Ships.size());
 	::ced::SModel3											& shipTransform			= solarSystem.Scene.Transforms[solarSystem.Entities[solarSystem.Ships[indexShip].Entity].Transform];
@@ -188,8 +187,9 @@ int													setup				(SApplication & app)	{
 static	int											explosionAdd		(::ced::container<::SExplosion> & explosions, int32_t indexMesh, uint32_t triangleCount, const ::ced::SCoord3<float> &collisionPoint, double debrisSpeed) {
 	::SExplosion											newExplosion				= {};
 	newExplosion.IndexMesh								= indexMesh;
-	for(uint32_t iQuad = 0, countQuads = triangleCount / 6; iQuad < countQuads; ++iQuad) {
-		newExplosion.Slices.push_back({(uint16_t)iQuad, (uint16_t)(rand() % 4 + 3)});
+	newExplosion.Slices.reserve(triangleCount / 6);
+	for(uint32_t iSlice = 0, countSlices = newExplosion.Slices.size(); iSlice < countSlices; ++iSlice) {
+		newExplosion.Slices.push_back({(uint16_t)iSlice, (uint16_t)(rand() % 4 + 3)});
 		::ced::SCoord3<float>									direction					= {0, 1, 0};
 		direction.RotateX(rand() * (::ced::MATH_2PI / RAND_MAX));
 		direction.RotateY(rand() * (::ced::MATH_2PI / RAND_MAX));
@@ -237,17 +237,17 @@ static	int											collisionDetect		(::SShots & shots, const ::ced::SCoord3<fl
 	return 0;
 }
 
-int													handleCollisionPoint	(SSolarSystem & solarSystem, int32_t weaponDamage, int32_t iEntity, int32_t iEntityParent, const ::ced::SCoord3<float> & sphereCenter, const ::ced::SCoord3<float> & collisionPoint, void* soundAlias)	{
+int													handleCollisionPoint	(SSolarSystem & solarSystem, int32_t weaponDamage, ::SShipPart& damagedPart, SShip & damagedShip, const ::ced::SCoord3<float> & sphereCenter, const ::ced::SCoord3<float> & collisionPoint, void* soundAlias)	{
 	PlaySoundA((LPCSTR)soundAlias, GetModuleHandle(0), SND_ALIAS_ID | SND_ASYNC);
 	const ::ced::SCoord3<float>							bounceVector		= (collisionPoint - sphereCenter).Normalize();
 	solarSystem.Debris.SpawnDirected(5, bounceVector, collisionPoint, 50, 1);
-	if(::applyDamage(weaponDamage, solarSystem.Health[iEntity], solarSystem.Health[iEntityParent])) {	// returns true if health reaches zero
-		const ::SEntity										& entityParent		= solarSystem.Entities[iEntityParent];
+	if(::applyDamage(weaponDamage, damagedPart.Health, damagedShip.Health)) {	// returns true if health reaches zero
+		const ::SEntity										& entityParent		= solarSystem.Entities[damagedShip.Entity];
 		const int32_t										indexMesh			= entityParent.Geometry;
 		const uint32_t										countTriangles		= solarSystem.Scene.Geometry[indexMesh].Triangles.size();
 		::explosionAdd(solarSystem.Explosions, indexMesh, countTriangles, collisionPoint, 50);
 		solarSystem.Debris.SpawnSpherical(30, collisionPoint, 60, 2);
-		if(0 >= solarSystem.Health[iEntityParent]) {
+		if(0 >= damagedShip.Health) {
 			const ::ced::SCoord3<float>							& parentPosition	= solarSystem.Scene.Transforms[entityParent.Transform].Position;
 			::explosionAdd(solarSystem.Explosions, indexMesh, countTriangles, parentPosition, 10);
 			solarSystem.Debris.SpawnSpherical(150, parentPosition, 13, 2.8f);
@@ -292,14 +292,14 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 		::SShip													& enemyShip				= solarSystem.Ships[iShip];
 		::ced::SModel3											& shipTransform			= solarSystem.Scene.Transforms[solarSystem.Entities[enemyShip.Entity].Transform];
 		shipTransform.Position.z							= (float)(sin(iShip + solarSystem.AnimationTime) * (iShip * 5.0) * ((iShip % 2) ? -1 : 1));
-		if(0 >= solarSystem.Health[enemyShip.Entity])
+		if(0 >= enemyShip.Health)
 			continue;
 		playing												= true;
 		for(uint32_t iPart = 0; iPart < enemyShip.Parts.size(); ++iPart) {
 			::SShipPart												& shipPart				= enemyShip.Parts[iPart];
 			::SEntity												& entityPart			= solarSystem.Entities[shipPart.Entity];
 			const int32_t											indexParent				= entityPart.Parent;
-			if(0 >= solarSystem.Health[shipPart.Entity])
+			if(0 >= shipPart.Health)
 				continue;
 			::ced::SModel3											& partTransform			= solarSystem.Scene.Transforms[entityPart.Transform];
 			partTransform.Rotation.y							+= (float)(secondsLastFrame * 1);
@@ -332,7 +332,7 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 	{
 		for(uint32_t iPart = 0; iPart < solarSystem.Ships[0].Parts.size(); ++iPart) {
 			::SShipPart												& shipPart				= solarSystem.Ships[0].Parts[iPart];
-			if(0 >= solarSystem.Health[shipPart.Entity])
+			if(0 >= shipPart.Health)
 				continue;
 			matricesParent										= {};
 			const int32_t											indexParent				= solarSystem.Entities[shipPart.Entity].Parent;
@@ -381,13 +381,10 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 		if(GetAsyncKeyState(VK_NUMPAD4)) modelPlayer.Rotation.x		+= (float)(secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
 	}
 
-	if(solarSystem.Health[0])
+	if(solarSystem.Ships[0].Health)
 		modelPlayer.Rotation.y								+= (float)secondsLastFrame * .5f;
-	for(uint32_t iEnemy = 1; iEnemy < solarSystem.Scene.Transforms.size(); ++iEnemy) {
-		if(0 == solarSystem.Health[iEnemy])
-			continue;
+	for(uint32_t iEnemy = 1; iEnemy < solarSystem.Scene.Transforms.size(); ++iEnemy)
 		solarSystem.Scene.Transforms[iEnemy].Rotation.y						+= (float)secondsLastFrame * (.1f * iEnemy);
-	}
 
 	solarSystem.Scene.LightVector									= solarSystem.Scene.LightVector.RotateY(secondsLastFrame * 2);
 
@@ -409,7 +406,7 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 			//	continue;
 			for(uint32_t iShip2 = 0; iShip2 < solarSystem.Ships.size(); ++iShip2) {
 				::SShip													& ship2					= solarSystem.Ships[iShip2];
-				if(solarSystem.Health[ship2.Entity] <= 0 || ship.Team == ship2.Team)
+				if(ship2.Health <= 0 || ship.Team == ship2.Team)
 					continue;
 				for(uint32_t iPart = 0; iPart < ship.Parts.size(); ++iPart) {
 					::SShipPart												& shipPart				= ship.Parts[iPart];
@@ -418,13 +415,13 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 					void													* soundAlias			= (iShip2 ? (void*)SND_ALIAS_SYSTEMHAND : (void*)SND_ALIAS_SYSTEMEXCLAMATION);
 					for(uint32_t iPart2 = 0; iPart2 < ship2.Parts.size(); ++iPart2) {
 						::SShipPart												& shipPart2				= ship2.Parts[iPart2];
-						if(solarSystem.Health[shipPart2.Entity] <= 0)
+						if(shipPart2.Health <= 0)
 							continue;
 						const ::ced::SMatrix4<float>							matrixTransform			= solarSystem.Scene.ModelMatricesLocal[shipPart2.Entity] * solarSystem.Scene.ModelMatricesLocal[ship2.Entity];
 						const ::ced::SCoord3<float>								entityPosition			= matrixTransform.GetTranslation();
 						::collisionDetect(shipPart.Shots, entityPosition, collisionPoints);
 						for(uint32_t iCollisionPoint = 0; iCollisionPoint < collisionPoints.size(); ++iCollisionPoint)
-							if(::handleCollisionPoint(solarSystem, shipPart.Shots.Damage, shipPart2.Entity, ship2.Entity, entityPosition, collisionPoints[iCollisionPoint], soundAlias))	// returns true if part health reaches zero.
+							if(::handleCollisionPoint(solarSystem, shipPart.Shots.Damage, shipPart2, ship2, entityPosition, collisionPoints[iCollisionPoint], soundAlias))	// returns true if part health reaches zero.
 								break;
 					}
 				}

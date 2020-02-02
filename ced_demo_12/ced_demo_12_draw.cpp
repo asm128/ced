@@ -214,30 +214,36 @@ int													draw				(SApplication & app)	{
 	::ced::container<::ced::SColorBGRA>						lightColorsWorld			= {};
 	::ced::container<::ced::SCoord3<float>>					lightPointsModel			= {};
 	::ced::container<::ced::SColorBGRA>						lightColorsModel			= {};
+	lightPointsWorld.reserve(2048);
+	lightColorsWorld.reserve(2048);
 	::getLightArrays(solarSystem, lightPointsWorld, lightColorsWorld);
-	lightPointsModel.resize(lightPointsWorld.size());
-	lightColorsModel.resize(lightColorsWorld.size());
-	lightPointsModel.clear();
-	lightColorsModel.clear();
+	lightPointsModel.reserve(lightPointsWorld.size());
+	lightColorsModel.reserve(lightColorsWorld.size());
 
 	::ced::view_grid<uint32_t>								depthBuffer					= {framework.DepthBuffer.begin(), framework.Window.Size};
-	for(uint32_t iEntity = 0; iEntity < solarSystem.Entities.size(); ++iEntity) {
-		if(solarSystem.Health[iEntity] <= 0)
+	for(uint32_t iShip = 0; iShip < solarSystem.Ships.size(); ++iShip) {
+		::SShip													& ship					= solarSystem.Ships[iShip];
+		if(ship.Health <= 0)
 			continue;
-		::SEntity												& entity					= solarSystem.Entities[iEntity];
-		if(-1 == entity.Parent)
-			continue;
-		::ced::SMatrix4<float>									matrixTransform				= solarSystem.Scene.ModelMatricesLocal[entity.Transform];
-		const ::ced::SMatrix4<float>							& matrixTransformParent		= solarSystem.Scene.ModelMatricesLocal[solarSystem.Entities[entity.Parent].Transform];
-		matrixTransform										= matrixTransform * matrixTransformParent ;
-		::ced::SMatrix4<float>									matrixTransformView			= matrixTransform * matrixView;
-		::getLightArrays(matrixTransform.GetTranslation(), lightPointsWorld, lightColorsWorld, lightPointsModel, lightColorsModel);
-		::ced::SGeometryQuads									& mesh						= solarSystem.Scene.Geometry[entity.Geometry];
-		::ced::view_grid<::ced::SColorBGRA>						image						= solarSystem.Scene.Image	[entity.Image];
-		for(uint32_t iTriangle = 0; iTriangle < mesh.Triangles.size(); ++iTriangle) {
-			pixelCoords			.clear();
-			pixelVertexWeights	.clear();
-			::ced::drawQuadTriangle(targetPixels, mesh, iTriangle, matrixTransform, matrixTransformView, solarSystem.Scene.LightVector, pixelCoords, pixelVertexWeights, image, lightPointsModel, lightColorsModel, depthBuffer);
+		for(uint32_t iPart = 0; iPart < ship.Parts.size(); ++iPart) {
+			::SShipPart												& shipPart				= ship.Parts[iPart];
+			if(shipPart.Health <= 0)
+				continue;
+			::SEntity												& entity					= solarSystem.Entities[shipPart.Entity];
+			if(-1 == entity.Parent)
+				continue;
+			::ced::SMatrix4<float>									matrixTransform				= solarSystem.Scene.ModelMatricesLocal[entity.Transform];
+			const ::ced::SMatrix4<float>							& matrixTransformParent		= solarSystem.Scene.ModelMatricesLocal[solarSystem.Entities[entity.Parent].Transform];
+			matrixTransform										= matrixTransform * matrixTransformParent ;
+			::ced::SMatrix4<float>									matrixTransformView			= matrixTransform * matrixView;
+			::getLightArrays(matrixTransform.GetTranslation(), lightPointsWorld, lightColorsWorld, lightPointsModel, lightColorsModel);
+			::ced::SGeometryQuads									& mesh						= solarSystem.Scene.Geometry[entity.Geometry];
+			::ced::view_grid<::ced::SColorBGRA>						image						= solarSystem.Scene.Image	[entity.Image];
+			for(uint32_t iTriangle = 0; iTriangle < mesh.Triangles.size(); ++iTriangle) {
+				pixelCoords			.clear();
+				pixelVertexWeights	.clear();
+				::ced::drawQuadTriangle(targetPixels, mesh, iTriangle, matrixTransform, matrixTransformView, solarSystem.Scene.LightVector, pixelCoords, pixelVertexWeights, image, lightPointsModel, lightColorsModel, depthBuffer);
+			}
 		}
 	}
 
