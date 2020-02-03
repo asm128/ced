@@ -169,6 +169,7 @@ int													stageSetup						(::SSolarSystem & solarSystem)	{	// Set up enemy
 		for(uint32_t iPart = 0; iPart < playerShip.Parts.size(); ++iPart) {
 			playerShip.Parts[iPart].Shots.Delay					= 1.0 / playerShip.Parts.size() * iPart;
 			playerShip.Parts[iPart].Shots.MaxDelay				= .1;
+			//playerShip.Parts[iPart].Shots.Damage				= 1;
 		}
 	}
 	else {
@@ -279,18 +280,18 @@ static	int											collisionDetect		(::SShots & shots, const ::ced::SCoord3<fl
 }
 
 int													handleCollisionPoint	(SSolarSystem & solarSystem, int32_t weaponDamage, ::SShipPart& damagedPart, SShip & damagedShip, const ::ced::SCoord3<float> & sphereCenter, const ::ced::SCoord3<float> & collisionPoint, void* soundAlias)	{
-	PlaySoundA((LPCSTR)soundAlias, GetModuleHandle(0), SND_ALIAS_ID | SND_ASYNC);
+	PlaySound((LPCTSTR)soundAlias, GetModuleHandle(0), SND_ALIAS_ID | SND_ASYNC);
 	const ::ced::SCoord3<float>							bounceVector		= (collisionPoint - sphereCenter).Normalize();
 	solarSystem.Debris.SpawnDirected(5, bounceVector, collisionPoint, 50, 1);
 	if(::applyDamage(weaponDamage, damagedPart.Health, damagedShip.Health)) {	// returns true if health reaches zero
 		const ::SEntity										& entityGeometry	= solarSystem.Entities[damagedPart.Entity + 1];
 		const int32_t										indexMesh			= entityGeometry.Geometry;
 		const uint32_t										countTriangles		= solarSystem.Scene.Geometry[indexMesh].Triangles.size();
-		::explosionAdd(solarSystem.Explosions, indexMesh, countTriangles, collisionPoint, 50);
+		::explosionAdd(solarSystem.Explosions, indexMesh, countTriangles, collisionPoint, 60);
 		solarSystem.Debris.SpawnSpherical(30, collisionPoint, 60, 2);
 		if(0 >= damagedShip.Health) {
 			const ::ced::SCoord3<float>							& parentPosition	= solarSystem.Scene.Transforms[solarSystem.Entities[damagedShip.Entity].Transform].Position;
-			::explosionAdd(solarSystem.Explosions, indexMesh, countTriangles, parentPosition, 10);
+			::explosionAdd(solarSystem.Explosions, indexMesh, countTriangles, parentPosition, 13);
 			solarSystem.Debris.SpawnSpherical(150, parentPosition, 13, 2.8f);
 			solarSystem.Slowing								= true;
 			solarSystem.TimeScale							= 1.0;
@@ -392,6 +393,11 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 			}
 		}
 	}
+	for(uint32_t iExplosion = 0; iExplosion < solarSystem.Explosions.size(); ++iExplosion)
+		for(uint32_t iParticle = 0; iParticle < solarSystem.Explosions[iExplosion].Particles.Position.size(); ++iParticle)
+			solarSystem.Explosions[iExplosion].Particles.Position[iParticle].x	-= (float)(solarSystem.RelativeSpeed * secondsLastFrame);
+	for(uint32_t iParticle = 0; iParticle < solarSystem.Debris.Particles.Position.size(); ++iParticle)
+			solarSystem.Debris.Particles.Position[iParticle].x	-= (float)(solarSystem.RelativeSpeed * secondsLastFrame);
 	if(false == playing) {
 		playing												= false;
 		for(uint32_t iExplosion = 0; iExplosion < solarSystem.Explosions.size(); ++iExplosion) {

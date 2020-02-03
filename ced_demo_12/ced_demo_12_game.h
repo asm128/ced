@@ -151,8 +151,9 @@ struct SExplosion {
 		Particles.IntegrateSpeed(secondsLastFrame);
 		for(uint32_t iShot = 0; iShot < Particles.Speed.size(); ++iShot) {
 			float											& speed				= Particles.Speed		[iShot];
-			speed										-= secondsLastFrame * (rand() % 16);
-			if (speed < -10)
+			//speed										-= secondsLastFrame * (rand() % 16);
+			speed										-= secondsLastFrame * ((0 > speed) ? (rand() % 16) * 5 : (rand() % 16));
+			if (speed < -30)
 				Remove(iShot--);
 		}
 		return 0;

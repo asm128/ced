@@ -60,6 +60,7 @@ struct SSolarSystem {
 
 	double												AnimationTime				= 0;
 	double												TimeScale					= 1;
+	double												RelativeSpeed				= 25;
 
 	::ced::SImage										BackgroundImage				= {};
 	bool												Slowing						= true;
