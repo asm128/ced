@@ -186,7 +186,6 @@ int													stageSetup						(::SSolarSystem & solarSystem)	{	// Set up enemy
 			enemyShip.Parts[iPart].Shots.Delay					= 1.0 / enemyShip.Parts.size() * iPart;
 			enemyShip.Parts[iPart].Shots.MaxDelay				= 1 + iPart;
 			enemyShip.Parts[iPart].Health						= partHealthEnemy;
-			solarSystem.ShipPhysics.Forces[solarSystem.Entities[enemyShip.Parts[iPart].Entity].Body].Rotation.y	*= float(1 + iShip * .35);
 		}
 		enemyShip.Health									= partHealthEnemy * enemyShip.Parts.size();
 	}
