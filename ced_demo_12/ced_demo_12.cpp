@@ -362,8 +362,10 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 			continue;
 
 		::ced::SModel3											& shipTransform			= solarSystem.Scene.Transforms[solarSystem.Entities[enemyShip.Entity].Transform];
-		if(iShip)
+		if(iShip) {
 			shipTransform.Position.z							= (float)(sin(iShip + solarSystem.AnimationTime) * (iShip * 5.0) * ((iShip % 2) ? -1 : 1));
+			shipTransform.Position.x							= (float)(sin(solarSystem.AnimationTime * ::ced::MATH_PI)) + (iShip * 5.f);
+		}
 		if(iShip)
 			playing												= true;
 		for(uint32_t iPart = 0; iPart < enemyShip.Parts.size(); ++iPart) {
@@ -378,6 +380,8 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 			//partTransform.Rotation.y							+= (float)(secondsLastFrame * 1);
 			matricesParent										= {};
 			::ced::SCoord3<float>									positionGlobal			= solarSystem.Scene.ModelMatricesGlobal[shipPart.Entity + 1].Transform(partTransform.Position);
+			for(uint32_t iParticle = 0; iParticle < shipPart.Shots.Particles.Position.size(); ++iParticle)
+				shipPart.Shots.Particles.Position[iParticle].x	-= (float)(solarSystem.RelativeSpeedCurrent * secondsLastFrame * .2);
 			if(iShip) {
 				if(1 < (modelPlayer.Position - positionGlobal).LengthSquared()) {
 					::ced::SCoord3<float>									direction			= modelPlayer.Position - positionGlobal;
@@ -394,10 +398,11 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 		}
 	}
 	for(uint32_t iExplosion = 0; iExplosion < solarSystem.Explosions.size(); ++iExplosion)
-		for(uint32_t iParticle = 0; iParticle < solarSystem.Explosions[iExplosion].Particles.Position.size(); ++iParticle)
-			solarSystem.Explosions[iExplosion].Particles.Position[iParticle].x	-= (float)(solarSystem.RelativeSpeed * secondsLastFrame);
+		for(uint32_t iParticle = 0; iParticle < solarSystem.Explosions[iExplosion].Particles.Position.size(); ++iParticle) {
+			solarSystem.Explosions[iExplosion].Particles.Position[iParticle].x	-= (float)(solarSystem.RelativeSpeedCurrent * secondsLastFrame);
+		}
 	for(uint32_t iParticle = 0; iParticle < solarSystem.Debris.Particles.Position.size(); ++iParticle)
-			solarSystem.Debris.Particles.Position[iParticle].x	-= (float)(solarSystem.RelativeSpeed * secondsLastFrame);
+		solarSystem.Debris.Particles.Position[iParticle].x	-= (float)(solarSystem.RelativeSpeedCurrent * secondsLastFrame);
 	if(false == playing) {
 		playing												= false;
 		for(uint32_t iExplosion = 0; iExplosion < solarSystem.Explosions.size(); ++iExplosion) {
@@ -420,14 +425,31 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 		//if(GetAsyncKeyState('S') || GetAsyncKeyState(VK_DOWN	)) playerBody.Position.x			-= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
 		//if(GetAsyncKeyState('A') || GetAsyncKeyState(VK_LEFT	)) playerBody.Position.z			+= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
 		//if(GetAsyncKeyState('D') || GetAsyncKeyState(VK_RIGHT	)) playerBody.Position.z			-= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
-		if(GetAsyncKeyState('W') || GetAsyncKeyState(VK_UP		)) modelPlayer.Position.x			+= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
-		if(GetAsyncKeyState('S') || GetAsyncKeyState(VK_DOWN	)) modelPlayer.Position.x			-= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
-		if(GetAsyncKeyState('A') || GetAsyncKeyState(VK_LEFT	)) modelPlayer.Position.z			+= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
-		if(GetAsyncKeyState('D') || GetAsyncKeyState(VK_RIGHT	)) modelPlayer.Position.z			-= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
+			 if(GetAsyncKeyState('W') || GetAsyncKeyState(VK_UP		)) { modelPlayer.Position.x			+= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8)); solarSystem.AccelerationControl	= +1; }
+		else if(GetAsyncKeyState('S') || GetAsyncKeyState(VK_DOWN	)) { modelPlayer.Position.x			-= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8)); solarSystem.AccelerationControl	= -1; }
+		else
+			solarSystem.AccelerationControl	= 0;
+
+		if(GetAsyncKeyState('A') || GetAsyncKeyState(VK_LEFT	)) { modelPlayer.Position.z			+= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8)); }
+		if(GetAsyncKeyState('D') || GetAsyncKeyState(VK_RIGHT	)) { modelPlayer.Position.z			-= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8)); }
 	}
 
+	if(solarSystem.AccelerationControl == 0) {
+		if(solarSystem.RelativeSpeedCurrent > solarSystem.RelativeSpeedTarget)
+			--solarSystem.RelativeSpeedCurrent;
+		else if(solarSystem.RelativeSpeedCurrent < solarSystem.RelativeSpeedTarget)
+			++solarSystem.RelativeSpeedCurrent;
+	}
+	else if(solarSystem.AccelerationControl > 0) {
+		++solarSystem.RelativeSpeedCurrent;
+	}
+	else if(solarSystem.AccelerationControl < 0) {
+		--solarSystem.RelativeSpeedCurrent;
+	}
+
+
 	if(solarSystem.Scene.Camera.Position.y > 0.001f)
-	if(solarSystem.Scene.Camera.Position.y > 0.001f) if(GetAsyncKeyState(VK_HOME	)) solarSystem.Scene.Camera.Position.RotateZ(ced::MATH_PI * secondsLastFrame);
+	if(solarSystem.Scene.Camera.Position.y > 0.001f) if(GetAsyncKeyState(VK_HOME)) solarSystem.Scene.Camera.Position.RotateZ(ced::MATH_PI * secondsLastFrame);
 	if(solarSystem.Scene.Camera.Position.x < 0.001f)
 	if(solarSystem.Scene.Camera.Position.x < 0.001f) if(GetAsyncKeyState(VK_END	)) solarSystem.Scene.Camera.Position.RotateZ(ced::MATH_PI * -secondsLastFrame);
 

@@ -33,7 +33,6 @@ static	int											drawStars			(SStars & stars, ::ced::view_grid<::ced::SColor
 	return 0;
 }
 
-
 static	int											drawDebris
 	( ::ced::view_grid<::ced::SColorBGRA>		targetPixels
 	, SDebris									& debris
@@ -110,13 +109,14 @@ static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixe
 
 		for(uint32_t iPixelCoord = 0; iPixelCoord < pixelCoordsCache.size(); ++iPixelCoord) {
 			const ::ced::SCoord3<float>							& pixelCoord		= pixelCoordsCache[iPixelCoord];
+			if(pixelCoord.z < 0 || pixelCoord.z > 1)
+				continue;
 			if( pixelCoord.y < 0 || pixelCoord.y >= (int32_t)targetPixels.metrics().y
 			 || pixelCoord.x < 0 || pixelCoord.x >= (int32_t)targetPixels.metrics().x
 			)
 				continue;
 			targetPixels[(uint32_t)pixelCoord.y][(uint32_t)pixelCoord.x]	= colorShot;
-
-			uint32_t												depth				= uint32_t(pixelCoord.z * 0xFFFFFFFFU);
+			const uint32_t											depth				= uint32_t(pixelCoord.z * 0xFFFFFFFFU);
 			const	double											brightRadiusSquared	= brightRadius * brightRadius;
 			double													brightUnit			= 1.0 / brightRadiusSquared;
 			for(int32_t y = (int32_t)-brightRadius, brightCount = (int32_t)brightRadius; y < brightCount; ++y)
