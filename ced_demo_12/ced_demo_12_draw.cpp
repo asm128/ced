@@ -14,7 +14,7 @@ static	int											drawStars			(SStars & stars, ::ced::view_grid<::ced::SColor
 		::ced::SCoord2<float>									starPos				= stars.Position[iStar];
 		::ced::SColorBGRA										starFinalColor		= colors[iStar % ::std::size(colors)] * stars.Brightness[iStar];
 		::ced::setPixel(targetPixels, starPos.Cast<int32_t>(), starFinalColor);
-		const	int32_t											brightRadius		= 1 + (iStar % 5) + (rand() % 4);
+		const	int32_t											brightRadius		= 1 + (iStar % 3) + (rand() % 2);
 		const	double											brightRadiusSquared	= brightRadius * (double)brightRadius;
 		double													brightUnit			= 1.0 / brightRadiusSquared;
 		for(int32_t y = -brightRadius; y < brightRadius; ++y)

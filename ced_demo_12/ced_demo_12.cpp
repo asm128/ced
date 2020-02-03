@@ -336,6 +336,10 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 	solarSystem.AnimationTime							+= secondsLastFrame;
 
 	solarSystem.ShipPhysics.Integrate(secondsLastFrame);
+	{
+		const int32_t randDebris	= rand();
+		solarSystem.Debris.Spawn({200.0f, ((randDebris % 2) ? -1.0f : 1.0f) * (randDebris % 100), ((randDebris % 2) ? -1.0f : 1.0f) * (randDebris % 400)}, {-1, 0, 0}, 400, 2);
+	}
 
 	::SShipScene											& scene						= solarSystem.Scene;
 	::ced::SModelMatrices									matrices					= {};

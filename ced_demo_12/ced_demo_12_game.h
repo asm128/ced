@@ -17,7 +17,7 @@ struct SStars	{
 			starPos.y									+= starSpeed * secondsLastFrame;
 			Brightness[iStar]							= float(randUnit * rand());
 			if(starPos.y >= yMax) {
-				starSpeed									= float(16 + (rand() % 64));
+				starSpeed									= float(16 + (rand() % 64)) * .1f;
 				starPos.y									= 0;
 			}
 		}
