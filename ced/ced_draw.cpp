@@ -132,6 +132,8 @@ int								ced::drawLine
 				depthBufferRow				= depthBuffer[line.A.y];
 				const double						factor					= yAxis ? factorUnit * line.A.y : factorUnit * line.A.x;
 				const double						finalZ					= ::ced::interpolate_linear(lineFloat.A.z, lineFloat.B.z, factor);// lineFloat.B.z * factor + (lineFloat.A.z * (1.0 - factor));
+				if (finalZ < 0 || finalZ > 1)
+					continue;
 				intZ							= uint32_t(0xFFFFFFFFU * finalZ);
 				uint32_t							& depthCell				= depthBufferRow[line.A.x];
 				if(depthCell <= intZ)
@@ -152,6 +154,8 @@ int								ced::drawLine
 				depthBufferRow				= depthBuffer[line.A.y];
 				const double					factor					= 1.0 / (yAxis ? factorUnit * line.A.y : factorUnit * line.A.x);
 				const double					finalZ					= ::ced::interpolate_linear(lineFloat.A.z, lineFloat.B.z, factor);// lineFloat.B.z * factor + (lineFloat.A.z * (1.0 - factor));
+				if (finalZ < 0 || finalZ > 1)
+					continue;
 				intZ						= uint32_t(0xFFFFFFFFU * finalZ);
 				uint32_t						& depthCell				= depthBufferRow[line.A.x];
 				if(depthCell <= intZ)

@@ -40,15 +40,15 @@ static	int											drawDebris
 	, ::ced::view_grid<uint32_t>				depthBuffer
 	)	{
 	for(uint32_t iParticle = 0; iParticle < debris.Brightness.size(); ++iParticle) {
-		::ced::SColorFloat										colorShot			= debris.Colors[iParticle % ::std::size(debris.Colors)];
+		const ::ced::SColorFloat								& colorShot			= debris.Colors[iParticle % ::std::size(debris.Colors)];
 		::ced::SCoord3<float>									starPos				= debris.Particles.Position[iParticle];
 		starPos												= matrixVPV.Transform(starPos);
+		if(starPos.z > 1 || starPos.z < 0)
+			continue;
 		const ::ced::SCoord2<int32_t>							pixelCoord			= {(int32_t)starPos.x, (int32_t)starPos.y};
 		if( pixelCoord.y < 0 || pixelCoord.y >= (int32_t)targetPixels.metrics().y
 		 || pixelCoord.x < 0 || pixelCoord.x >= (int32_t)targetPixels.metrics().x
 		)
-			continue;
-		if(starPos.z > 1 || starPos.z < 0)
 			continue;
 		uint32_t												depth				= uint32_t(starPos.z * 0xFFFFFFFFU);
 		if(depth > depthBuffer[pixelCoord.y][pixelCoord.x])
