@@ -364,7 +364,13 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 		::ced::SModel3											& shipTransform			= solarSystem.Scene.Transforms[solarSystem.Entities[enemyShip.Entity].Transform];
 		if(iShip) {
 			shipTransform.Position.z							= (float)(sin(iShip + solarSystem.AnimationTime) * (iShip * 5.0) * ((iShip % 2) ? -1 : 1));
-			shipTransform.Position.x							= (float)(sin(solarSystem.AnimationTime * ::ced::MATH_PI)) + (iShip * 5.f);
+			shipTransform.Position.x							= (float)(iShip * 5.0) - (solarSystem.Stage / 3);
+			if(0 == (iShip % 2))
+				shipTransform.Position.x							+= (float)(sin(solarSystem.AnimationTime * .5 * ::ced::MATH_2PI) * 2 * ((iShip % 2) ? -1 : 1));
+			else if(0 == (iShip % 3))
+				shipTransform.Position.x							+= (float)(sin(solarSystem.AnimationTime * .75 * ::ced::MATH_2PI) * 2 * ((iShip % 2) ? -1 : 1));
+			else if(0 == (iShip % 7))
+				shipTransform.Position.x							+= (float)(sin(solarSystem.AnimationTime * .75 * ::ced::MATH_2PI) * 2 * ((iShip % 2) ? -1 : 1));
 		}
 		if(iShip)
 			playing												= true;
