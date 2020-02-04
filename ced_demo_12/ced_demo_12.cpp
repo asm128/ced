@@ -86,6 +86,7 @@ static	int											shipCreate			(::SSolarSystem & solarSystem, int32_t teamId,
 		::SShipPart												shipPart				= {};
 		shipPart.Health										= partHealth;
 		shipPart.Entity										= entityPart.Parent;
+		shipPart.Type										= SHIP_PART_TYPE_SHELL;
 		shipPart.Shots.Delay								= 1.0 / countParts * iPart;
 		shipPart.Shots.MaxDelay								= 1 + iPart;
 		::SEntity												& parentEntity			= solarSystem.Entities[ship.Entity];
@@ -169,6 +170,7 @@ int													stageSetup						(::SSolarSystem & solarSystem)	{	// Set up enemy
 		for(uint32_t iPart = 0; iPart < playerShip.Parts.size(); ++iPart) {
 			playerShip.Parts[iPart].Shots.Delay					= 1.0 / playerShip.Parts.size() * iPart;
 			playerShip.Parts[iPart].Shots.MaxDelay				= .1;
+			playerShip.Parts[iPart].Type						= SHIP_PART_TYPE_GUN;
 			//playerShip.Parts[iPart].Shots.Damage				= 1;
 		}
 	}
@@ -369,32 +371,34 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 		if(iShip) {
 			shipTransform.Position.z							= (float)(sin(iShip + solarSystem.AnimationTime) * (iShip * 5.0) * ((iShip % 2) ? -1 : 1));
 			shipTransform.Position.x							= (float)(iShip * 5.0) - (solarSystem.Stage / 2);
+			double													timeWaveVertical					= .05;
 			if(0 == (solarSystem.Stage % 7)) {
 				if(iShip % 2)
 					shipTransform.Position.z							= (float)(cos(iShip + solarSystem.AnimationTime) * ((solarSystem.Ships.size() - 1 - iShip) * 4.0) * ((iShip % 2) ? -1 : 1));
 				else
 					shipTransform.Position.z							= (float)(sin(iShip + solarSystem.AnimationTime) * (iShip * 4.0) * ((iShip % 2) ? -1 : 1));
-					 if(0 == (iShip % 2))	shipTransform.Position.x	+= (float)(sin(solarSystem.AnimationTime * .65 * ::ced::MATH_2PI) * 2 * ((iShip % 2) ? -1 : 1));
-				else if(0 == (iShip % 3))	shipTransform.Position.x	+= (float)(sin(solarSystem.AnimationTime * .8  * ::ced::MATH_2PI) * 2 * ((iShip % 2) ? -1 : 1));
-				else if(0 == (iShip % 7))	shipTransform.Position.x	+= (float)(sin(solarSystem.AnimationTime * .8  * ::ced::MATH_2PI) * 2 * ((iShip % 2) ? -1 : 1));
+					 if(0 == (iShip % 2)) timeWaveVertical	= .65;
+				else if(0 == (iShip % 3)) timeWaveVertical	= .80;
+				else if(0 == (iShip % 7)) timeWaveVertical	= .80;
 			}
 			else if(0 == (solarSystem.Stage % 5)) {
 					shipTransform.Position.z							= (float)(cos(iShip + solarSystem.AnimationTime) * ((solarSystem.Ships.size() - 1 - iShip) * 3.0) * ((iShip % 2) ? -1 : 1));
-					 if(0 == (iShip % 2))	shipTransform.Position.x	+= (float)(sin(solarSystem.AnimationTime * .5  * ::ced::MATH_2PI) * 2 * ((iShip % 2) ? -1 : 1));
-				else if(0 == (iShip % 3))	shipTransform.Position.x	+= (float)(sin(solarSystem.AnimationTime * .75 * ::ced::MATH_2PI) * 2 * ((iShip % 2) ? -1 : 1));
-				else if(0 == (iShip % 7))	shipTransform.Position.x	+= (float)(sin(solarSystem.AnimationTime * .8  * ::ced::MATH_2PI) * 2 * ((iShip % 2) ? -1 : 1));
+					 if(0 == (iShip % 2)) timeWaveVertical	= .50;
+				else if(0 == (iShip % 3)) timeWaveVertical	= .75;
+				else if(0 == (iShip % 7)) timeWaveVertical	= .80;
 			}
 			else if(0 == (solarSystem.Stage % 3)) {
 					shipTransform.Position.z							= (float)(cos(iShip + solarSystem.AnimationTime) * ((solarSystem.Ships.size() - 1 - iShip) * 2.0) * ((iShip % 2) ? -1 : 1));
-					 if(0 == (iShip % 2))	shipTransform.Position.x	+= (float)(sin(solarSystem.AnimationTime * .25 * ::ced::MATH_2PI) * 2 * ((iShip % 2) ? -1 : 1));
-				else if(0 == (iShip % 3))	shipTransform.Position.x	+= (float)(sin(solarSystem.AnimationTime * .5 * ::ced::MATH_2PI) * 2 * ((iShip % 2) ? -1 : 1));
-				else if(0 == (iShip % 7))	shipTransform.Position.x	+= (float)(sin(solarSystem.AnimationTime * .75 * ::ced::MATH_2PI) * 2 * ((iShip % 2) ? -1 : 1));
+					 if(0 == (iShip % 2)) timeWaveVertical	= .25;
+				else if(0 == (iShip % 3)) timeWaveVertical	= .50;
+				else if(0 == (iShip % 7)) timeWaveVertical	= .75;
 			}
 			else {
-					 if(0 == (iShip % 2))	shipTransform.Position.x	+= (float)(sin(solarSystem.AnimationTime * .5 * ::ced::MATH_2PI) * 2 * ((iShip % 2) ? -1 : 1));
-				else if(0 == (iShip % 3))	shipTransform.Position.x	+= (float)(sin(solarSystem.AnimationTime * .25 * ::ced::MATH_2PI) * 2 * ((iShip % 2) ? -1 : 1));
-				else if(0 == (iShip % 7))	shipTransform.Position.x	+= (float)(sin(solarSystem.AnimationTime * .15 * ::ced::MATH_2PI) * 2 * ((iShip % 2) ? -1 : 1));
+					 if(0 == (iShip % 2)) timeWaveVertical	= .50;
+				else if(0 == (iShip % 3)) timeWaveVertical	= .25;
+				else if(0 == (iShip % 7)) timeWaveVertical	= .15;
 			}
+			shipTransform.Position.x								+= (float)(sin(solarSystem.AnimationTime * timeWaveVertical * ::ced::MATH_2PI) * 2 * ((iShip % 2) ? -1 : 1));
 		}
 		if(iShip)
 			playing												= true;
@@ -412,17 +416,23 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 			::ced::SCoord3<float>									positionGlobal			= solarSystem.Scene.ModelMatricesGlobal[shipPart.Entity + 1].Transform(partTransform.Position);
 			for(uint32_t iParticle = 0; iParticle < shipPart.Shots.Particles.Position.size(); ++iParticle)
 				shipPart.Shots.Particles.Position[iParticle].x	-= (float)(solarSystem.RelativeSpeedCurrent * secondsLastFrame * .2);
-			if(iShip) {
+			if(shipPart.Type == SHIP_PART_TYPE_SHELL) {
 				if(1 < (modelPlayer.Position - positionGlobal).LengthSquared()) {
 					::ced::SCoord3<float>									direction			= modelPlayer.Position - positionGlobal;
 					direction.RotateY(rand() * (1.0 / RAND_MAX) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
 					shipPart.Shots.Spawn(positionGlobal, direction.Normalize(), 25, 1);
 				}
 			}
-			else {
+			else if(shipPart.Type == SHIP_PART_TYPE_LASER) {
 				::ced::SCoord3<float>									direction				= {1, 0, 0};
 				//direction.RotateY(rand() * (1.0 / RAND_MAX) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
 				//direction.RotateZ(rand() * (1.0 / RAND_MAX) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
+				shipPart.Shots.Spawn(positionGlobal, direction, 100, .2f);
+			}
+			else if(shipPart.Type == SHIP_PART_TYPE_GUN) {
+				::ced::SCoord3<float>									direction				= {1, 0, 0};
+				direction.RotateY(rand() * (1.0 / RAND_MAX) * ced::MATH_PI * .0125 * ((rand() % 2) ? -1 : 1));
+				direction.RotateZ(rand() * (1.0 / RAND_MAX) * ced::MATH_PI * .0125 * ((rand() % 2) ? -1 : 1));
 				shipPart.Shots.Spawn(positionGlobal, direction, 100, .2f);
 			}
 		}

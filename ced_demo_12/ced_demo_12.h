@@ -24,8 +24,18 @@ struct SEntity {
 	::ced::container<uint32_t>							Children					;
 };
 
+enum SHIP_PART_TYPE
+	{ SHIP_PART_TYPE_GUN		= 0
+	, SHIP_PART_TYPE_SHELL
+	, SHIP_PART_TYPE_LASER
+	, SHIP_PART_TYPE_ROCKET
+	, SHIP_PART_TYPE_SHIELD
+	, SHIP_PART_TYPE_COUNT
+	};
+
 struct SShipPart {
 	int32_t												Entity	;
+	int32_t												Type	;
 	int32_t												Health	;
 	::SShots											Shots	;
 };
