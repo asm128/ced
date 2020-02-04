@@ -161,9 +161,15 @@ static	int											getLightArrays
 		lightColors.push_back(iShip ? colorLightEnemy : colorLightPlayer);
 		for(uint32_t iPart = 0; iPart < ship.Parts.size(); ++iPart) {
 			const ::SShipPart										& shipPart				= ship.Parts[iPart];
+			const ::ced::SColorFloat								colorShot
+				= (MUNITION_TYPE_RAY	== ship.Parts[iPart].Type) ? ::ced::RED
+				: (MUNITION_TYPE_SHELL	== ship.Parts[iPart].Type) ? ::ced::SColorFloat{::ced::SColorBGRA{0x40, 0x20, 0xfF}}
+				: (MUNITION_TYPE_BULLET == ship.Parts[iPart].Type) ? ::ced::DARKGRAY	//::ced::SColorFloat{::ced::SColorBGRA{0x40, 0xfF, 0x80}}
+				: ::ced::SColorFloat{::ced::SColorBGRA{0xFF, 0xFF, 0xFF}}
+				;
 			for(uint32_t iShot = 0; iShot < shipPart.Shots.Particles.Position.size(); ++iShot) {
 				lightPoints.push_back(shipPart.Shots.Particles.Position[iShot]);
-				lightColors.push_back(iShip ? colorShotEnemy : colorShotPlayer);
+				lightColors.push_back(colorShot);
 			}
 		}
 	}
