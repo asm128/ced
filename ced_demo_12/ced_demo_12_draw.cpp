@@ -145,9 +145,6 @@ static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixe
 	return 0;
 }
 
-static constexpr	const ::ced::SColorBGRA			colorShotPlayer			= ::ced::SColorBGRA{0x40, 0xfF, 0x80};// *.2;
-static constexpr	const ::ced::SColorBGRA			colorShotEnemy			= ::ced::SColorBGRA{0x40, 0x20, 0xfF};// *.2;
-
 static	int											getLightArrays
 	( const ::SSolarSystem						& solarSystem
 	, ::ced::container<::ced::SCoord3<float>>	& lightPoints
@@ -158,7 +155,7 @@ static	int											getLightArrays
 	for(uint32_t iShip = 0; iShip < solarSystem.Ships.size(); ++iShip) {
 		const ::SShip											& ship					= solarSystem.Ships[iShip];
 		lightPoints.push_back(solarSystem.Scene.Transforms[ship.Entity].Position);
-		lightColors.push_back(iShip ? colorLightEnemy : colorLightPlayer);
+		lightColors.push_back((0 == solarSystem.Ships[iShip].Team) ? colorLightPlayer : colorLightEnemy);
 		for(uint32_t iPart = 0; iPart < ship.Parts.size(); ++iPart) {
 			const ::SShipPart										& shipPart				= ship.Parts[iPart];
 			const ::ced::SColorFloat								colorShot
