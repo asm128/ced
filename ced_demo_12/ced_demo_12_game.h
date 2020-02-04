@@ -104,17 +104,26 @@ struct SDebris	{
 	}
 };
 
+enum MUNITION_TYPE
+	{ MUNITION_TYPE_BULLET		= 0
+	, MUNITION_TYPE_SHELL
+	, MUNITION_TYPE_RAY
+	, MUNITION_TYPE_ROCKET
+	, MUNITION_TYPE_FLARE
+	, MUNITION_TYPE_COUNT
+	};
+
 struct SShots	{
 	int32_t										Weapon				= 0;
 	double										Delay				= 0;
 	int32_t										Damage				= 1;
 	double										MaxDelay			= 1;
+	MUNITION_TYPE								Type				= MUNITION_TYPE_BULLET;
 
 	::ced::container<float>						Brightness			= {};
 	::ced::container<::ced::SCoord3<float>>		PositionPrev		= {};
 	::ced::container<::ced::SCoord3<float>>		PositionDraw		= {};
 	::SParticles3								Particles;
-
 
 	int											Spawn				(const ::ced::SCoord3<float> & position, const ::ced::SCoord3<float> & direction, float speed, float brightness)	{
 		if(Delay < MaxDelay)
@@ -152,7 +161,7 @@ struct SExplosion {
 	int											Update				(float secondsLastFrame)	{
 		Particles.IntegrateSpeed(secondsLastFrame);
 		for(uint32_t iShot = 0; iShot < Particles.Speed.size(); ++iShot) {
-			float											& speed				= Particles.Speed		[iShot];
+			float											& speed				= Particles.Speed[iShot];
 			//speed										-= secondsLastFrame * (rand() % 16);
 			speed										-= secondsLastFrame * ((0 > speed) ? (rand() % 16) * 5 : (rand() % 16));
 			if (speed < -30)

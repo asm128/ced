@@ -86,7 +86,7 @@ static	int											shipCreate			(::SSolarSystem & solarSystem, int32_t teamId,
 		::SShipPart												shipPart				= {};
 		shipPart.Health										= partHealth;
 		shipPart.Entity										= entityPart.Parent;
-		shipPart.Type										= SHIP_PART_TYPE_SHELL;
+		shipPart.Type										= SHIP_PART_TYPE_CANNON;
 		shipPart.Shots.Delay								= 1.0 / countParts * iPart;
 		shipPart.Shots.MaxDelay								= 1 + iPart;
 		::SEntity												& parentEntity			= solarSystem.Entities[ship.Entity];
@@ -171,6 +171,7 @@ int													stageSetup						(::SSolarSystem & solarSystem)	{	// Set up enemy
 		for(uint32_t iPart = 0; iPart < playerShip.Parts.size(); ++iPart) {
 			playerShip.Parts[iPart].Shots.Delay					= 1.0 / playerShip.Parts.size() * iPart;
 			playerShip.Parts[iPart].Shots.MaxDelay				= .1;
+			playerShip.Parts[iPart].Shots.Type					= (iPart % 2) ? MUNITION_TYPE_RAY : MUNITION_TYPE_BULLET;
 			playerShip.Parts[iPart].Type						= (iPart % 2) ? SHIP_PART_TYPE_LASER : SHIP_PART_TYPE_GUN;
 			//playerShip.Parts[iPart].Shots.Damage				= 1;
 		}
@@ -382,7 +383,7 @@ int													updateShipPart			(SSolarSystem & solarSystem, ::SShipPart & ship
 	::ced::SCoord3<float>									positionGlobal			= solarSystem.Scene.ModelMatricesGlobal[shipPart.Entity + 1].Transform(partTransform.Position);
 	for(uint32_t iParticle = 0; iParticle < shipPart.Shots.Particles.Position.size(); ++iParticle)
 		shipPart.Shots.Particles.Position[iParticle].x		-= (float)(solarSystem.RelativeSpeedCurrent * secondsLastFrame * .2);
-	if(shipPart.Type == SHIP_PART_TYPE_SHELL) {
+	if(shipPart.Type == SHIP_PART_TYPE_CANNON) {
 		if(1 < (modelPlayer.Position - positionGlobal).LengthSquared()) {
 			::ced::SCoord3<float>									direction			= modelPlayer.Position - positionGlobal;
 			direction.RotateY(rand() * (1.0 / RAND_MAX) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
@@ -465,6 +466,12 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 		if(GetAsyncKeyState(VK_NUMPAD6)) modelPlayer.Rotation.x		-= (float)(secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
 		if(GetAsyncKeyState(VK_NUMPAD4)) modelPlayer.Rotation.x		+= (float)(secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
 	}
+
+	//solarSystem.Scene.Camera.Position	= modelPlayer.Position;
+	//solarSystem.Scene.Camera.Position.x	-= 50;
+	//solarSystem.Scene.Camera.Position.y	+= 10;
+	//solarSystem.Scene.Camera.Target		= solarSystem.Scene.Camera.Position;
+	//solarSystem.Scene.Camera.Target.x	+= 1;
 
 	::SShipScene											& scene						= solarSystem.Scene;
 	::ced::SModelMatrices									matrices					= {};

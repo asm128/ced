@@ -93,7 +93,7 @@ int								ced::drawLine
 	( ::ced::view_grid<::ced::SColorBGRA>			pixels
 	, const ::ced::SLine3<float>					& lineFloat
 	, ::ced::container<::ced::SCoord3<float>>		& pixelCoords
-	, ::ced::view_grid<uint32_t>						depthBuffer
+	, ::ced::view_grid<uint32_t>					depthBuffer
 	) {
 	::ced::SLine2<int32_t>				line					= {{(int32_t)lineFloat.A.x, (int32_t)lineFloat.A.y}, {(int32_t)lineFloat.B.x, (int32_t)lineFloat.B.y}};
 	int32_t								xDiff					= (int32_t)abs(line.B.x - line.A.x);
@@ -103,13 +103,14 @@ int								ced::drawLine
 	int32_t								err						= xDiff + yDiff;  /* error value e_xy */
 
 	bool								yAxis					= abs(yDiff) > xDiff;
-	uint32_t							intZ					= uint32_t(0xFFFFFFFFU * lineFloat.A.z);
 	::ced::view<uint32_t>				depthBufferRow			= {};
 	if( line.A.x >= 0 && line.A.x < (int32_t)pixels.metrics().x
 	 && line.A.y >= 0 && line.A.y < (int32_t)pixels.metrics().y
+	 && lineFloat.A.z >= 0 && lineFloat.A.z <= 1
 	) {
 		depthBufferRow					= depthBuffer[line.A.y];
 		uint32_t							& depthCell				= depthBufferRow[line.A.x];
+		uint32_t							intZ					= uint32_t(0xFFFFFFFFU * lineFloat.A.z);
 		if( depthCell > intZ ) {
 			depthCell						= intZ;
 			//pixelCoords.push_back({(int32_t)line.A.x, (int32_t)line.A.y});
@@ -118,7 +119,7 @@ int								ced::drawLine
 	}
 
 	bool								outside				= true;
-	const double						factorUnit			= 1.0 / (yAxis ? yDiff : xDiff);
+	const double						factorUnit			= 1.0 / (yAxis ? abs(yDiff) : xDiff);
 	while (true) {   /* loop */
 		if (line.A.x == line.B.x && line.A.y == line.B.y)
 			break;
@@ -132,9 +133,9 @@ int								ced::drawLine
 				depthBufferRow				= depthBuffer[line.A.y];
 				const double						factor					= yAxis ? factorUnit * line.A.y : factorUnit * line.A.x;
 				const double						finalZ					= ::ced::interpolate_linear(lineFloat.A.z, lineFloat.B.z, factor);// lineFloat.B.z * factor + (lineFloat.A.z * (1.0 - factor));
-				if (finalZ < 0 || finalZ > 1)
+				if (finalZ <= 0 || finalZ >= 1)
 					continue;
-				intZ							= uint32_t(0xFFFFFFFFU * finalZ);
+				const uint32_t						intZ					= uint32_t(0xFFFFFFFFU * finalZ);
 				uint32_t							& depthCell				= depthBufferRow[line.A.x];
 				if(depthCell <= intZ)
 					continue;
@@ -151,13 +152,13 @@ int								ced::drawLine
 			if( line.A.x >= 0 && line.A.x < (int32_t)pixels.metrics().x
 			 && line.A.y >= 0 && line.A.y < (int32_t)pixels.metrics().y
 			) {
-				depthBufferRow				= depthBuffer[line.A.y];
-				const double					factor					= 1.0 / (yAxis ? factorUnit * line.A.y : factorUnit * line.A.x);
-				const double					finalZ					= ::ced::interpolate_linear(lineFloat.A.z, lineFloat.B.z, factor);// lineFloat.B.z * factor + (lineFloat.A.z * (1.0 - factor));
-				if (finalZ < 0 || finalZ > 1)
+				depthBufferRow					= depthBuffer[line.A.y];
+				const double						factor					= 1.0 / (yAxis ? factorUnit * line.A.y : factorUnit * line.A.x);
+				const double						finalZ					= ::ced::interpolate_linear(lineFloat.A.z, lineFloat.B.z, factor);// lineFloat.B.z * factor + (lineFloat.A.z * (1.0 - factor));
+				if (finalZ <= 0 || finalZ >= 1)
 					continue;
-				intZ						= uint32_t(0xFFFFFFFFU * finalZ);
-				uint32_t						& depthCell				= depthBufferRow[line.A.x];
+				const uint32_t						intZ					= uint32_t(0xFFFFFFFFU * finalZ);
+				uint32_t							& depthCell				= depthBufferRow[line.A.x];
 				if(depthCell <= intZ)
 					continue;
 
@@ -328,9 +329,9 @@ int													ced::drawQuadTriangle
 	) {
 	::ced::STriangle3	<float>								triangleWorld		= triangle;
 	::ced::transform(triangle, matrixTransformView);
-	if( triangle.A.z < 0 || triangle.A.z >= 1
-	 || triangle.B.z < 0 || triangle.B.z >= 1
-	 || triangle.C.z < 0 || triangle.C.z >= 1
+	if( triangle.A.z <= 0 || triangle.A.z >= 1
+	 || triangle.B.z <= 0 || triangle.B.z >= 1
+	 || triangle.C.z <= 0 || triangle.C.z >= 1
 	)
 		return 0;
 	::ced::transform(triangleWorld, matrixTransform);
@@ -374,9 +375,9 @@ int													ced::drawQuadTriangle
 	::ced::SCoord3		<float>								normal				= geometry.Normals		[iTriangle / 2];
 	normal												= matrixTransform.TransformDirection(normal).Normalize();
 	::ced::transform(triangle, matrixTransformView);
-	if( triangle.A.z < 0 || triangle.A.z >= 1
-	 || triangle.B.z < 0 || triangle.B.z >= 1
-	 || triangle.C.z < 0 || triangle.C.z >= 1
+	if( triangle.A.z <= 0 || triangle.A.z >= 1
+	 || triangle.B.z <= 0 || triangle.B.z >= 1
+	 || triangle.C.z <= 0 || triangle.C.z >= 1
 	)
 		return 0;
 
@@ -405,9 +406,9 @@ int													ced::drawTriangle
 	::ced::STriangle3		<float>								triangle			= geometry.Triangles	[iTriangle];
 	const ::ced::STriangle3	<float>								& triangleNormals	= geometry.Normals		[iTriangle];
 	::ced::transform(triangle, matrixTransformView);
-	if( triangle.A.z < 0 || triangle.A.z >= 1
-	 || triangle.B.z < 0 || triangle.B.z >= 1
-	 || triangle.C.z < 0 || triangle.C.z >= 1
+	if( triangle.A.z <= 0 || triangle.A.z >= 1
+	 || triangle.B.z <= 0 || triangle.B.z >= 1
+	 || triangle.C.z <= 0 || triangle.C.z >= 1
 	)
 		return 0;
 
@@ -439,9 +440,9 @@ int													ced::drawTriangle
 	const ::ced::STriangle3	<float>								& triangleNormals	= geometry.Normals			[iTriangle];
 	const ::ced::STriangle2	<float>								& triangleTexCoords	= geometry.TextureCoords	[iTriangle];
 	::ced::transform(triangle, matrixTransformView);
-	if( triangle.A.z < 0 || triangle.A.z >= 1
-	 || triangle.B.z < 0 || triangle.B.z >= 1
-	 || triangle.C.z < 0 || triangle.C.z >= 1
+	if( triangle.A.z <= 0 || triangle.A.z >= 1
+	 || triangle.B.z <= 0 || triangle.B.z >= 1
+	 || triangle.C.z <= 0 || triangle.C.z >= 1
 	)
 		return 0;
 

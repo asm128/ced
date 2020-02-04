@@ -300,11 +300,33 @@ int													draw				(SApplication & app)	{
 	pixelCoordsCache.reserve(512);
 	for(uint32_t iShip = 0; iShip < solarSystem.Ships.size(); ++iShip) {
 		const ::SShip										& ship					= solarSystem.Ships[iShip];
-		for(uint32_t iPart = 0; iPart < ship.Parts.size(); ++iPart)
-			if(iShip)
-				::drawShots(targetPixels, ship.Parts[iPart].Shots, matrixView, colorShotEnemy, 7.0, 10, false, depthBuffer, pixelCoordsCache);
-			else
-				::drawShots(targetPixels, ship.Parts[iPart].Shots, matrixView, (SHIP_PART_TYPE_LASER == ship.Parts[iPart].Type) ? ::ced::RED : (::ced::SColorFloat)colorShotPlayer, 4.0, 1, true , depthBuffer, pixelCoordsCache);
+		for(uint32_t iPart = 0; iPart < ship.Parts.size(); ++iPart) {
+			const ::ced::SColorFloat							colorShot
+				= (MUNITION_TYPE_RAY	== ship.Parts[iPart].Type) ? ::ced::RED
+				: (MUNITION_TYPE_SHELL	== ship.Parts[iPart].Type) ? ::ced::SColorFloat{::ced::SColorBGRA{0x40, 0x20, 0xfF}}
+				: (MUNITION_TYPE_BULLET == ship.Parts[iPart].Type) ? ::ced::DARKGRAY	//::ced::SColorFloat{::ced::SColorBGRA{0x40, 0xfF, 0x80}}
+				: ::ced::SColorFloat{::ced::SColorBGRA{0xFF, 0xFF, 0xFF}}
+				;
+			const	double								brightRadius
+				= (MUNITION_TYPE_RAY	== ship.Parts[iPart].Type) ? 4.0
+				: (MUNITION_TYPE_SHELL	== ship.Parts[iPart].Type) ? 10.0
+				: (MUNITION_TYPE_BULLET == ship.Parts[iPart].Type) ? 4.0
+				: 4.0
+				;
+			const	double								intensity
+				= (MUNITION_TYPE_RAY	== ship.Parts[iPart].Type) ? 1
+				: (MUNITION_TYPE_SHELL	== ship.Parts[iPart].Type) ? 10
+				: (MUNITION_TYPE_BULLET == ship.Parts[iPart].Type) ? 1
+				: 1
+				;
+			const	bool								line
+				= (MUNITION_TYPE_RAY	== ship.Parts[iPart].Type) ? true
+				: (MUNITION_TYPE_SHELL	== ship.Parts[iPart].Type) ? false
+				: (MUNITION_TYPE_BULLET == ship.Parts[iPart].Type) ? true
+				: false
+				;
+			::drawShots(targetPixels, ship.Parts[iPart].Shots, matrixView, colorShot, brightRadius, intensity, line, depthBuffer, pixelCoordsCache);
+		}
 	}
 	::drawDebris(targetPixels, solarSystem.Debris		, matrixView, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
 	return 0;
