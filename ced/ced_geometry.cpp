@@ -110,7 +110,7 @@ int													ced::geometryBuildGrid	(SGeometryQuads & geometry, ::ced::SCoord
 		geometry.Triangles		.push_back(triangleB);
 		geometry.TextureCoords	.push_back(triangleATex);
 		geometry.TextureCoords	.push_back(triangleBTex);
-		geometry.Normals		.push_back({0, 1, 0});
+		geometry.Normals		.push_back((triangleA.A - triangleA.B).Normalize().Cross((triangleB.A - triangleB.B).Normalize()).Normalize().Cast<float>());
 	}
 	return 0;
 }
@@ -144,7 +144,8 @@ int													ced::geometryBuildFigure0	(SGeometryQuads & geometry, uint32_t s
 		triangleB.C											-= gridCenter;
 		geometry.Triangles		.push_back(triangleA);
 		geometry.Triangles		.push_back(triangleB);
-		geometry.Normals		.push_back((coords[0] - coords[1]).Normalize().Cross((coords[1] - coords[3]).Normalize()).Cast<float>());
+		geometry.Normals		.push_back((triangleA.A - triangleA.B).Normalize().Cross((triangleB.A - triangleB.B).Normalize()).Normalize().Cast<float>());
+		//geometry.Normals		.push_back((coords[0] - coords[1]).Normalize().Cross((coords[1] - coords[3]).Normalize()).Normalize().Cast<float>());
 		geometry.TextureCoords	.push_back(triangleATex);
 		geometry.TextureCoords	.push_back(triangleBTex);
 	}

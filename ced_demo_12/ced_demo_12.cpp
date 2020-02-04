@@ -468,8 +468,9 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 	}
 
 	//solarSystem.Scene.Camera.Position	= modelPlayer.Position;
-	//solarSystem.Scene.Camera.Position.x	-= 50;
-	//solarSystem.Scene.Camera.Position.y	+= 10;
+	//solarSystem.Scene.Camera.Position.x	-= 1.5;
+	////solarSystem.Scene.Camera.Position.x	-= 50;
+	////solarSystem.Scene.Camera.Position.y	+= 10;
 	//solarSystem.Scene.Camera.Target		= solarSystem.Scene.Camera.Position;
 	//solarSystem.Scene.Camera.Target.x	+= 1;
 
