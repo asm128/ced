@@ -72,7 +72,7 @@ int													ced::geometryBuildCube	(SGeometryQuads & geometry)	{
 	return 0;
 }
 
-int													ced::geometryBuildGrid	(SGeometryQuads & geometry, ::ced::SCoord2<uint32_t> gridSize, ::ced::SCoord2<float> gridCenter)	{
+int													ced::geometryBuildGrid	(SGeometryQuads & geometry, ::ced::SCoord2<uint32_t> gridSize, ::ced::SCoord2<float> gridCenter, const ::ced::SCoord3<float> & scale)	{
 	for(uint32_t z = 0; z < gridSize.y; ++z)
 	for(uint32_t x = 0; x < gridSize.x; ++x)  {
 		::ced::SCoord3<float>									coords	[4]			=
@@ -97,6 +97,8 @@ int													ced::geometryBuildGrid	(SGeometryQuads & geometry, ::ced::SCoord
 		triangleB.A											+= {(float)x, 0, (float)z};
 		triangleB.B											+= {(float)x, 0, (float)z};
 		triangleB.C											+= {(float)x, 0, (float)z};
+		triangleA.Scale(scale);
+		triangleB.Scale(scale);
 
 		triangleA.A											-= {(float)gridCenter.x, 0, (float)gridCenter.y};
 		triangleA.B											-= {(float)gridCenter.x, 0, (float)gridCenter.y};

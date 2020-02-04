@@ -83,6 +83,12 @@ namespace ced
 			z														+= (_tValue)(vectorToScaleAndAdd.z * scale);
 		}
 
+										void					Scale				(const TCoord3& scale)										{
+			x														= (_tValue)(x * scale.x);
+			y														= (_tValue)(y * scale.y);
+			z														= (_tValue)(z * scale.z);
+		}
+
 		constexpr						TCoord3					Cross					(const TCoord3& right)												const	noexcept	{ return {y * right.z - z * right.y, z * right.x - x * right.z, x * right.y - y * right.x };	}
 										TCoord3&				Cross					(const TCoord3& vector1, const TCoord3& vector2)							noexcept	{
 			x														= vector1.y * vector2.z - vector1.z * vector2.y;
@@ -315,6 +321,12 @@ namespace ced
 		SCoord3<_tValue>					B;
 		SCoord3<_tValue>					C;
 
+		STriangle3<_tValue>&				Scale					(const SCoord3<_tValue> & scale)		noexcept		{
+			A.Scale(scale);
+			B.Scale(scale);
+			C.Scale(scale);
+			return *this;
+		}
 		template<typename _tOther>
 		STriangle3<_tOther>					Cast					()								const	noexcept		{
 			return

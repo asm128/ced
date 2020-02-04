@@ -304,7 +304,7 @@ int													draw				(SApplication & app)	{
 			if(iShip)
 				::drawShots(targetPixels, ship.Parts[iPart].Shots, matrixView, colorShotEnemy, 7.0, 10, false, depthBuffer, pixelCoordsCache);
 			else
-				::drawShots(targetPixels, ship.Parts[iPart].Shots, matrixView, colorShotPlayer, 4.0, 1, true , depthBuffer, pixelCoordsCache);
+				::drawShots(targetPixels, ship.Parts[iPart].Shots, matrixView, (SHIP_PART_TYPE_LASER == ship.Parts[iPart].Type) ? ::ced::RED : (::ced::SColorFloat)colorShotPlayer, 4.0, 1, true , depthBuffer, pixelCoordsCache);
 	}
 	::drawDebris(targetPixels, solarSystem.Debris		, matrixView, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
 	return 0;

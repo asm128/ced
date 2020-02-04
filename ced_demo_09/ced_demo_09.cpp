@@ -64,7 +64,7 @@ int													setup				(SApplication & app)	{
 	::ced::geometryBuildSphere	(app.Scene.Geometry[1], 16U, 5U, .5f, {0, 0});
 	::ced::geometryBuildFigure0	(app.Scene.Geometry[1], 2U, 8U, 1, {});
 	::ced::geometryBuildCube	(app.Scene.Geometry[2]);
-	::ced::geometryBuildGrid	(app.Scene.Geometry[2], {2U, 2U}, {1U, 1U});
+	::ced::geometryBuildGrid	(app.Scene.Geometry[2], {2U, 2U}, {1U, 1U}, {1, 1, 1});
 	::ced::geometryBuildCube	(app.Scene.Geometry[3]);
 	::ced::geometryBuildSphere	(app.Scene.Geometry[3], 4U, 2U, 1, {0, 0});
 	::ced::geometryBuildSphere	(app.Scene.Geometry[4], 16U, 2U, 1, {0, 0});
