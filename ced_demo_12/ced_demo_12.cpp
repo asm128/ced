@@ -393,13 +393,13 @@ int													updateShipPart			(SSolarSystem & solarSystem, ::SShipPart & ship
 		::ced::SCoord3<float>									direction				= {1, 0, 0};
 		//direction.RotateY(rand() * (1.0 / RAND_MAX) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
 		//direction.RotateZ(rand() * (1.0 / RAND_MAX) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
-		shipPart.Shots.Spawn(positionGlobal, direction, 1000, .2f);
+		shipPart.Shots.Spawn(positionGlobal, direction, 500, .2f);
 	}
 	else if(shipPart.Type == SHIP_PART_TYPE_GUN) {
 		::ced::SCoord3<float>									direction				= {1, 0, 0};
 		direction.RotateY(rand() * (1.0 / RAND_MAX) * ced::MATH_PI * .01 * ((rand() % 2) ? -1 : 1));
 		direction.RotateZ(rand() * (1.0 / RAND_MAX) * ced::MATH_PI * .01 * ((rand() % 2) ? -1 : 1));
-		shipPart.Shots.Spawn(positionGlobal, direction, 150, .2f);
+		shipPart.Shots.Spawn(positionGlobal, direction, 100, .2f);
 	}
 	return 0;
 }
@@ -523,7 +523,7 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 		}
 		if(iShip)
 			playing												= true;
-		double														secondsToProcess		= secondsLastFrame;
+		double													secondsToProcess		= secondsLastFrame;
 
 		while(secondsToProcess > frameStep) {
 			for(uint32_t iPart = 0; iPart < enemyShip.Parts.size(); ++iPart) {
@@ -541,7 +541,15 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 			::updateShipPart(solarSystem, shipPart, secondsToProcess);
 		}
 	}
-	double														secondsToProcess		= secondsLastFrame;
+	for(uint32_t iShip = 0; iShip < solarSystem.Ships.size(); ++iShip) {
+		::SShip													& ship					= solarSystem.Ships[iShip];
+		for(uint32_t iPart = 0; iPart < ship.Parts.size(); ++iPart) {
+			::SShipPart												& shipPart				= ship.Parts[iPart];
+			shipPart.Shots.PositionDraw.resize(shipPart.Shots.Particles.Position.size());
+			memcpy(shipPart.Shots.PositionDraw.begin(), shipPart.Shots.Particles.Position.begin(), shipPart.Shots.Particles.Position.size() * sizeof(::ced::SCoord3<float>));
+		}
+	}
+	double													secondsToProcess		= secondsLastFrame;
 	while(secondsToProcess > frameStep) {
 		::updateShots(solarSystem, frameStep);
 		secondsToProcess									-= frameStep;

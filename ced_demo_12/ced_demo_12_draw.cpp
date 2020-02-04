@@ -95,7 +95,7 @@ static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixe
 	) {
 	for(uint32_t iShot = 0; iShot < shots.Brightness.size(); ++iShot) {
 		pixelCoordsCache.clear();
-		const ::ced::SCoord3<float>								& starPosPrev		= shots.PositionPrev[iShot];
+		const ::ced::SCoord3<float>								& starPosPrev		= shots.PositionDraw[iShot];
 		const ::ced::SCoord3<float>								& starPos			= shots.Particles.Position[iShot];
 		::ced::SLine3<float>									raySegmentWorld	= {starPosPrev, starPos};
 

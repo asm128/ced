@@ -112,6 +112,7 @@ struct SShots	{
 
 	::ced::container<float>						Brightness			= {};
 	::ced::container<::ced::SCoord3<float>>		PositionPrev		= {};
+	::ced::container<::ced::SCoord3<float>>		PositionDraw		= {};
 	::SParticles3								Particles;
 
 
@@ -138,6 +139,7 @@ struct SShots	{
 	int											Remove				(uint32_t iShot)			{
 		Particles.Remove(iShot);
 		PositionPrev		.remove_unordered(iShot);
+		PositionDraw		.remove_unordered(iShot);
 		return Brightness	.remove_unordered(iShot);
 	}
 };
