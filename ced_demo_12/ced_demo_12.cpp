@@ -368,13 +368,33 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 		::ced::SModel3											& shipTransform			= solarSystem.Scene.Transforms[solarSystem.Entities[enemyShip.Entity].Transform];
 		if(iShip) {
 			shipTransform.Position.z							= (float)(sin(iShip + solarSystem.AnimationTime) * (iShip * 5.0) * ((iShip % 2) ? -1 : 1));
-			shipTransform.Position.x							= (float)(iShip * 5.0) - (solarSystem.Stage / 3);
-			if(0 == (iShip % 2))
-				shipTransform.Position.x							+= (float)(sin(solarSystem.AnimationTime * .5 * ::ced::MATH_2PI) * 2 * ((iShip % 2) ? -1 : 1));
-			else if(0 == (iShip % 3))
-				shipTransform.Position.x							+= (float)(sin(solarSystem.AnimationTime * .75 * ::ced::MATH_2PI) * 2 * ((iShip % 2) ? -1 : 1));
-			else if(0 == (iShip % 7))
-				shipTransform.Position.x							+= (float)(sin(solarSystem.AnimationTime * .75 * ::ced::MATH_2PI) * 2 * ((iShip % 2) ? -1 : 1));
+			shipTransform.Position.x							= (float)(iShip * 5.0) - (solarSystem.Stage / 2);
+			if(0 == (solarSystem.Stage % 7)) {
+				if(iShip % 2)
+					shipTransform.Position.z							= (float)(cos(iShip + solarSystem.AnimationTime) * ((solarSystem.Ships.size() - 1 - iShip) * 4.0) * ((iShip % 2) ? -1 : 1));
+				else
+					shipTransform.Position.z							= (float)(sin(iShip + solarSystem.AnimationTime) * (iShip * 4.0) * ((iShip % 2) ? -1 : 1));
+					 if(0 == (iShip % 2))	shipTransform.Position.x	+= (float)(sin(solarSystem.AnimationTime * .65 * ::ced::MATH_2PI) * 2 * ((iShip % 2) ? -1 : 1));
+				else if(0 == (iShip % 3))	shipTransform.Position.x	+= (float)(sin(solarSystem.AnimationTime * .8  * ::ced::MATH_2PI) * 2 * ((iShip % 2) ? -1 : 1));
+				else if(0 == (iShip % 7))	shipTransform.Position.x	+= (float)(sin(solarSystem.AnimationTime * .8  * ::ced::MATH_2PI) * 2 * ((iShip % 2) ? -1 : 1));
+			}
+			else if(0 == (solarSystem.Stage % 5)) {
+					shipTransform.Position.z							= (float)(cos(iShip + solarSystem.AnimationTime) * ((solarSystem.Ships.size() - 1 - iShip) * 3.0) * ((iShip % 2) ? -1 : 1));
+					 if(0 == (iShip % 2))	shipTransform.Position.x	+= (float)(sin(solarSystem.AnimationTime * .5  * ::ced::MATH_2PI) * 2 * ((iShip % 2) ? -1 : 1));
+				else if(0 == (iShip % 3))	shipTransform.Position.x	+= (float)(sin(solarSystem.AnimationTime * .75 * ::ced::MATH_2PI) * 2 * ((iShip % 2) ? -1 : 1));
+				else if(0 == (iShip % 7))	shipTransform.Position.x	+= (float)(sin(solarSystem.AnimationTime * .8  * ::ced::MATH_2PI) * 2 * ((iShip % 2) ? -1 : 1));
+			}
+			else if(0 == (solarSystem.Stage % 3)) {
+					shipTransform.Position.z							= (float)(cos(iShip + solarSystem.AnimationTime) * ((solarSystem.Ships.size() - 1 - iShip) * 2.0) * ((iShip % 2) ? -1 : 1));
+					 if(0 == (iShip % 2))	shipTransform.Position.x	+= (float)(sin(solarSystem.AnimationTime * .25 * ::ced::MATH_2PI) * 2 * ((iShip % 2) ? -1 : 1));
+				else if(0 == (iShip % 3))	shipTransform.Position.x	+= (float)(sin(solarSystem.AnimationTime * .5 * ::ced::MATH_2PI) * 2 * ((iShip % 2) ? -1 : 1));
+				else if(0 == (iShip % 7))	shipTransform.Position.x	+= (float)(sin(solarSystem.AnimationTime * .75 * ::ced::MATH_2PI) * 2 * ((iShip % 2) ? -1 : 1));
+			}
+			else {
+					 if(0 == (iShip % 2))	shipTransform.Position.x	+= (float)(sin(solarSystem.AnimationTime * .5 * ::ced::MATH_2PI) * 2 * ((iShip % 2) ? -1 : 1));
+				else if(0 == (iShip % 3))	shipTransform.Position.x	+= (float)(sin(solarSystem.AnimationTime * .25 * ::ced::MATH_2PI) * 2 * ((iShip % 2) ? -1 : 1));
+				else if(0 == (iShip % 7))	shipTransform.Position.x	+= (float)(sin(solarSystem.AnimationTime * .15 * ::ced::MATH_2PI) * 2 * ((iShip % 2) ? -1 : 1));
+			}
 		}
 		if(iShip)
 			playing												= true;
