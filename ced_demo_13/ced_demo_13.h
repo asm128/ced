@@ -25,11 +25,9 @@ struct SEntity {
 };
 
 enum SHIP_PART_TYPE
-	{ SHIP_PART_TYPE_GUN		= 0
-	, SHIP_PART_TYPE_CANNON
-	, SHIP_PART_TYPE_LASER
-	, SHIP_PART_TYPE_ROCKET
+	{ SHIP_PART_TYPE_WEAPON		= 0
 	, SHIP_PART_TYPE_SHIELD
+	, SHIP_PART_TYPE_SILO
 	, SHIP_PART_TYPE_COUNT
 	};
 
@@ -78,7 +76,7 @@ struct SSolarSystem {
 	bool												Slowing						= true;
 	int													AccelerationControl			= 0;
 
-	uint32_t											Stage						= 0;
+	uint32_t											Stage						= 20;
 };
 
 struct SApplication {

@@ -28,7 +28,7 @@ namespace ced
 	int								drawTriangle		(::ced::view_grid<::ced::SColorBGRA> pixels	, ::ced::STriangle2	<int32_t>	triangle	, ::ced::SColorBGRA color);
 	int								drawTriangle		(::ced::SCoord2<uint32_t> targetSize	, ::ced::STriangle3	<float>		triangle	, ::ced::container<::ced::SCoord2<int32_t>> & pixelCoords, ::ced::container<::ced::STriangleWeights<float>> & proportions, ::ced::view_grid<uint32_t> depthBuffer);
 	int								drawQuadTriangle
-		( const ::ced::view_grid<::ced::SColorBGRA>			targetPixels
+		( ::ced::view_grid<::ced::SColorBGRA>				targetPixels
 		, const ::ced::SGeometryQuads						& geometry
 		, const int											iTriangle
 		, const ::ced::SMatrix4<float>						& matrixTransform
@@ -40,7 +40,7 @@ namespace ced
 		, ::ced::view_grid<uint32_t>						depthBuffer
 		);
 	int								drawQuadTriangle
-		( const ::ced::view_grid<::ced::SColorBGRA>			targetPixels
+		( ::ced::view_grid<::ced::SColorBGRA>				targetPixels
 		, const ::ced::SGeometryQuads						& geometry
 		, const int											iTriangle
 		, const ::ced::SMatrix4<float>						& matrixTransform
@@ -48,14 +48,14 @@ namespace ced
 		, const ::ced::SCoord3<float>						& lightVector
 		, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
 		, ::ced::container<::ced::STriangleWeights<float>>	& pixelVertexWeights
-		, ::ced::view_grid<::ced::SColorBGRA>				textureImage
+		, ::ced::view_grid<const ::ced::SColorBGRA>			textureImage
 		, ::ced::container<::ced::SCoord3<float>>			& lightPoints
 		, ::ced::container<::ced::SColorBGRA>				& lightColors
 		, ::ced::view_grid<uint32_t>						depthBuffer
 		);
 
 	int								drawQuadTriangle
-		( const ::ced::view_grid<::ced::SColorBGRA>			targetPixels
+		( ::ced::view_grid<::ced::SColorBGRA>			targetPixels
 		, ::ced::STriangle3			<float>					triangle
 		, ::ced::SCoord3			<float>					normal
 		, const ::ced::STriangle2	<float>					& triangleTexCoords
@@ -64,13 +64,13 @@ namespace ced
 		, const ::ced::SCoord3<float>						& lightVector
 		, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
 		, ::ced::container<::ced::STriangleWeights<float>>	& pixelVertexWeights
-		, ::ced::view_grid<::ced::SColorBGRA>				textureImage
+		, ::ced::view_grid<const ::ced::SColorBGRA>			textureImage
 		, ::ced::container<::ced::SCoord3<float>>			& lightPoints
 		, ::ced::container<::ced::SColorBGRA>				& lightColors
 		, ::ced::view_grid<uint32_t>						depthBuffer
 		);
 	int								drawQuadTriangle
-		( const ::ced::view_grid<::ced::SColorBGRA>			targetPixels
+		( ::ced::view_grid<::ced::SColorBGRA>			targetPixels
 		, const ::ced::STriangle3	<float>					& triangleWorld
 		, const ::ced::STriangle3	<float>					& triangleScreen
 		, const ::ced::SCoord3		<float>					& normal
@@ -78,13 +78,13 @@ namespace ced
 		, const ::ced::SCoord3		<float>					& lightVector
 		, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
 		, ::ced::container<::ced::STriangleWeights<float>>	& pixelVertexWeights
-		, ::ced::view_grid<::ced::SColorBGRA>				textureImage
+		, ::ced::view_grid<const ::ced::SColorBGRA>			textureImage
 		, ::ced::container<::ced::SCoord3<float>>			& lightPoints
 		, ::ced::container<::ced::SColorBGRA>				& lightColors
 		, ::ced::view_grid<uint32_t>						depthBuffer
 		);
 	int								drawTriangle
-		( const ::ced::view_grid<::ced::SColorBGRA>			targetPixels
+		( ::ced::view_grid<::ced::SColorBGRA>			targetPixels
 		, const ::ced::SGeometryTriangles					& geometry
 		, const int											iTriangle
 		, const ::ced::SMatrix4<float>						& matrixTransform
@@ -96,7 +96,7 @@ namespace ced
 		, ::ced::view_grid<uint32_t>						depthBuffer
 		);
 	int								drawTriangle
-		( const ::ced::view_grid<::ced::SColorBGRA>			targetPixels
+		( ::ced::view_grid<::ced::SColorBGRA>				targetPixels
 		, const ::ced::SGeometryTriangles					& geometry
 		, const int											iTriangle
 		, const ::ced::SMatrix4<float>						& matrixTransform
@@ -104,11 +104,11 @@ namespace ced
 		, const ::ced::SCoord3<float>						& lightVector
 		, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
 		, ::ced::container<::ced::STriangleWeights<float>>	& pixelVertexWeights
-		, ::ced::view_grid<::ced::SColorBGRA>				textureImage
+		, ::ced::view_grid<const ::ced::SColorBGRA>			textureImage
 		, ::ced::view_grid<uint32_t>						depthBuffer
 		);
 	int								drawTriangle
-		( const ::ced::view_grid<::ced::SColorBGRA>			targetPixels
+		( ::ced::view_grid<::ced::SColorBGRA>			targetPixels
 		, const ::ced::SGeometryTriangles					& geometry
 		, const int											iTriangle
 		, const ::ced::SMatrix4<float>						& matrixTransform
@@ -117,7 +117,7 @@ namespace ced
 		, const ::ced::SColorFloat							& lightColor
 		, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
 		, ::ced::container<::ced::STriangleWeights<float>>	& pixelVertexWeights
-		, ::ced::view_grid<::ced::SColorBGRA>				textureImage
+		, ::ced::view_grid<const ::ced::SColorBGRA>			textureImage
 		, ::ced::container<::ced::SLight3>					& lightPoints
 		, ::ced::container<::ced::SColorBGRA>				& lightColors
 		, ::ced::view_grid<uint32_t>						depthBuffer

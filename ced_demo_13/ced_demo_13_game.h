@@ -104,6 +104,15 @@ struct SDebris	{
 	}
 };
 
+enum WEAPON_TYPE
+	{ WEAPON_TYPE_GUN		= 0
+	, WEAPON_TYPE_CANNON
+	, WEAPON_TYPE_LASER
+	, WEAPON_TYPE_ROCKET
+	, WEAPON_TYPE_SHIELD
+	, WEAPON_TYPE_COUNT
+	};
+
 enum MUNITION_TYPE
 	{ MUNITION_TYPE_BULLET		= 0
 	, MUNITION_TYPE_SHELL
@@ -114,10 +123,10 @@ enum MUNITION_TYPE
 	};
 
 struct SShots	{
-	int32_t										Weapon				= 0;
+	int32_t										Weapon				= WEAPON_TYPE_GUN;
 	double										Delay				= 0;
 	int32_t										Damage				= 1;
-	double										MaxDelay			= 1;
+	double										MaxDelay			= .1;
 	MUNITION_TYPE								Type				= MUNITION_TYPE_BULLET;
 
 	::ced::container<float>						Brightness			= {};

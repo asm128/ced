@@ -131,6 +131,7 @@ int													setup							(SApplication & app)	{
 		, ::ced::LIGHTYELLOW
 		, ::ced::GREEN
 		, ::ced::DARKGRAY
+		, ::ced::YELLOW
 		};
 
 	app.SolarSystem.Image.resize(PLANET_COUNT + 1);
@@ -145,11 +146,14 @@ int													setup							(SApplication & app)	{
 	for(uint32_t iImage = 0; iImage < app.SolarSystem.Image.size(); ++iImage) {
 		if(app.SolarSystem.Image[iImage].Pixels.size())
 			continue;
-		app.SolarSystem.Image[iImage].Metrics									= {24, 12};
+		app.SolarSystem.Image[iImage].Metrics									= {512, 512};
 		app.SolarSystem.Image[iImage].Pixels.resize(app.SolarSystem.Image[iImage].Metrics.x * app.SolarSystem.Image[iImage].Metrics.y);
-		for(uint32_t y = 0; y < app.SolarSystem.Image[iImage].Metrics.y; ++y) // Generate noise color for planet texture
-		for(uint32_t x = 0; x < app.SolarSystem.Image[iImage].Metrics.x; ++x) {
-			app.SolarSystem.Image[iImage].Pixels[y * app.SolarSystem.Image[iImage].Metrics.x + x]		= colors[iImage % ::std::size(colors)];
+		for(uint32_t y = 0; y < app.SolarSystem.Image[iImage].Metrics.y; ++y) { // Generate noise color for planet texture
+			const double															ecuatorialShade			= cos(y * (1.0 / app.SolarSystem.Image[iImage].Metrics.y * ::ced::MATH_2PI)) + 1.5;
+			uint32_t																rowOffset				= y * app.SolarSystem.Image[iImage].Metrics.x;
+			for(uint32_t x = 0; x < app.SolarSystem.Image[iImage].Metrics.x; ++x) {
+				app.SolarSystem.Image[iImage].Pixels[rowOffset + x]	= colors[iImage % ::std::size(colors)] * ecuatorialShade * (1.0 - (rand() / 3.0 / (double)RAND_MAX));
+			}
 		}
 	}
 	app.SolarSystem.Entities.push_back({-1, 0, 0, 0, -1});
@@ -200,19 +204,29 @@ int													update						(SApplication & app)	{
 	double													secondsLastFrame			= framework.Timer.ElapsedMicroseconds * .000001;
 
 	//------------------------------------------- Handle input
-	if(GetAsyncKeyState('Q')) app.SolarSystem.Scene.Camera.Position.z				-= (float)secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 100 : 10);
-	if(GetAsyncKeyState('E')) app.SolarSystem.Scene.Camera.Position.z				+= (float)secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 100 : 10);
-	if(GetAsyncKeyState('S')) app.SolarSystem.Scene.Camera.Position					+= app.SolarSystem.Scene.Camera.Position / app.SolarSystem.Scene.Camera.Position.Length() * (GetAsyncKeyState(VK_SHIFT) ? 100 : 2) * secondsLastFrame;
-	if(GetAsyncKeyState('W')) app.SolarSystem.Scene.Camera.Position					-= app.SolarSystem.Scene.Camera.Position / app.SolarSystem.Scene.Camera.Position.Length() * (GetAsyncKeyState(VK_SHIFT) ? 100 : 2) * secondsLastFrame;
-	if(GetAsyncKeyState('A')) app.SolarSystem.Scene.Camera.Position.RotateY( (GetAsyncKeyState(VK_SHIFT) ? 100 : 2) * secondsLastFrame);
-	if(GetAsyncKeyState('D')) app.SolarSystem.Scene.Camera.Position.RotateY(-(GetAsyncKeyState(VK_SHIFT) ? 100 : 2) * secondsLastFrame);
+	::ced::SCamera											& camera					= app.SolarSystem.Scene.Camera;
+	if(GetAsyncKeyState('Q')) camera.Position.z				-= (float)secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 100 : 10);
+	if(GetAsyncKeyState('E')) camera.Position.z				+= (float)secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 100 : 10);
+	if(GetAsyncKeyState('S')) camera.Position				+= app.SolarSystem.Scene.Camera.Position / app.SolarSystem.Scene.Camera.Position.Length() * (GetAsyncKeyState(VK_SHIFT) ? 100 : 2) * secondsLastFrame;
+	if(GetAsyncKeyState('W')) camera.Position				-= app.SolarSystem.Scene.Camera.Position / app.SolarSystem.Scene.Camera.Position.Length() * (GetAsyncKeyState(VK_SHIFT) ? 100 : 2) * secondsLastFrame;
+	if(GetAsyncKeyState('A')) camera.Position.RotateY( (GetAsyncKeyState(VK_SHIFT) ? 100 : 2) * secondsLastFrame);
+	if(GetAsyncKeyState('D')) camera.Position.RotateY(-(GetAsyncKeyState(VK_SHIFT) ? 100 : 2) * secondsLastFrame);
+	if(GetAsyncKeyState('0')) { ; camera.Target = app.SolarSystem.Scene.Transform[0 * 2].GetTranslation(); camera.Position = camera.Target + ::ced::SCoord3<float>{30, 0, 0}; }
+	if(GetAsyncKeyState('1')) { ; camera.Target = app.SolarSystem.Scene.Transform[1 * 2].GetTranslation(); camera.Position = camera.Target + ::ced::SCoord3<float>{30, 0, 0}; }
+	if(GetAsyncKeyState('2')) { ; camera.Target = app.SolarSystem.Scene.Transform[2 * 2].GetTranslation(); camera.Position = camera.Target + ::ced::SCoord3<float>{30, 0, 0}; }
+	if(GetAsyncKeyState('3')) { ; camera.Target = app.SolarSystem.Scene.Transform[3 * 2].GetTranslation(); camera.Position = camera.Target + ::ced::SCoord3<float>{30, 0, 0}; }
+	if(GetAsyncKeyState('4')) { ; camera.Target = app.SolarSystem.Scene.Transform[4 * 2].GetTranslation(); camera.Position = camera.Target + ::ced::SCoord3<float>{30, 0, 0}; }
+	if(GetAsyncKeyState('5')) { ; camera.Target = app.SolarSystem.Scene.Transform[5 * 2].GetTranslation(); camera.Position = camera.Target + ::ced::SCoord3<float>{30, 0, 0}; }
+	if(GetAsyncKeyState('6')) { ; camera.Target = app.SolarSystem.Scene.Transform[6 * 2].GetTranslation(); camera.Position = camera.Target + ::ced::SCoord3<float>{30, 0, 0}; }
+	if(GetAsyncKeyState('7')) { ; camera.Target = app.SolarSystem.Scene.Transform[7 * 2].GetTranslation(); camera.Position = camera.Target + ::ced::SCoord3<float>{30, 0, 0}; }
+	if(GetAsyncKeyState('8')) { ; camera.Target = app.SolarSystem.Scene.Transform[8 * 2].GetTranslation(); camera.Position = camera.Target + ::ced::SCoord3<float>{30, 0, 0}; }
+	if(GetAsyncKeyState('9')) { ; camera.Target = app.SolarSystem.Scene.Transform[9 * 2].GetTranslation(); camera.Position = camera.Target + ::ced::SCoord3<float>{30, 0, 0}; }
 
 	// Update physics
 	::SIntegrator3											& bodies						= app.SolarSystem.Bodies;
 	bodies.Integrate(secondsLastFrame);
 
 	//------------------------------------------- Transform and Draw
-	const ::ced::SCamera									& camera					= app.SolarSystem.Scene.Camera;
 	::ced::view_grid<::ced::SColorBGRA>						targetPixels				= {framework.Pixels, framework.Window.Size};
 	memset(targetPixels.begin(), 0, sizeof(::ced::SColorBGRA) * targetPixels.size());
 	::ced::SCoord3<float>									lightVector					= camera.Position;

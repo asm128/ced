@@ -19,7 +19,7 @@ static	int											setupStars			(SStars & stars, ::ced::SCoord2<uint32_t> targ
 	return 0;
 }
 
-static	int											shipCreate			(::SSolarSystem & solarSystem, int32_t teamId, uint32_t partHealth, int32_t iGeometry, int32_t iImage)	{
+static	int											shipCreate			(::SSolarSystem & solarSystem, int32_t teamId, int32_t iGeometry, int32_t iImage)	{
 	::SShipScene											& scene				= solarSystem.Scene;
 	const uint32_t											countParts			= 6;
 
@@ -37,10 +37,8 @@ static	int											shipCreate			(::SSolarSystem & solarSystem, int32_t teamId,
 		entity.Image										= iImage % 5;
 		entity.Body											= -1;
 
-		const uint32_t											entityHealth		= partHealth * countParts;
 		ship.Entity											= solarSystem.Entities.push_back(entity);
 		ship.Team											= teamId;
-		ship.Health											= entityHealth;
 
 		const int32_t											indexBody			= solarSystem.ShipPhysics.Spawn();
 		scene.ModelMatricesLocal	.push_back({});
@@ -72,7 +70,7 @@ static	int											shipCreate			(::SSolarSystem & solarSystem, int32_t teamId,
 		entityPart.Parent									= solarSystem.Entities.push_back(entityOrbit);
 		entityPart.Geometry									= (iGeometry + (iPart % 2)) % 5;
 		entityPart.Transform								= scene.Transforms.push_back(pivot);
-		entityPart.Image									= (iGeometry - (iPart % 2)) % 10;
+		entityPart.Image									= (iGeometry - (iPart % 2)) % 32;
 		entityPart.Body										= entityOrbit.Body + 1;
 		int32_t													indexEntityPart				= solarSystem.Entities.push_back(entityPart);
 		solarSystem.Entities[entityPart.Parent].Children.push_back(indexEntityPart);
@@ -81,12 +79,7 @@ static	int											shipCreate			(::SSolarSystem & solarSystem, int32_t teamId,
 		//solarSystem.ShipPhysics.Transforms[entityOrbit.Body].Orientation.Normalize();
 
 		::SShipPart												shipPart				= {};
-		shipPart.Health										= partHealth;
 		shipPart.Entity										= entityPart.Parent;
-		shipPart.Type										= SHIP_PART_TYPE_CANNON;
-		shipPart.Shots.Delay								= 1.0 / countParts * iPart;
-		shipPart.Shots.MaxDelay								= 1 + iPart;
-		shipPart.Shots.Damage								= 1;
 		::SEntity												& parentEntity			= solarSystem.Entities[ship.Entity];
  		parentEntity.Children.push_back(shipPart.Entity);
 
@@ -134,7 +127,7 @@ int													modelsSetup	(::SShipScene & scene)			{
 			, ::ced::TURQUOISE
 			};
 
-		scene.Image.resize(10);
+		scene.Image.resize(32);
 		//::ced::bmpFileLoad("../ced_data/mars_color.bmp", solarSystem.Scene.Image[0], true);
 		for(uint32_t iImage = 0; iImage < scene.Image.size(); ++iImage) {
 			if(scene.Image[iImage].Pixels.size())
@@ -167,64 +160,66 @@ int													stageSetup						(::SSolarSystem & solarSystem)	{	// Set up enemy
 	static constexpr	const uint32_t						partHealthPlayer				= 1;
 	static constexpr	const uint32_t						partHealthEnemy					= 10;
 
-	struct SWeapon {
+	struct SShipPart {
 		SHIP_PART_TYPE	Type	;
+		WEAPON_TYPE		Weapon;
 		MUNITION_TYPE	Munition;
 		double			MaxDelay;
 		int32_t			Damage	;
 	};
 
-	static constexpr const SWeapon							weaponDefinitions		[]		=
-		{ {SHIP_PART_TYPE_GUN	, MUNITION_TYPE_BULLET	, .1, 1}
-		, {SHIP_PART_TYPE_LASER	, MUNITION_TYPE_RAY		, .3, 3}
-		, {SHIP_PART_TYPE_CANNON, MUNITION_TYPE_SHELL	,  1, 1}
+	static constexpr const SShipPart							weaponDefinitions		[]		=
+		{ {SHIP_PART_TYPE_WEAPON, WEAPON_TYPE_GUN	, MUNITION_TYPE_BULLET	, .1, 1}
+		, {SHIP_PART_TYPE_WEAPON, WEAPON_TYPE_LASER	, MUNITION_TYPE_RAY		, .3, 3}
+		, {SHIP_PART_TYPE_WEAPON, WEAPON_TYPE_CANNON, MUNITION_TYPE_SHELL	,1.5, 1}
 		};
 
-	if(0 == solarSystem.Ships.size()) {	// Set up player ship
-		const int32_t											shipIndex						= ::shipCreate(solarSystem, 0, partHealthPlayer, 0, 0);
-		::ced::SModel3											& shipPivot						= solarSystem.Scene.Transforms[solarSystem.Entities[solarSystem.Ships[shipIndex].Entity].Transform];
+	if(0 == solarSystem.Ships.size()) { // Create player ship
+		const int32_t											indexShip						= ::shipCreate(solarSystem, 0, 0, 0);
+		::SShip													& playerShip					= solarSystem.Ships[indexShip];
+		::ced::SModel3											& shipPivot						= solarSystem.Scene.Transforms[solarSystem.Entities[playerShip.Entity].Transform];
 		shipPivot.Rotation									= {0, 0, (float)(-::ced::MATH_PI_2)};
 		shipPivot.Position									= {-30};
-		//::ced::STransform3										& shipTransform					= solarSystem.ShipPhysics.Transforms[solarSystem.Entities[solarSystem.Ships[shipIndex].Entity].Body];
-		//shipTransform.Orientation							= {0, 0, (float)(-::ced::MATH_PI_2), 0};
-		//shipTransform.Position								= {-30};
-		::SShip													& playerShip					= solarSystem.Ships[shipIndex];
-		for(uint32_t iPart = 0; iPart < playerShip.Parts.size(); ++iPart) {
-			playerShip.Parts[iPart].Type						= weaponDefinitions[(iPart % 2) ? 1 : 0].Type;
-			playerShip.Parts[iPart].Shots.MaxDelay				= weaponDefinitions[(iPart % 2) ? 1 : 0].MaxDelay;
-			playerShip.Parts[iPart].Shots.Type					= weaponDefinitions[(iPart % 2) ? 1 : 0].Munition;
-			playerShip.Parts[iPart].Shots.Damage				= weaponDefinitions[(iPart % 2) ? 1 : 0].Damage;
-			playerShip.Parts[iPart].Shots.Delay					= playerShip.Parts[iPart].Shots.MaxDelay / playerShip.Parts.size() * iPart;
-		}
 	}
-	else {
-		::SShip													& playerShip					= solarSystem.Ships[0];
-		for(uint32_t iPart = 0; iPart < playerShip.Parts.size(); ++iPart)
-			playerShip.Parts[iPart].Health						= partHealthPlayer;
-		playerShip.Health									= partHealthPlayer * playerShip.Parts.size();
-	}
-	{
-		for(uint32_t iShip = 1; iShip < solarSystem.Ships.size(); ++iShip) {
-			::SShip													& enemyShip					= solarSystem.Ships[iShip];
-			for(uint32_t iPart = 0; iPart < enemyShip.Parts.size(); ++iPart) {
-				enemyShip.Parts[iPart].Health						= partHealthEnemy;
-				enemyShip.Parts[iPart].Type							= weaponDefinitions[2].Type;
-				enemyShip.Parts[iPart].Shots.MaxDelay				= weaponDefinitions[2].MaxDelay + iPart;
-				enemyShip.Parts[iPart].Shots.Type					= weaponDefinitions[2].Munition;
-				enemyShip.Parts[iPart].Shots.Damage					= weaponDefinitions[2].Damage;
-				enemyShip.Parts[iPart].Shots.Delay					= enemyShip.Parts[iPart].Shots.MaxDelay / enemyShip.Parts.size() * iPart;
-			}
-			enemyShip.Health									= partHealthEnemy * enemyShip.Parts.size();
-		}
-	}
-	while(((int)solarSystem.Ships.size() - 2) < (int)solarSystem.Stage) {
-		int32_t													indexShip				= ::shipCreate(solarSystem, 1, partHealthEnemy, solarSystem.Stage + solarSystem.Ships.size(), solarSystem.Stage + solarSystem.Ships.size());
+	while(((int)solarSystem.Ships.size() - 2) < (int)solarSystem.Stage) {	// Create enemy ships depending on stage.
+		int32_t													indexShip				= ::shipCreate(solarSystem, 1, solarSystem.Stage + solarSystem.Ships.size(), solarSystem.Stage + solarSystem.Ships.size());
 		::ced::SModel3											& shipTransform			= solarSystem.Scene.Transforms[solarSystem.Entities[solarSystem.Ships[indexShip].Entity].Transform];
 		shipTransform.Rotation.z							= (float)(::ced::MATH_PI_2);
 		shipTransform.Position								= {5.0f + 5 * solarSystem.Ships.size()};
 		::SShip													& enemyShip					= solarSystem.Ships[indexShip];
 		for(uint32_t iPart = 0; iPart < enemyShip.Parts.size(); ++iPart)
 			solarSystem.ShipPhysics.Forces[solarSystem.Entities[enemyShip.Parts[iPart].Entity].Body].Rotation.y	*= float(1 + indexShip * .35);
+	}
+
+	{ // Set up player ship
+		::SShip													& playerShip					= solarSystem.Ships[0];
+		for(uint32_t iPart = 0; iPart < playerShip.Parts.size(); ++iPart) {
+			::SShipPart												& shipPart						= playerShip.Parts[iPart];
+			shipPart.Health										= partHealthPlayer;
+			shipPart.Type										= weaponDefinitions[(iPart % 2) ? 1 : 0].Type;
+			shipPart.Shots.MaxDelay								= weaponDefinitions[(iPart % 2) ? 1 : 0].MaxDelay;
+			shipPart.Shots.Weapon								= weaponDefinitions[(iPart % 2) ? 1 : 0].Weapon;
+			shipPart.Shots.Type									= weaponDefinitions[(iPart % 2) ? 1 : 0].Munition;
+			shipPart.Shots.Damage								= weaponDefinitions[(iPart % 2) ? 1 : 0].Damage;
+			shipPart.Shots.Delay								= shipPart.Shots.MaxDelay / playerShip.Parts.size() * iPart;
+		}
+		playerShip.Health									= partHealthPlayer * playerShip.Parts.size();
+	}
+	{ // Set up enemy ships
+		for(uint32_t iShip = 1; iShip < solarSystem.Ships.size(); ++iShip) {
+			::SShip													& enemyShip					= solarSystem.Ships[iShip];
+			for(uint32_t iPart = 0; iPart < enemyShip.Parts.size(); ++iPart) {
+				::SShipPart												& shipPart						= enemyShip.Parts[iPart];
+				shipPart.Health										= partHealthEnemy;
+				shipPart.Type										= weaponDefinitions[2].Type;
+				shipPart.Shots.Weapon								= weaponDefinitions[2].Weapon;
+				shipPart.Shots.MaxDelay								= weaponDefinitions[2].MaxDelay + iPart;
+				shipPart.Shots.Type									= weaponDefinitions[2].Munition;
+				shipPart.Shots.Damage								= weaponDefinitions[2].Damage;
+				shipPart.Shots.Delay								= shipPart.Shots.MaxDelay / enemyShip.Parts.size() * iPart;
+			}
+			enemyShip.Health									= partHealthEnemy * enemyShip.Parts.size();
+		}
 	}
 	++solarSystem.Stage;
 	solarSystem.Slowing									= true;
@@ -407,20 +402,20 @@ int													updateShipPart			(SSolarSystem & solarSystem, ::SShipPart & ship
 		shipPart.Shots.Particles.Position[iParticle].x		-= (float)(solarSystem.RelativeSpeedCurrent * secondsLastFrame * .2);
 
 	shipPart.Shots.Delay								+= secondsLastFrame;// * .1 * (1 + iPart);
-	if(shipPart.Type == SHIP_PART_TYPE_CANNON) {
+	if(shipPart.Shots.Weapon == WEAPON_TYPE_CANNON) {
 		if(1 < (modelPlayer.Position - positionGlobal).LengthSquared()) {
 			::ced::SCoord3<float>									direction			= modelPlayer.Position - positionGlobal;
 			direction.RotateY(rand() * (1.0 / RAND_MAX) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
 			shipPart.Shots.Spawn(positionGlobal, direction.Normalize(), 25, 1);
 		}
 	}
-	else if(shipPart.Type == SHIP_PART_TYPE_LASER) {
+	else if(shipPart.Shots.Weapon == WEAPON_TYPE_LASER) {
 		::ced::SCoord3<float>									direction				= {1, 0, 0};
 		//direction.RotateY(rand() * (1.0 / RAND_MAX) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
 		//direction.RotateZ(rand() * (1.0 / RAND_MAX) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
 		shipPart.Shots.Spawn(positionGlobal, direction, 750, .75f);
 	}
-	else if(shipPart.Type == SHIP_PART_TYPE_GUN) {
+	else if(shipPart.Shots.Weapon == WEAPON_TYPE_GUN) {
 		::ced::SCoord3<float>									direction				= {1, 0, 0};
 		direction.RotateY(rand() * (1.0 / RAND_MAX) * ced::MATH_PI * .01 * ((rand() % 2) ? -1 : 1));
 		direction.RotateZ(rand() * (1.0 / RAND_MAX) * ced::MATH_PI * .01 * ((rand() % 2) ? -1 : 1));
@@ -523,7 +518,7 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 		::ced::SModel3											& shipTransform			= solarSystem.Scene.Transforms[solarSystem.Entities[enemyShip.Entity].Transform];
 		if(iShip) {
 			shipTransform.Position.z							= (float)(sin(iShip + solarSystem.AnimationTime) * (iShip * 5.0) * ((iShip % 2) ? -1 : 1));
-			shipTransform.Position.x							= (float)(iShip * 5.0) - (solarSystem.Stage / 2);
+			shipTransform.Position.x							= (float)((iShip * 5.0) - (solarSystem.Stage / 2) + 10 - (solarSystem.RelativeSpeedCurrent * solarSystem.RelativeSpeedCurrent * .0005));
 			double													timeWaveVertical					= .1;
 			if(0 == (solarSystem.Stage % 7)) {
 				if(iShip % 2)
@@ -649,9 +644,15 @@ int													update				(SApplication & app)	{
 	double													secondsLastFrame	= framework.Timer.ElapsedMicroseconds * .001;
 	secondsLastFrame									*= .001;
 	::solarSystemUpdate(app.SolarSystem, secondsLastFrame, framework.Window.Size);
-	::draw(app);
 	Sleep(1);
 	return framework.Running ? 0 : 1;
+}
+
+int													solarSystemDraw			(const ::SSolarSystem & solarSystem, ::ced::view_grid<::ced::SColorBGRA> & targetPixels, ::ced::view_grid<uint32_t> depthBuffer);
+int													draw					(SApplication & app) {
+	::ced::view_grid<::ced::SColorBGRA>						targetPixels			= {app.Framework.Pixels, app.Framework.Window.Size};
+	::ced::view_grid<uint32_t>								depthBuffer				= {app.Framework.DepthBuffer.begin(), app.Framework.Window.Size};
+	return solarSystemDraw(app.SolarSystem, targetPixels, depthBuffer);
 }
 
 int	WINAPI											WinMain
@@ -666,6 +667,7 @@ int	WINAPI											WinMain
 	while(app.Framework.Running) {
 		if(1 == ::update(app))
 			break;
+		::draw(app);
 	}
 	::cleanup(app);
 	return 0;

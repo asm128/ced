@@ -270,7 +270,7 @@ int								ced::drawTriangle
 }
 
 int													ced::drawQuadTriangle
-	( const ::ced::view_grid<::ced::SColorBGRA>			targetPixels
+	( ::ced::view_grid<::ced::SColorBGRA>				targetPixels
 	, const ::ced::STriangle3	<float>					& triangleWorld
 	, const ::ced::STriangle3	<float>					& triangleScreen
 	, const ::ced::SCoord3		<float>					& normal
@@ -278,7 +278,7 @@ int													ced::drawQuadTriangle
 	, const ::ced::SCoord3		<float>					& lightVector
 	, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
 	, ::ced::container<::ced::STriangleWeights<float>>	& pixelVertexWeights
-	, ::ced::view_grid<::ced::SColorBGRA>				textureImage
+	, ::ced::view_grid<const ::ced::SColorBGRA>			textureImage
 	, ::ced::container<::ced::SCoord3<float>>			& lightPoints
 	, ::ced::container<::ced::SColorBGRA>				& lightColors
 	, ::ced::view_grid<uint32_t>						depthBuffer
@@ -313,7 +313,7 @@ int													ced::drawQuadTriangle
 }
 
 int													ced::drawQuadTriangle
-	( const ::ced::view_grid<::ced::SColorBGRA>			targetPixels
+	( ::ced::view_grid<::ced::SColorBGRA>				targetPixels
 	, ::ced::STriangle3			<float>					triangle
 	, ::ced::SCoord3			<float>					normal
 	, const ::ced::STriangle2	<float>					& triangleTexCoords
@@ -322,7 +322,7 @@ int													ced::drawQuadTriangle
 	, const ::ced::SCoord3<float>						& lightVector
 	, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
 	, ::ced::container<::ced::STriangleWeights<float>>	& pixelVertexWeights
-	, ::ced::view_grid<::ced::SColorBGRA>				textureImage
+	, ::ced::view_grid<const ::ced::SColorBGRA>			textureImage
 	, ::ced::container<::ced::SCoord3<float>>			& lightPoints
 	, ::ced::container<::ced::SColorBGRA>				& lightColors
 	, ::ced::view_grid<uint32_t>						depthBuffer
@@ -340,7 +340,7 @@ int													ced::drawQuadTriangle
 }
 
 int													ced::drawQuadTriangle
-	( const ::ced::view_grid<::ced::SColorBGRA>			targetPixels
+	( ::ced::view_grid<::ced::SColorBGRA>				targetPixels
 	, const ::ced::SGeometryQuads						& geometry
 	, const int											iTriangle
 	, const ::ced::SMatrix4<float>						& matrixTransform
@@ -348,7 +348,7 @@ int													ced::drawQuadTriangle
 	, const ::ced::SCoord3<float>						& lightVector
 	, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
 	, ::ced::container<::ced::STriangleWeights<float>>	& pixelVertexWeights
-	, ::ced::view_grid<::ced::SColorBGRA>				textureImage
+	, ::ced::view_grid<const ::ced::SColorBGRA>			textureImage
 	, ::ced::container<::ced::SCoord3<float>>			& lightPoints
 	, ::ced::container<::ced::SColorBGRA>				& lightColors
 	, ::ced::view_grid<uint32_t>						depthBuffer
@@ -360,7 +360,7 @@ int													ced::drawQuadTriangle
 }
 
 int													ced::drawQuadTriangle
-	( const ::ced::view_grid<::ced::SColorBGRA>			targetPixels
+	( ::ced::view_grid<::ced::SColorBGRA>				targetPixels
 	, const ::ced::SGeometryQuads						& geometry
 	, const int											iTriangle
 	, const ::ced::SMatrix4<float>						& matrixTransform
@@ -392,7 +392,7 @@ int													ced::drawQuadTriangle
 }
 
 int													ced::drawTriangle
-	( const ::ced::view_grid<::ced::SColorBGRA>			targetPixels
+	( ::ced::view_grid<::ced::SColorBGRA>				targetPixels
 	, const ::ced::SGeometryTriangles					& geometry
 	, const int											iTriangle
 	, const ::ced::SMatrix4<float>						& matrixTransform
@@ -433,7 +433,7 @@ int													ced::drawTriangle
 	, const ::ced::SCoord3<float>						& lightVector
 	, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
 	, ::ced::container<::ced::STriangleWeights<float>>	& pixelVertexWeights
-	, ::ced::view_grid<::ced::SColorBGRA>				textureImage
+	, ::ced::view_grid<const ::ced::SColorBGRA>			textureImage
 	, ::ced::view_grid<uint32_t>						depthBuffer
 	) {
 	::ced::STriangle3		<float>								triangle			= geometry.Triangles		[iTriangle];
@@ -476,7 +476,7 @@ int													ced::drawTriangle
 	, const ::ced::SColorFloat							& lightColor
 	, ::ced::container<::ced::SCoord2<int32_t>>			& pixelCoords
 	, ::ced::container<::ced::STriangleWeights<float>>	& pixelVertexWeights
-	, ::ced::view_grid<::ced::SColorBGRA>				textureImage
+	, ::ced::view_grid<const ::ced::SColorBGRA>			textureImage
 	, ::ced::container<::ced::SLight3>					& lightPoints
 	, ::ced::container<::ced::SColorBGRA>				& lightColors
 	, ::ced::view_grid<uint32_t>						depthBuffer

@@ -3,12 +3,12 @@
 
 static constexpr	const uint32_t					MAX_LIGHT_RANGE		= 10;
 
-static	int											drawStars			(SStars & stars, ::ced::view_grid<::ced::SColorBGRA> targetPixels)	{
+static	int											drawStars			(const SStars & stars, ::ced::view_grid<::ced::SColorBGRA> targetPixels)	{
 	::ced::SColorBGRA										colors[]			=
 		{ {0xfF, 0xfF, 0xfF, }
-		, {0x40, 0x80, 0xfF, }
-		, {0xfF, 0x80, 0x40, }
-		, {0x80, 0x80, 0x40, }
+		, {0xC0, 0xC0, 0xfF, }
+		, {0xfF, 0xC0, 0xC0, }
+		, {0xC0, 0xD0, 0xC0, }
 		};
 	for(uint32_t iStar = 0; iStar < stars.Brightness.size(); ++iStar) {
 		::ced::SCoord2<float>									starPos				= stars.Position[iStar];
@@ -35,7 +35,7 @@ static	int											drawStars			(SStars & stars, ::ced::view_grid<::ced::SColor
 
 static	int											drawDebris
 	( ::ced::view_grid<::ced::SColorBGRA>		targetPixels
-	, SDebris									& debris
+	, const SDebris								& debris
 	, const ::ced::SMatrix4<float>				& matrixVPV
 	, ::ced::view_grid<uint32_t>				depthBuffer
 	)	{
@@ -216,19 +216,13 @@ static	int											getLightArrays
 //	return 0;
 //}
 
-int													draw				(SApplication & app)	{
+int													solarSystemDraw				(const ::SSolarSystem & solarSystem, ::ced::view_grid<::ced::SColorBGRA> & targetPixels, ::ced::view_grid<uint32_t> depthBuffer)	{
 	//------------------------------------------- Transform and Draw
-	::ced::SFramework										& framework			= app.Framework;
-	::ced::view_grid<::ced::SColorBGRA>						targetPixels		= {framework.Pixels, framework.Window.Size};
 	if(0 == targetPixels.size())
 		return 1;
-	memcpy(targetPixels.begin(), app.SolarSystem.BackgroundImage.Pixels.begin(), sizeof(::ced::SColorBGRA) * targetPixels.size());
+	memcpy(targetPixels.begin(), solarSystem.BackgroundImage.Pixels.begin(), sizeof(::ced::SColorBGRA) * targetPixels.size());
 
-	::SSolarSystem											& solarSystem		= app.SolarSystem;
-
-	::drawStars(app.SolarSystem.Stars, {framework.Pixels, framework.Window.Size});
-
-	solarSystem.Scene.LightVector.Normalize();
+	::drawStars(solarSystem.Stars, targetPixels);
 
 	::ced::SMatrix4<float>									matrixView			= {};
 	matrixView.LookAt(solarSystem.Scene.Camera.Position, solarSystem.Scene.Camera.Target, solarSystem.Scene.Camera.Up);
@@ -246,18 +240,17 @@ int													draw				(SApplication & app)	{
 	lightPointsModel.reserve(lightPointsWorld.size());
 	lightColorsModel.reserve(lightColorsWorld.size());
 
-	::ced::view_grid<uint32_t>								depthBuffer					= {framework.DepthBuffer.begin(), framework.Window.Size};
 	for(uint32_t iShip = 0; iShip < solarSystem.Ships.size(); ++iShip) {
-		::SShip													& ship					= solarSystem.Ships[iShip];
+		const ::SShip											& ship					= solarSystem.Ships[iShip];
 		if(ship.Health <= 0)
 			continue;
 		for(uint32_t iPart = 0; iPart < ship.Parts.size(); ++iPart) {
-			::SShipPart												& shipPart				= ship.Parts[iPart];
+			const ::SShipPart										& shipPart				= ship.Parts[iPart];
 			if(shipPart.Health <= 0)
 				continue;
-			::SEntity												& entity					= solarSystem.Entities[shipPart.Entity];
+			const ::SEntity											& entity					= solarSystem.Entities[shipPart.Entity];
 			for(uint32_t iEntity = 0; iEntity < entity.Children.size(); ++iEntity) {
-				::SEntity												& entityChild				= solarSystem.Entities[entity.Children[iEntity]];
+				const ::SEntity											& entityChild				= solarSystem.Entities[entity.Children[iEntity]];
 				if(-1 == entityChild.Parent)
 					continue;
 				if(-1 == entityChild.Geometry)
@@ -265,8 +258,8 @@ int													draw				(SApplication & app)	{
 				::ced::SMatrix4<float>									matrixTransform				= solarSystem.Scene.ModelMatricesGlobal[entityChild.Transform];
 				::ced::SMatrix4<float>									matrixTransformView			= matrixTransform * matrixView;
 				::getLightArrays(matrixTransform.GetTranslation(), lightPointsWorld, lightColorsWorld, lightPointsModel, lightColorsModel);
-				::ced::SGeometryQuads									& mesh						= solarSystem.Scene.Geometry[entityChild.Geometry];
-				::ced::view_grid<::ced::SColorBGRA>						image						= solarSystem.Scene.Image	[entityChild.Image];
+				const ::ced::SGeometryQuads								& mesh						= solarSystem.Scene.Geometry[entityChild.Geometry];
+				const ::ced::view_grid<const ::ced::SColorBGRA>			image						= solarSystem.Scene.Image	[entityChild.Image];
 				for(uint32_t iTriangle = 0; iTriangle < mesh.Triangles.size(); ++iTriangle) {
 					pixelCoords			.clear();
 					pixelVertexWeights	.clear();
@@ -289,7 +282,7 @@ int													draw				(SApplication & app)	{
 	for(uint32_t iExplosion = 0; iExplosion < solarSystem.Explosions.size(); ++iExplosion) {
 		const ::SExplosion										& explosion				= solarSystem.Explosions[iExplosion];
 
-		::ced::view_grid<::ced::SColorBGRA>						image					= solarSystem.Scene.Image	[explosion.IndexMesh];
+		::ced::view_grid<const ::ced::SColorBGRA>				image					= solarSystem.Scene.Image	[explosion.IndexMesh];
 		const ::ced::SGeometryQuads								& mesh					= solarSystem.Scene.Geometry[explosion.IndexMesh];
 		for(uint32_t iExplosionPart = 0; iExplosionPart < explosion.Particles.Position.size(); ++iExplosionPart) {
 			const ::ced::SSlice<uint16_t>							& sliceMesh				= explosion.Slices[iExplosionPart];
@@ -333,33 +326,17 @@ int													draw				(SApplication & app)	{
 	for(uint32_t iShip = 0; iShip < solarSystem.Ships.size(); ++iShip) {
 		const ::SShip										& ship					= solarSystem.Ships[iShip];
 		for(uint32_t iPart = 0; iPart < ship.Parts.size(); ++iPart) {
-			const ::ced::SColorFloat							colorShot
-				= (MUNITION_TYPE_RAY	== ship.Parts[iPart].Type) ? ::ced::SColorFloat{1.0f, 0.1f, 0.0f}
-				: (MUNITION_TYPE_SHELL	== ship.Parts[iPart].Type) ? ::ced::SColorFloat{1.0f, 0.125f, 0.25f} //::ced::SColorFloat{::ced::SColorBGRA{0x40, 0x20, 0xfF}}
-				: (MUNITION_TYPE_BULLET == ship.Parts[iPart].Type) ? ::ced::DARKGRAY	//::ced::SColorFloat{::ced::SColorBGRA{0x40, 0xfF, 0x80}}
-				: ::ced::SColorFloat{::ced::SColorBGRA{0xFF, 0xFF, 0xFF}}
-				;
-			const	double								brightRadius
-				= (MUNITION_TYPE_RAY	== ship.Parts[iPart].Type) ? 4.0
-				: (MUNITION_TYPE_SHELL	== ship.Parts[iPart].Type) ? 10.0
-				: (MUNITION_TYPE_BULLET == ship.Parts[iPart].Type) ? 4.0
-				: 4.0
-				;
-			const	double								intensity
-				= (MUNITION_TYPE_RAY	== ship.Parts[iPart].Type) ? 1
-				: (MUNITION_TYPE_SHELL	== ship.Parts[iPart].Type) ? 10
-				: (MUNITION_TYPE_BULLET == ship.Parts[iPart].Type) ? 1
-				: 1
-				;
-			const	bool								line
-				= (MUNITION_TYPE_RAY	== ship.Parts[iPart].Type) ? true
-				: (MUNITION_TYPE_SHELL	== ship.Parts[iPart].Type) ? false
-				: (MUNITION_TYPE_BULLET == ship.Parts[iPart].Type) ? true
-				: false
-				;
+			::ced::SColorFloat									colorShot				= ::ced::WHITE;
+			double												brightRadius			= 1;
+			double												intensity				= 1;
+			bool												line					= true;
+				 if(MUNITION_TYPE_RAY	== ship.Parts[iPart].Shots.Type) { colorShot = ::ced::SColorFloat{1.0f, 0.1f, 0.0f}		; brightRadius =  2.0; intensity =  1; line = true ;}
+			else if(MUNITION_TYPE_SHELL	== ship.Parts[iPart].Shots.Type) { colorShot = ::ced::SColorFloat{1.0f, 0.125f, 0.25f}	; brightRadius =  7.0; intensity = 10; line = false;}
+			else if(MUNITION_TYPE_BULLET== ship.Parts[iPart].Shots.Type) { colorShot = ::ced::DARKGRAY							; brightRadius =  2.0; intensity =  1; line = true ;}
+
 			::drawShots(targetPixels, ship.Parts[iPart].Shots, matrixView, colorShot, brightRadius, intensity, line, depthBuffer, pixelCoordsCache);
 		}
 	}
-	::drawDebris(targetPixels, solarSystem.Debris		, matrixView, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
+	::drawDebris(targetPixels, solarSystem.Debris, matrixView, depthBuffer);
 	return 0;
 }

@@ -28,8 +28,9 @@ namespace ced
 		_tValue								* Data				= 0;
 		::ced::SCoord2<uint32_t>			Metrics				= {};
 
-											view_grid			(_tValue * data, ::ced::SCoord2<uint32_t> metrics)	: Data(data), Metrics(metrics) { if(metrics.x && metrics.y && 0 == Data) throw(""); }
-		inline constexpr					view_grid			()									noexcept		= default;
+											view_grid						(_tValue * data, ::ced::SCoord2<uint32_t> metrics)	: Data(data), Metrics(metrics) { if(metrics.x && metrics.y && 0 == Data) throw(""); }
+		inline constexpr					view_grid						()									noexcept		= default;
+		operator							::ced::view_grid<const _tValue>	()						const			{ return ::ced::view_grid<const _tValue>{Data, Metrics}; }
 
 
  		::ced::view<_tValue>				operator[]			(uint32_t index)									{ if(index >= Metrics.y) throw(""); return ::ced::view<_tValue>{&Data[Metrics.x * index], Metrics.x}; }
