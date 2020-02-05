@@ -86,6 +86,7 @@ static	int											shipCreate			(::SSolarSystem & solarSystem, int32_t teamId,
 		shipPart.Type										= SHIP_PART_TYPE_CANNON;
 		shipPart.Shots.Delay								= 1.0 / countParts * iPart;
 		shipPart.Shots.MaxDelay								= 1 + iPart;
+		shipPart.Shots.Damage								= 1;
 		::SEntity												& parentEntity			= solarSystem.Entities[ship.Entity];
  		parentEntity.Children.push_back(shipPart.Entity);
 
@@ -165,6 +166,20 @@ int													solarSystemSetupBackgroundImage	(::ced::SImage & backgroundImage
 int													stageSetup						(::SSolarSystem & solarSystem)	{	// Set up enemy ships
 	static constexpr	const uint32_t						partHealthPlayer				= 1;
 	static constexpr	const uint32_t						partHealthEnemy					= 10;
+
+	struct SWeapon {
+		SHIP_PART_TYPE	Type	;
+		MUNITION_TYPE	Munition;
+		double			MaxDelay;
+		int32_t			Damage	;
+	};
+
+	static constexpr const SWeapon							weaponDefinitions		[]		=
+		{ {SHIP_PART_TYPE_GUN	, MUNITION_TYPE_BULLET	, .1, 1}
+		, {SHIP_PART_TYPE_LASER	, MUNITION_TYPE_RAY		, .3, 3}
+		, {SHIP_PART_TYPE_CANNON, MUNITION_TYPE_SHELL	,  1, 1}
+		};
+
 	if(0 == solarSystem.Ships.size()) {	// Set up player ship
 		const int32_t											shipIndex						= ::shipCreate(solarSystem, 0, partHealthPlayer, 0, 0);
 		::ced::SModel3											& shipPivot						= solarSystem.Scene.Transforms[solarSystem.Entities[solarSystem.Ships[shipIndex].Entity].Transform];
@@ -175,30 +190,32 @@ int													stageSetup						(::SSolarSystem & solarSystem)	{	// Set up enemy
 		//shipTransform.Position								= {-30};
 		::SShip													& playerShip					= solarSystem.Ships[shipIndex];
 		for(uint32_t iPart = 0; iPart < playerShip.Parts.size(); ++iPart) {
-			playerShip.Parts[iPart].Shots.Delay					= 1.0 / playerShip.Parts.size() * iPart;
-			playerShip.Parts[iPart].Shots.MaxDelay				= .1;
-			playerShip.Parts[iPart].Shots.Type					= (iPart % 2) ? MUNITION_TYPE_RAY : MUNITION_TYPE_BULLET;
-			playerShip.Parts[iPart].Type						= (iPart % 2) ? SHIP_PART_TYPE_LASER : SHIP_PART_TYPE_GUN;
-			//playerShip.Parts[iPart].Shots.Damage				= 1;
+			playerShip.Parts[iPart].Type						= weaponDefinitions[(iPart % 2) ? 1 : 0].Type;
+			playerShip.Parts[iPart].Shots.MaxDelay				= weaponDefinitions[(iPart % 2) ? 1 : 0].MaxDelay;
+			playerShip.Parts[iPart].Shots.Type					= weaponDefinitions[(iPart % 2) ? 1 : 0].Munition;
+			playerShip.Parts[iPart].Shots.Damage				= weaponDefinitions[(iPart % 2) ? 1 : 0].Damage;
+			playerShip.Parts[iPart].Shots.Delay					= playerShip.Parts[iPart].Shots.MaxDelay / playerShip.Parts.size() * iPart;
 		}
 	}
 	else {
 		::SShip													& playerShip					= solarSystem.Ships[0];
-		for(uint32_t iPart = 0; iPart < playerShip.Parts.size(); ++iPart) {
-			playerShip.Parts[iPart].Shots.Delay					= 1.0 / playerShip.Parts.size() * iPart;
-			playerShip.Parts[iPart].Shots.MaxDelay				= .1;
+		for(uint32_t iPart = 0; iPart < playerShip.Parts.size(); ++iPart)
 			playerShip.Parts[iPart].Health						= partHealthPlayer;
-		}
 		playerShip.Health									= partHealthPlayer * playerShip.Parts.size();
 	}
-	for(uint32_t iShip = 1; iShip < solarSystem.Ships.size(); ++iShip) {
-		::SShip													& enemyShip					= solarSystem.Ships[iShip];
-		for(uint32_t iPart = 0; iPart < enemyShip.Parts.size(); ++iPart) {
-			enemyShip.Parts[iPart].Shots.Delay					= 1.0 / enemyShip.Parts.size() * iPart;
-			enemyShip.Parts[iPart].Shots.MaxDelay				= 1 + iPart;
-			enemyShip.Parts[iPart].Health						= partHealthEnemy;
+	{
+		for(uint32_t iShip = 1; iShip < solarSystem.Ships.size(); ++iShip) {
+			::SShip													& enemyShip					= solarSystem.Ships[iShip];
+			for(uint32_t iPart = 0; iPart < enemyShip.Parts.size(); ++iPart) {
+				enemyShip.Parts[iPart].Health						= partHealthEnemy;
+				enemyShip.Parts[iPart].Type							= weaponDefinitions[2].Type;
+				enemyShip.Parts[iPart].Shots.MaxDelay				= weaponDefinitions[2].MaxDelay + iPart;
+				enemyShip.Parts[iPart].Shots.Type					= weaponDefinitions[2].Munition;
+				enemyShip.Parts[iPart].Shots.Damage					= weaponDefinitions[2].Damage;
+				enemyShip.Parts[iPart].Shots.Delay					= enemyShip.Parts[iPart].Shots.MaxDelay / enemyShip.Parts.size() * iPart;
+			}
+			enemyShip.Health									= partHealthEnemy * enemyShip.Parts.size();
 		}
-		enemyShip.Health									= partHealthEnemy * enemyShip.Parts.size();
 	}
 	while(((int)solarSystem.Ships.size() - 2) < (int)solarSystem.Stage) {
 		int32_t													indexShip				= ::shipCreate(solarSystem, 1, partHealthEnemy, solarSystem.Stage + solarSystem.Ships.size(), solarSystem.Stage + solarSystem.Ships.size());
@@ -401,13 +418,13 @@ int													updateShipPart			(SSolarSystem & solarSystem, ::SShipPart & ship
 		::ced::SCoord3<float>									direction				= {1, 0, 0};
 		//direction.RotateY(rand() * (1.0 / RAND_MAX) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
 		//direction.RotateZ(rand() * (1.0 / RAND_MAX) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
-		shipPart.Shots.Spawn(positionGlobal, direction, 500, .2f);
+		shipPart.Shots.Spawn(positionGlobal, direction, 750, .75f);
 	}
 	else if(shipPart.Type == SHIP_PART_TYPE_GUN) {
 		::ced::SCoord3<float>									direction				= {1, 0, 0};
 		direction.RotateY(rand() * (1.0 / RAND_MAX) * ced::MATH_PI * .01 * ((rand() % 2) ? -1 : 1));
 		direction.RotateZ(rand() * (1.0 / RAND_MAX) * ced::MATH_PI * .01 * ((rand() % 2) ? -1 : 1));
-		shipPart.Shots.Spawn(positionGlobal, direction, 100, .2f);
+		shipPart.Shots.Spawn(positionGlobal, direction, 200, 5.0f);
 	}
 	return 0;
 }

@@ -95,19 +95,21 @@ static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixe
 	) {
 	const ::ced::SCoord2<int32_t>						targetMetrics			= targetPixels.metrics().Cast<int32_t>();
 	for(uint32_t iShot = 0; iShot < shots.Brightness.size(); ++iShot) {
+		float													brightness			= shots.Brightness[iShot];
 		pixelCoordsCache.clear();
 		const ::ced::SCoord3<float>								& starPosPrev		= shots.PositionDraw[iShot];
 		const ::ced::SCoord3<float>								& starPos			= shots.Particles.Position[iShot];
-		::ced::SLine3<float>									raySegmentWorld	= {starPosPrev, starPos};
+		//::ced::SLine3<float>									raySegmentWorld	= {starPosPrev, starPos};
 
-		::ced::SLine3<float>									raySegment		= raySegmentWorld;
+		::ced::SLine3<float>									raySegment			= {starPos, starPosPrev}; //raySegmentWorld;
 		raySegment.A										= matrixVPV.Transform(raySegment.A);
 		raySegment.B										= matrixVPV.Transform(raySegment.B);
 		if(line)
 			::ced::drawLine(targetPixels, raySegment, pixelCoordsCache, depthBuffer);
 		else
-			pixelCoordsCache.push_back(raySegment.A);
-		for(uint32_t iPixelCoord = 0; iPixelCoord < pixelCoordsCache.size(); ++iPixelCoord) {
+			pixelCoordsCache.push_back(raySegment.B);
+		const double											pixelCoordUnit		= 1.0 / pixelCoordsCache.size();
+		for(uint32_t iPixelCoord = 0, countPixelCoords = pixelCoordsCache.size(); iPixelCoord < countPixelCoords; ++iPixelCoord) {
 			const ::ced::SCoord3<float>							& pixelCoord		= pixelCoordsCache[iPixelCoord];
 			if(pixelCoord.z < 0 || pixelCoord.z > 1)
 				continue;
@@ -118,7 +120,7 @@ static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixe
 			targetPixels[(uint32_t)pixelCoord.y][(uint32_t)pixelCoord.x]	= colorShot;
 			const uint32_t											depth				= uint32_t(pixelCoord.z * 0xFFFFFFFFU);
 			const	double											brightRadiusSquared	= brightRadius * brightRadius;
-			double													brightUnit			= 1.0 / brightRadiusSquared;
+			double													brightUnit			= 1.0 / brightRadiusSquared * brightness;
 			for(int32_t y = (int32_t)-brightRadius, brightCount = (int32_t)brightRadius; y < brightCount; ++y)
 			for(int32_t x = (int32_t)-brightRadius; x < brightCount; ++x) {
 				::ced::SCoord2<float>									brightPos			= {(float)x, (float)y};
@@ -134,8 +136,11 @@ static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixe
 						continue;
 					blendVal											= depth;
 					::ced::SColorBGRA										& pixelVal						= targetPixels[blendPos.y][blendPos.x];
-					double													finalBrightness					= (1.0 - (brightDistance * brightUnit)) * (line ? (1.0 / pixelCoordsCache.size() * iPixelCoord) : 1);
-					::ced::SColorFloat										pixelColor						= colorShot * (finalBrightness * intensity) + pixelVal;
+					double													finalBrightness
+						= line
+						? (		 (brightDistance * brightUnit)) * (pixelCoordUnit * (countPixelCoords - 1 - iPixelCoord))
+						: (1.0 - (brightDistance * brightUnit));
+					::ced::SColorFloat										pixelColor						= ::ced::interpolate_linear(::ced::SColorFloat{pixelVal}, colorShot, finalBrightness * intensity);
 					pixelVal											= pixelColor;
 				}
 			}
@@ -161,7 +166,7 @@ static	int											getLightArrays
 			const ::ced::SColorFloat								colorShot
 				= (MUNITION_TYPE_RAY	== ship.Parts[iPart].Type) ? ::ced::RED
 				: (MUNITION_TYPE_SHELL	== ship.Parts[iPart].Type) ? ::ced::SColorFloat{::ced::SColorBGRA{0x40, 0x20, 0xfF}}
-				: (MUNITION_TYPE_BULLET == ship.Parts[iPart].Type) ? ::ced::DARKGRAY	//::ced::SColorFloat{::ced::SColorBGRA{0x40, 0xfF, 0x80}}
+				: (MUNITION_TYPE_BULLET == ship.Parts[iPart].Type) ? ::ced::GRAY
 				: ::ced::SColorFloat{::ced::SColorBGRA{0xFF, 0xFF, 0xFF}}
 				;
 			for(uint32_t iShot = 0; iShot < shipPart.Shots.Particles.Position.size(); ++iShot) {
@@ -329,8 +334,8 @@ int													draw				(SApplication & app)	{
 		const ::SShip										& ship					= solarSystem.Ships[iShip];
 		for(uint32_t iPart = 0; iPart < ship.Parts.size(); ++iPart) {
 			const ::ced::SColorFloat							colorShot
-				= (MUNITION_TYPE_RAY	== ship.Parts[iPart].Type) ? ::ced::RED
-				: (MUNITION_TYPE_SHELL	== ship.Parts[iPart].Type) ? ::ced::SColorFloat{::ced::SColorBGRA{0x40, 0x20, 0xfF}}
+				= (MUNITION_TYPE_RAY	== ship.Parts[iPart].Type) ? ::ced::SColorFloat{1.0f, 0.1f, 0.0f}
+				: (MUNITION_TYPE_SHELL	== ship.Parts[iPart].Type) ? ::ced::SColorFloat{1.0f, 0.125f, 0.25f} //::ced::SColorFloat{::ced::SColorBGRA{0x40, 0x20, 0xfF}}
 				: (MUNITION_TYPE_BULLET == ship.Parts[iPart].Type) ? ::ced::DARKGRAY	//::ced::SColorFloat{::ced::SColorBGRA{0x40, 0xfF, 0x80}}
 				: ::ced::SColorFloat{::ced::SColorBGRA{0xFF, 0xFF, 0xFF}}
 				;
