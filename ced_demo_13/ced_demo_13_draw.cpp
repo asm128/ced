@@ -257,6 +257,8 @@ int													draw				(SApplication & app)	{
 		}
 	}
 
+	struct SMaterial {};
+
 	for(uint32_t iExplosion = 0; iExplosion < solarSystem.Explosions.size(); ++iExplosion) {
 		const ::SExplosion							& explosion				= solarSystem.Explosions[iExplosion];
 

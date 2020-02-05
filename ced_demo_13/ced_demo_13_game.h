@@ -131,6 +131,7 @@ struct SShots	{
 		Delay										= 0;
 		Particles.Spawn(position, direction, speed);
 		PositionPrev.push_back(position);
+		PositionDraw.push_back(position);
 		return Brightness.push_back(brightness);
 	}
 

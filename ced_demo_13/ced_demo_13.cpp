@@ -49,12 +49,10 @@ static	int											shipCreate			(::SSolarSystem & solarSystem, int32_t teamId,
 	const int32_t											indexShip			= solarSystem.Ships.push_back(ship);
 	ship.Parts.reserve(countParts);
 	for(uint32_t iPart = 0; iPart < countParts; ++iPart) {	// Create child parts
-
 		::ced::SModel3											pivot				= {};
 		pivot.Scale											= {1, 1, 1};
 		//pivot.Position										= {2.5, 0.5};
 		//pivot.Position.RotateY(::ced::MATH_2PI / countParts * iPart);
-
 		::SEntity												entityOrbit				= {ship.Entity};
 		::SEntity												entityPart				= {-1};
 		entityOrbit.Parent									= ship.Entity;
@@ -78,7 +76,6 @@ static	int											shipCreate			(::SSolarSystem & solarSystem, int32_t teamId,
 		entityPart.Body										= entityOrbit.Body + 1;
 		int32_t													indexEntityPart				= solarSystem.Entities.push_back(entityPart);
 		solarSystem.Entities[entityPart.Parent].Children.push_back(indexEntityPart);
-		//solarSystem.ShipPhysics.Integrate(1.0);
 		solarSystem.ShipPhysics.Transforms[entityOrbit.Body].Orientation	= {};
 		solarSystem.ShipPhysics.Transforms[entityOrbit.Body].Orientation.MakeFromEulerTaitBryan(0, (float)(::ced::MATH_2PI / countParts * iPart), 0);
 		//solarSystem.ShipPhysics.Transforms[entityOrbit.Body].Orientation.Normalize();
@@ -120,11 +117,20 @@ int													modelsSetup	(::SShipScene & scene)			{
 	::ced::geometryBuildSphere	(scene.Geometry[4], 6U, 2U, 1, {0, 0});
 
 	{
-		::ced::SColorFloat										baseColor	[4]			=
+		::ced::SColorFloat										baseColor	[]			=
 			{ ::ced::LIGHTGREEN
 			, ::ced::LIGHTBLUE
 			, ::ced::LIGHTRED
 			, ::ced::LIGHTCYAN
+			, ::ced::LIGHTORANGE
+			, ::ced::LIGHTYELLOW
+			, ::ced::YELLOW
+			, ::ced::RED
+			, ::ced::BLUE
+			, ::ced::BROWN
+			, ::ced::GRAY
+			, ::ced::PANOCHE
+			, ::ced::TURQUOISE
 			};
 
 		scene.Image.resize(10);
@@ -374,7 +380,6 @@ int													updateShots				(SSolarSystem & solarSystem, double secondsLastFr
 }
 int													updateShipPart			(SSolarSystem & solarSystem, ::SShipPart & shipPart, double secondsLastFrame)	{
 	::ced::SModel3											& modelPlayer			= solarSystem.Scene.Transforms[solarSystem.Entities[0].Transform];
-	shipPart.Shots.Delay								+= secondsLastFrame;// * .1 * (1 + iPart);
 
 	::SEntity												& entityPart			= solarSystem.Entities[shipPart.Entity];
 	::ced::SModel3											& partTransform			= solarSystem.Scene.Transforms[entityPart.Transform + 1];
@@ -383,6 +388,8 @@ int													updateShipPart			(SSolarSystem & solarSystem, ::SShipPart & ship
 	::ced::SCoord3<float>									positionGlobal			= solarSystem.Scene.ModelMatricesGlobal[shipPart.Entity + 1].Transform(partTransform.Position);
 	for(uint32_t iParticle = 0; iParticle < shipPart.Shots.Particles.Position.size(); ++iParticle)
 		shipPart.Shots.Particles.Position[iParticle].x		-= (float)(solarSystem.RelativeSpeedCurrent * secondsLastFrame * .2);
+
+	shipPart.Shots.Delay								+= secondsLastFrame;// * .1 * (1 + iPart);
 	if(shipPart.Type == SHIP_PART_TYPE_CANNON) {
 		if(1 < (modelPlayer.Position - positionGlobal).LengthSquared()) {
 			::ced::SCoord3<float>									direction			= modelPlayer.Position - positionGlobal;
@@ -531,36 +538,39 @@ int													solarSystemUpdate				(SSolarSystem & solarSystem, double seconds
 		}
 		if(iShip)
 			playing												= true;
-		double													secondsToProcess		= secondsLastFrame;
-
-		while(secondsToProcess > frameStep) {
-			for(uint32_t iPart = 0; iPart < enemyShip.Parts.size(); ++iPart) {
-				::SShipPart												& shipPart				= enemyShip.Parts[iPart];
-				if(0 >= shipPart.Health)
-					continue;
-				::updateShipPart(solarSystem, shipPart, frameStep);
-			}
-			secondsToProcess									-= frameStep;
-		}
-		for(uint32_t iPart = 0; iPart < enemyShip.Parts.size(); ++iPart) {
-			::SShipPart												& shipPart				= enemyShip.Parts[iPart];
-			if(0 >= shipPart.Health)
-				continue;
-			::updateShipPart(solarSystem, shipPart, secondsToProcess);
-		}
 	}
 	for(uint32_t iShip = 0; iShip < solarSystem.Ships.size(); ++iShip) {
 		::SShip													& ship					= solarSystem.Ships[iShip];
 		for(uint32_t iPart = 0; iPart < ship.Parts.size(); ++iPart) {
 			::SShipPart												& shipPart				= ship.Parts[iPart];
-			shipPart.Shots.PositionDraw.resize(shipPart.Shots.Particles.Position.size());
 			memcpy(shipPart.Shots.PositionDraw.begin(), shipPart.Shots.Particles.Position.begin(), shipPart.Shots.Particles.Position.size() * sizeof(::ced::SCoord3<float>));
 		}
 	}
 	double													secondsToProcess		= secondsLastFrame;
 	while(secondsToProcess > frameStep) {
+		for(uint32_t iShip = 0; iShip < solarSystem.Ships.size(); ++iShip) {
+			::SShip													& ship					= solarSystem.Ships[iShip];
+			if(0 >= ship.Health)
+				continue;
+			for(uint32_t iPart = 0; iPart < ship.Parts.size(); ++iPart) {
+				::SShipPart												& shipPart				= ship.Parts[iPart];
+				if(0 >= shipPart.Health)
+					continue;
+				::updateShipPart(solarSystem, shipPart, frameStep);
+			}
+		}
 		::updateShots(solarSystem, frameStep);
 		secondsToProcess									-= frameStep;
+	}
+
+	for(uint32_t iShip = 0; iShip < solarSystem.Ships.size(); ++iShip) {
+		::SShip													& ship					= solarSystem.Ships[iShip];
+		for(uint32_t iPart = 0; iPart < ship.Parts.size(); ++iPart) {
+			::SShipPart												& shipPart				= ship.Parts[iPart];
+			if(0 >= shipPart.Health)
+				continue;
+			::updateShipPart(solarSystem, shipPart, secondsToProcess);
+		}
 	}
 	::updateShots(solarSystem, secondsToProcess);
 	solarSystem.Debris		.Update((float)secondsLastFrame);
