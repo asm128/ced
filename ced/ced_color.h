@@ -161,25 +161,25 @@ namespace ced
 									SColorFloat&	operator *=		(const SColorFloat& color)										noexcept	{ r = r * color.r;					g = g * color.g;				b = b * color.b;				return Clamp();																					}
 									SColorFloat&	operator *=		(double scalar)													noexcept	{ r = (float)(r * scalar);			g = (float)(g * scalar);		b = (float)(b * scalar);		return Clamp();																					}
 									SColorFloat&	operator /=		(double scalar)																{ r = (float)(r / scalar);			g = (float)(g / scalar);		b = (float)(b / scalar);		return Clamp();																					}
+									SColorFloat&	operator *=		(float scalar)													noexcept	{ r = r * scalar;					g = g * scalar;					b = b * scalar;					return Clamp();																					}
+									SColorFloat&	operator /=		(float scalar)																{ r = r / scalar;					g = g / scalar;					b = b / scalar;					return Clamp();																					}
 									SColorFloat&	operator *=		(const SColorBGRA& color)										noexcept	{ r = r * (color.r * (1/255.0f));	g = g * (color.g * (1/255.0f));	b = b * (color.b * (1/255.0f));	return Clamp();																					}
 									SColorFloat&	operator +=		(const SColorBGRA& color)										noexcept	{ r = r + (color.r * (1/255.0f));	g = g + (color.g * (1/255.0f));	b = b + (color.b * (1/255.0f));	return Clamp();																					}
 									SColorFloat&	operator *=		(const SColorBGR& color)										noexcept	{ r = r * (color.r * (1/255.0f));	g = g * (color.g * (1/255.0f));	b = b * (color.b * (1/255.0f));	return Clamp();																					}
 									SColorFloat&	operator +=		(const SColorBGR& color)										noexcept	{ r = r + (color.r * (1/255.0f));	g = g + (color.g * (1/255.0f));	b = b + (color.b * (1/255.0f));	return Clamp();																					}
-									SColorFloat		operator *		(const SColorBGRA& color)								const	noexcept	{ return ::ced::SColorFloat{r * (color.r * (1/255.0f)), g * (color.g * (1/255.0f)), b * (color.b * (1/255.0f)), a}.Clamp();																				}
-									SColorFloat		operator +		(const SColorBGRA& color)								const	noexcept	{ return ::ced::SColorFloat{r + (color.r * (1/255.0f)), g + (color.g * (1/255.0f)), b + (color.b * (1/255.0f)), a}.Clamp();																				}
-									SColorFloat		operator *		(const SColorBGR& color)								const	noexcept	{ return ::ced::SColorFloat{r * (color.r * (1/255.0f)), g * (color.g * (1/255.0f)), b * (color.b * (1/255.0f)), a}.Clamp();																				}
-									SColorFloat		operator +		(const SColorBGR& color)								const	noexcept	{ return ::ced::SColorFloat{r + (color.r * (1/255.0f)), g + (color.g * (1/255.0f)), b + (color.b * (1/255.0f)), a}.Clamp();																				}
-		constexpr					SColorFloat		operator *		(const SColorFloat& color)								const	noexcept	{ return ::ced::SColorFloat{::ced::clamp(r * color.r, 0.0f, 1.0f), ::ced::clamp(g * color.g, 0.0f, 1.0f),	::ced::clamp(b * color.b, 0.0f, 1.0f), a};													}
-		constexpr					SColorFloat		operator +		(const SColorFloat& color)								const	noexcept	{ return ::ced::SColorFloat{::ced::clamp(r + color.r, 0.0f, 1.0f), ::ced::clamp(g + color.g, 0.0f, 1.0f),	::ced::clamp(b + color.b, 0.0f, 1.0f), a};													}
-		constexpr					SColorFloat		operator -		(const SColorFloat& color)								const	noexcept	{ return ::ced::SColorFloat(::ced::clamp(r - color.r, 0.0f, 1.0f), ::ced::clamp(g - color.g, 0.0f, 1.0f),	::ced::clamp(b - color.b, 0.0f, 1.0f), a);	}
-		constexpr					SColorFloat		operator *		(double scalar)											const	noexcept	{ return ::ced::SColorFloat{(float)::ced::clamp(r * scalar, 0.0, 1.0), (float)::ced::clamp(g * scalar, 0.0, 1.0), (float)::ced::clamp(b * scalar, 0.0, 1.0), a};											}
-		constexpr					SColorFloat		operator /		(double scalar)											const				{ return ::ced::SColorFloat{(float)::ced::clamp(r / scalar, 0.0, 1.0), (float)::ced::clamp(g / scalar, 0.0, 1.0), (float)::ced::clamp(b / scalar, 0.0, 1.0), a};											}
-									SColorFloat&	operator *=		(float scalar)													noexcept	{ r = r * scalar;					g = g * scalar;					b = b * scalar;					return Clamp();																					}
-									SColorFloat&	operator /=		(float scalar)																{ r = r / scalar;					g = g / scalar;					b = b / scalar;					return Clamp();																					}
-		constexpr					SColorFloat		operator *		(float scalar)											const	noexcept	{ return ::ced::SColorFloat(::ced::clamp(r * scalar, 0.0f, 1.0f),	::ced::clamp(g * scalar, 0.0f, 1.0f),	::ced::clamp(b * scalar, 0.0f, 1.0f));													}
-		constexpr					SColorFloat		operator /		(float scalar)											const				{ return ::ced::SColorFloat(::ced::clamp(r / scalar, 0.0f, 1.0f),	::ced::clamp(g / scalar, 0.0f, 1.0f),	::ced::clamp(b / scalar, 0.0f, 1.0f));													}
+									SColorFloat		operator *		(const SColorBGRA& color)								const	noexcept	{ return ::ced::SColorFloat{r * (color.r * (1/255.0f)), g * (color.g * (1/255.0f)), b * (color.b * (1/255.0f)), a};																				}
+									SColorFloat		operator +		(const SColorBGRA& color)								const	noexcept	{ return ::ced::SColorFloat{r + (color.r * (1/255.0f)), g + (color.g * (1/255.0f)), b + (color.b * (1/255.0f)), a};																				}
+									SColorFloat		operator *		(const SColorBGR& color)								const	noexcept	{ return ::ced::SColorFloat{r * (color.r * (1/255.0f)), g * (color.g * (1/255.0f)), b * (color.b * (1/255.0f)), a};																				}
+									SColorFloat		operator +		(const SColorBGR& color)								const	noexcept	{ return ::ced::SColorFloat{r + (color.r * (1/255.0f)), g + (color.g * (1/255.0f)), b + (color.b * (1/255.0f)), a};																				}
+		constexpr					SColorFloat		operator *		(const SColorFloat& color)								const	noexcept	{ return ::ced::SColorFloat{r * color.r, g * color.g, b * color.b, a};	}
+		constexpr					SColorFloat		operator +		(const SColorFloat& color)								const	noexcept	{ return ::ced::SColorFloat{r + color.r, g + color.g, b + color.b, a};	}
+		constexpr					SColorFloat		operator -		(const SColorFloat& color)								const	noexcept	{ return ::ced::SColorFloat(r - color.r, g - color.g, b - color.b, a);	}
+		constexpr					SColorFloat		operator *		(double scalar)											const	noexcept	{ return ::ced::SColorFloat{(float)(r * scalar), (float)(g * scalar), (float)(b * scalar), a};											}
+		constexpr					SColorFloat		operator *		(float scalar)											const	noexcept	{ return ::ced::SColorFloat{(r * scalar), (g * scalar),	(b * scalar)};													}
+		constexpr					SColorFloat		operator /		(double scalar)											const				{ return ::ced::SColorFloat{(float)(r / scalar), (float)(g / scalar), (float)(b / scalar), a};	}
+		constexpr					SColorFloat		operator /		(float scalar)											const				{ return ::ced::SColorFloat(r / scalar,	g / scalar,	b / scalar);								}
 
-									SColorFloat&	Clamp			()																noexcept	{ r = ::ced::clamp(r, 0.0f, 1.0f); g = ::ced::clamp(g, 0.0f, 1.0f); b = ::ced::clamp(b, 0.0f, 1.0f); return *this;																				}
+		SColorFloat&	Clamp			()																noexcept	{ r = ::ced::clamp(r, 0.0f, 1.0f); g = ::ced::clamp(g, 0.0f, 1.0f); b = ::ced::clamp(b, 0.0f, 1.0f); return *this;																				}
 	};	// struct
 
 	static constexpr	const ::ced::SColorFloat	BLACK			= {0.0f, 0.0f, 0.0f, 1.0f					};

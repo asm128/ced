@@ -93,6 +93,7 @@ static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixe
 	, ::ced::view_grid<uint32_t>				depthBuffer
 	, ::ced::container<::ced::SCoord3<float>>	pixelCoordsCache
 	) {
+	const ::ced::SCoord2<int32_t>						targetMetrics			= targetPixels.metrics().Cast<int32_t>();
 	for(uint32_t iShot = 0; iShot < shots.Brightness.size(); ++iShot) {
 		pixelCoordsCache.clear();
 		const ::ced::SCoord3<float>								& starPosPrev		= shots.PositionDraw[iShot];
@@ -106,13 +107,12 @@ static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixe
 			::ced::drawLine(targetPixels, raySegment, pixelCoordsCache, depthBuffer);
 		else
 			pixelCoordsCache.push_back(raySegment.A);
-
 		for(uint32_t iPixelCoord = 0; iPixelCoord < pixelCoordsCache.size(); ++iPixelCoord) {
 			const ::ced::SCoord3<float>							& pixelCoord		= pixelCoordsCache[iPixelCoord];
 			if(pixelCoord.z < 0 || pixelCoord.z > 1)
 				continue;
-			if( pixelCoord.y < 0 || pixelCoord.y >= (int32_t)targetPixels.metrics().y
-			 || pixelCoord.x < 0 || pixelCoord.x >= (int32_t)targetPixels.metrics().x
+			if( pixelCoord.y < 0 || pixelCoord.y >= targetMetrics.y
+			 || pixelCoord.x < 0 || pixelCoord.x >= targetMetrics.x
 			)
 				continue;
 			targetPixels[(uint32_t)pixelCoord.y][(uint32_t)pixelCoord.x]	= colorShot;
@@ -125,8 +125,8 @@ static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixe
 				const double											brightDistance		= brightPos.LengthSquared();
 				if(brightDistance <= brightRadiusSquared) {
 					::ced::SCoord2<int32_t>									blendPos			= ::ced::SCoord2<int32_t>{(int32_t)pixelCoord.x, (int32_t)pixelCoord.y} + (brightPos).Cast<int32_t>();
-					if( blendPos.y < 0 || blendPos.y >= (int32_t)targetPixels.metrics().y
-					 || blendPos.x < 0 || blendPos.x >= (int32_t)targetPixels.metrics().x
+					if( blendPos.y < 0 || blendPos.y >= targetMetrics.y
+					 || blendPos.x < 0 || blendPos.x >= targetMetrics.x
 					)
 						continue;
 					uint32_t												& blendVal			= depthBuffer[blendPos.y][blendPos.x];
@@ -135,7 +135,7 @@ static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixe
 					blendVal											= depth;
 					::ced::SColorBGRA										& pixelVal						= targetPixels[blendPos.y][blendPos.x];
 					double													finalBrightness					= (1.0 - (brightDistance * brightUnit)) * (line ? (1.0 / pixelCoordsCache.size() * iPixelCoord) : 1);
-					::ced::SColorFloat										pixelColor						= colorShot * finalBrightness * intensity + pixelVal;
+					::ced::SColorFloat										pixelColor						= colorShot * (finalBrightness * intensity) + pixelVal;
 					pixelVal											= pixelColor;
 				}
 			}
@@ -196,6 +196,20 @@ static	int											getLightArrays
 	}
 	return 0;
 }
+//
+//static	int											getLightArrays
+//	( const ::ced::SCoord3<float>							& modelPosition
+//	, const ::ced::container<::ced::SCoord3<float>>			& lightPointsWorld
+//	, ::ced::container<uint16_t>							& indicesPointLights
+//	) {
+//	indicesPointLights.clear();
+//	for(uint32_t iLightPoint = 0; iLightPoint < lightPointsWorld.size(); ++iLightPoint) {
+//		const ::ced::SCoord3<float>								& lightPoint		=	lightPointsWorld[iLightPoint];
+//		if((lightPoint - modelPosition).LengthSquared() < (MAX_LIGHT_RANGE * MAX_LIGHT_RANGE))
+//			indicesPointLights.push_back((uint16_t)iLightPoint);
+//	}
+//	return 0;
+//}
 
 int													draw				(SApplication & app)	{
 	//------------------------------------------- Transform and Draw
@@ -257,16 +271,24 @@ int													draw				(SApplication & app)	{
 		}
 	}
 
-	struct SMaterial {};
+#pragma pack(push, 1)
+	struct SRenderNode	{
+		uint32_t					Mesh				;
+		int32_t						Image				;
+		::ced::SSlice<uint16_t>		Slice				;
+		::ced::container<uint16_t>	IndicesPointLight	;
+	};
+#pragma pack(pop)
 
+	::ced::container<uint16_t>								indicesPointLight;
 	for(uint32_t iExplosion = 0; iExplosion < solarSystem.Explosions.size(); ++iExplosion) {
-		const ::SExplosion							& explosion				= solarSystem.Explosions[iExplosion];
+		const ::SExplosion										& explosion				= solarSystem.Explosions[iExplosion];
 
-		::ced::view_grid<::ced::SColorBGRA>			image					= solarSystem.Scene.Image	[explosion.IndexMesh];
-		const ::ced::SGeometryQuads					& mesh					= solarSystem.Scene.Geometry[explosion.IndexMesh];
+		::ced::view_grid<::ced::SColorBGRA>						image					= solarSystem.Scene.Image	[explosion.IndexMesh];
+		const ::ced::SGeometryQuads								& mesh					= solarSystem.Scene.Geometry[explosion.IndexMesh];
 		for(uint32_t iExplosionPart = 0; iExplosionPart < explosion.Particles.Position.size(); ++iExplosionPart) {
-			const ::ced::SSlice<uint16_t>				& sliceMesh				= explosion.Slices[iExplosionPart];
-			::ced::SMatrix4<float>						matrixPart				= {};
+			const ::ced::SSlice<uint16_t>							& sliceMesh				= explosion.Slices[iExplosionPart];
+			::ced::SMatrix4<float>									matrixPart				= {};
 			matrixPart.Identity();
 			matrixPart.RotationX(solarSystem.AnimationTime * 2);
 			matrixPart.SetTranslation(explosion.Particles.Position[iExplosionPart], false);
