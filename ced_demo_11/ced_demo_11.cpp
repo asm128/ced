@@ -319,7 +319,7 @@ int													update						(SApplication & app)	{
 	bodies.Integrate(secondsLastFrame);
 
 	//------------------------------------------- Transform and Draw
-	::ced::view_grid<::ced::SColorBGRA>						targetPixels				= {framework.Pixels, framework.Window.Size};
+	::ced::view_grid<::ced::SColorBGRA>						targetPixels				= {framework.Pixels.begin(), framework.Window.Size};
 	memset(targetPixels.begin(), 0, sizeof(::ced::SColorBGRA) * targetPixels.size());
 		::ced::SColorBGRA										colorBackground		= {0x20, 0x8, 0x4};
 	//colorBackground									+= (colorBackground * (0.5 + (0.5 / 65535 * rand())) * ((rand() % 2) ? -1 : 1)) ;
@@ -343,6 +343,7 @@ int													update						(SApplication & app)	{
 	::ced::container<::ced::STriangleWeights<float>>		pixelVertexWeights			= {};
 	::ced::SModelMatrices									matrices					= {};
 	::ced::view_grid<uint32_t>								depthBuffer					= {framework.DepthBuffer.begin(), app.Framework.Window.Size};
+	memset(depthBuffer.begin(), -1, sizeof(uint32_t) * depthBuffer.size());
 	::ced::container<::ced::SLight3>						lightPoints;
 	::ced::container<::ced::SColorBGRA>						lightColors;
 	lightPoints.push_back({{0,0,0}, 10000});

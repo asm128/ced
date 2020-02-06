@@ -72,16 +72,16 @@ int									update				(SApplication & app)	{
 			circle.Radius						= 10;
 		}
 	}
-	::ced::view_grid<::ced::SColorBGRA>			viewTarget			= {app.Pixels, window.Size};
+	::ced::view_grid<::ced::SColorBGRA>		viewTarget			= {app.Pixels, window.Size};
 	::ced::SLine2<int32_t>					lineA				= {{0, 0}, window.Size.Cast<int32_t>() / 2};
 	::ced::SLine2<int32_t>					lineB				= {{(int32_t)window.Size.x / 2, 0}, {0, (int32_t)window.Size.y / 2}};
 	static double							angle				= 0;
 	angle								+= secondsLastFrame / 10;
 	for(uint32_t iRectangle = 0; iRectangle < ::std::size(app.Rectangles); ++iRectangle) {
 		const ::ced::SRectangle<int32_t>		& rectangle			= app.Rectangles[iRectangle];
-		::ced::drawRectangle	(viewTarget, rectangle, app.Colors[iRectangle]);
-		::ced::drawTriangle		(viewTarget, app.Triangles	[iRectangle], app.Colors[(iRectangle + 1) % 4]);
-		::ced::drawCircle		(viewTarget, app.Circles	[iRectangle], app.Colors[(iRectangle + 3) % 4]);
+		::ced::drawRectangle(viewTarget, rectangle, app.Colors[iRectangle]);
+		::ced::drawTriangle	(viewTarget, app.Triangles	[iRectangle], app.Colors[(iRectangle + 1) % 4]);
+		::ced::drawCircle	(viewTarget, app.Circles	[iRectangle], app.Colors[(iRectangle + 3) % 4]);
 		::ced::SLine2							finalLineA			= lineA;
 		::ced::SLine2							finalLineB			= lineB;
 		finalLineA.A						= finalLineA.A.Rotated(angle);
@@ -92,8 +92,8 @@ int									update				(SApplication & app)	{
 		finalLineA.B						+= rectangle.Position;
 		finalLineB.A						+= rectangle.Position;
 		finalLineB.B						+= rectangle.Position;
-		::ced::drawLine			(viewTarget, finalLineA, app.Colors[(iRectangle + 2) % 4]);
-		::ced::drawLine			(viewTarget, finalLineB, app.Colors[(iRectangle + 2) % 4]);
+		::ced::drawLine(viewTarget, finalLineA, app.Colors[(iRectangle + 2) % 4]);
+		::ced::drawLine(viewTarget, finalLineB, app.Colors[(iRectangle + 2) % 4]);
 	}
 	return app.Running ? 0 : 1;
 }

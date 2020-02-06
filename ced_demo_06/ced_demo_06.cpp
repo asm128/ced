@@ -68,8 +68,11 @@ int													update				(SApplication & app)	{
 	if(GetAsyncKeyState('E')) cameraPosition.y				+= (float)secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
 
 	//------------------------------------------- Transform and Draw
-	::ced::view_grid<::ced::SColorBGRA>						targetPixels		= {framework.Pixels, framework.Window.Size};
+	::ced::view_grid<::ced::SColorBGRA>						targetPixels		= {framework.Pixels.begin(), framework.Window.Size};
 	memset(targetPixels.begin(), 0, sizeof(::ced::SColorBGRA) * targetPixels.size());
+	::ced::view_grid<uint32_t>								depthBuffer			= {framework.DepthBuffer.begin(), framework.Window.Size};
+	memset(depthBuffer.begin(), -1, sizeof(uint32_t) * depthBuffer.size());
+
 	static ::ced::SCoord3<float>							lightVector			= {15, 12, 0};
 	lightVector											= lightVector	.RotateY(secondsLastFrame * 2);
 	cameraPosition										= cameraPosition.RotateY(secondsLastFrame / 2);
@@ -98,7 +101,7 @@ int													update				(SApplication & app)	{
 		for(uint32_t iTriangle = 0; iTriangle < app.Geometry.Triangles.size(); ++iTriangle) {
 			pixelCoords			.clear();
 			pixelVertexWeights	.clear();
-			::ced::drawTriangle(targetPixels, app.Geometry, iTriangle, matrixTransform, matrixTransformView, lightVector, pixelCoords, pixelVertexWeights, {app.Image.Pixels.begin(), app.Image.Metrics}, {framework.DepthBuffer.begin(), app.Framework.Window.Size});
+			::ced::drawTriangle(targetPixels, app.Geometry, iTriangle, matrixTransform, matrixTransformView, lightVector, pixelCoords, pixelVertexWeights, app.Image, depthBuffer);
 		}
 	}
 	return framework.Running ? 0 : 1;

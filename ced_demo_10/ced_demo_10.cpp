@@ -204,6 +204,7 @@ int													update						(SApplication & app)	{
 	double													secondsLastFrame			= framework.Timer.ElapsedMicroseconds * .000001;
 
 	//------------------------------------------- Handle input
+	::SScene												& scene						= app.SolarSystem.Scene;
 	::ced::SCamera											& camera					= app.SolarSystem.Scene.Camera;
 	if(GetAsyncKeyState('Q')) camera.Position.z				-= (float)secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 100 : 10);
 	if(GetAsyncKeyState('E')) camera.Position.z				+= (float)secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 100 : 10);
@@ -211,23 +212,23 @@ int													update						(SApplication & app)	{
 	if(GetAsyncKeyState('W')) camera.Position				-= app.SolarSystem.Scene.Camera.Position / app.SolarSystem.Scene.Camera.Position.Length() * (GetAsyncKeyState(VK_SHIFT) ? 100 : 2) * secondsLastFrame;
 	if(GetAsyncKeyState('A')) camera.Position.RotateY( (GetAsyncKeyState(VK_SHIFT) ? 100 : 2) * secondsLastFrame);
 	if(GetAsyncKeyState('D')) camera.Position.RotateY(-(GetAsyncKeyState(VK_SHIFT) ? 100 : 2) * secondsLastFrame);
-	if(GetAsyncKeyState('0')) { ; camera.Target = app.SolarSystem.Scene.Transform[0 * 2].GetTranslation(); camera.Position = camera.Target + ::ced::SCoord3<float>{30, 0, 0}; }
-	if(GetAsyncKeyState('1')) { ; camera.Target = app.SolarSystem.Scene.Transform[1 * 2].GetTranslation(); camera.Position = camera.Target + ::ced::SCoord3<float>{30, 0, 0}; }
-	if(GetAsyncKeyState('2')) { ; camera.Target = app.SolarSystem.Scene.Transform[2 * 2].GetTranslation(); camera.Position = camera.Target + ::ced::SCoord3<float>{30, 0, 0}; }
-	if(GetAsyncKeyState('3')) { ; camera.Target = app.SolarSystem.Scene.Transform[3 * 2].GetTranslation(); camera.Position = camera.Target + ::ced::SCoord3<float>{30, 0, 0}; }
-	if(GetAsyncKeyState('4')) { ; camera.Target = app.SolarSystem.Scene.Transform[4 * 2].GetTranslation(); camera.Position = camera.Target + ::ced::SCoord3<float>{30, 0, 0}; }
-	if(GetAsyncKeyState('5')) { ; camera.Target = app.SolarSystem.Scene.Transform[5 * 2].GetTranslation(); camera.Position = camera.Target + ::ced::SCoord3<float>{30, 0, 0}; }
-	if(GetAsyncKeyState('6')) { ; camera.Target = app.SolarSystem.Scene.Transform[6 * 2].GetTranslation(); camera.Position = camera.Target + ::ced::SCoord3<float>{30, 0, 0}; }
-	if(GetAsyncKeyState('7')) { ; camera.Target = app.SolarSystem.Scene.Transform[7 * 2].GetTranslation(); camera.Position = camera.Target + ::ced::SCoord3<float>{30, 0, 0}; }
-	if(GetAsyncKeyState('8')) { ; camera.Target = app.SolarSystem.Scene.Transform[8 * 2].GetTranslation(); camera.Position = camera.Target + ::ced::SCoord3<float>{30, 0, 0}; }
-	if(GetAsyncKeyState('9')) { ; camera.Target = app.SolarSystem.Scene.Transform[9 * 2].GetTranslation(); camera.Position = camera.Target + ::ced::SCoord3<float>{30, 0, 0}; }
+	if(GetAsyncKeyState('0')) { camera.Target = scene.Transform[0 * 2].GetTranslation(); camera.Position = camera.Target + ::ced::SCoord3<float>{scene.Pivot[app.SolarSystem.Entities[0 * 2].IndexModel].Scale.x * 10, 0, 0}; }
+	if(GetAsyncKeyState('1')) { camera.Target = scene.Transform[1 * 2].GetTranslation(); camera.Position = camera.Target + ::ced::SCoord3<float>{scene.Pivot[app.SolarSystem.Entities[1 * 2].IndexModel].Scale.x * 10, 0, 0}; }
+	if(GetAsyncKeyState('2')) { camera.Target = scene.Transform[2 * 2].GetTranslation(); camera.Position = camera.Target + ::ced::SCoord3<float>{scene.Pivot[app.SolarSystem.Entities[2 * 2].IndexModel].Scale.x * 10, 0, 0}; }
+	if(GetAsyncKeyState('3')) { camera.Target = scene.Transform[3 * 2].GetTranslation(); camera.Position = camera.Target + ::ced::SCoord3<float>{scene.Pivot[app.SolarSystem.Entities[3 * 2].IndexModel].Scale.x * 10, 0, 0}; }
+	if(GetAsyncKeyState('4')) { camera.Target = scene.Transform[4 * 2].GetTranslation(); camera.Position = camera.Target + ::ced::SCoord3<float>{scene.Pivot[app.SolarSystem.Entities[4 * 2].IndexModel].Scale.x * 10, 0, 0}; }
+	if(GetAsyncKeyState('5')) { camera.Target = scene.Transform[5 * 2].GetTranslation(); camera.Position = camera.Target + ::ced::SCoord3<float>{scene.Pivot[app.SolarSystem.Entities[5 * 2].IndexModel].Scale.x * 10, 0, 0}; }
+	if(GetAsyncKeyState('6')) { camera.Target = scene.Transform[6 * 2].GetTranslation(); camera.Position = camera.Target + ::ced::SCoord3<float>{scene.Pivot[app.SolarSystem.Entities[6 * 2].IndexModel].Scale.x * 10, 0, 0}; }
+	if(GetAsyncKeyState('7')) { camera.Target = scene.Transform[7 * 2].GetTranslation(); camera.Position = camera.Target + ::ced::SCoord3<float>{scene.Pivot[app.SolarSystem.Entities[7 * 2].IndexModel].Scale.x * 10, 0, 0}; }
+	if(GetAsyncKeyState('8')) { camera.Target = scene.Transform[8 * 2].GetTranslation(); camera.Position = camera.Target + ::ced::SCoord3<float>{scene.Pivot[app.SolarSystem.Entities[8 * 2].IndexModel].Scale.x * 10, 0, 0}; }
+	if(GetAsyncKeyState('9')) { camera.Target = scene.Transform[9 * 2].GetTranslation(); camera.Position = camera.Target + ::ced::SCoord3<float>{scene.Pivot[app.SolarSystem.Entities[9 * 2].IndexModel].Scale.x * 10, 0, 0}; }
 
 	// Update physics
 	::SIntegrator3											& bodies						= app.SolarSystem.Bodies;
 	bodies.Integrate(secondsLastFrame);
 
 	//------------------------------------------- Transform and Draw
-	::ced::view_grid<::ced::SColorBGRA>						targetPixels				= {framework.Pixels, framework.Window.Size};
+	::ced::view_grid<::ced::SColorBGRA>						targetPixels				= {framework.Pixels.begin(), framework.Window.Size};
 	memset(targetPixels.begin(), 0, sizeof(::ced::SColorBGRA) * targetPixels.size());
 	::ced::SCoord3<float>									lightVector					= camera.Position;
 
@@ -246,7 +247,7 @@ int													update						(SApplication & app)	{
 	::ced::container<::ced::STriangleWeights<float>>		pixelVertexWeights			= {};
 	::ced::SModelMatrices									matrices					= {};
 	::ced::view_grid<uint32_t>								depthBuffer					= {framework.DepthBuffer.begin(), app.Framework.Window.Size};
-	::SScene												& scene						= app.SolarSystem.Scene;
+	memset(depthBuffer.begin(), -1, sizeof(uint32_t) * depthBuffer.size());
 
 	::ced::SMatrix4<float>									matrixBody					= {};
 	scene.Transform.resize(app.SolarSystem.Entities.size());

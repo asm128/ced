@@ -1,9 +1,11 @@
-#include "ced_demo_13.h"
+#include "ced_demo_13_game.h"
+#include "ced_draw.h"
+
 #include <algorithm>
 
 static constexpr	const uint32_t					MAX_LIGHT_RANGE		= 10;
 
-static	int											drawStars			(const SStars & stars, ::ced::view_grid<::ced::SColorBGRA> targetPixels)	{
+static	int											drawStars			(const ::SStars & stars, ::ced::view_grid<::ced::SColorBGRA> targetPixels)	{
 	::ced::SColorBGRA										colors[]			=
 		{ {0xfF, 0xfF, 0xfF, }
 		, {0xC0, 0xC0, 0xfF, }
@@ -216,59 +218,117 @@ static	int											getLightArrays
 //	return 0;
 //}
 
-int													solarSystemDraw				(const ::SSolarSystem & solarSystem, ::ced::view_grid<::ced::SColorBGRA> & targetPixels, ::ced::view_grid<uint32_t> depthBuffer)	{
-	//------------------------------------------- Transform and Draw
-	if(0 == targetPixels.size())
-		return 1;
-	memcpy(targetPixels.begin(), solarSystem.BackgroundImage.Pixels.begin(), sizeof(::ced::SColorBGRA) * targetPixels.size());
-
-	::drawStars(solarSystem.Stars, targetPixels);
-
-	::ced::SMatrix4<float>									matrixView			= {};
-	matrixView.LookAt(solarSystem.Scene.Camera.Position, solarSystem.Scene.Camera.Target, solarSystem.Scene.Camera.Up);
-	matrixView											*= solarSystem.Scene.MatrixProjection;
-	::ced::container<::ced::SCoord2<int32_t>>				pixelCoords					= {};
-	::ced::container<::ced::STriangleWeights<float>>		pixelVertexWeights			= {};
-
-	::ced::container<::ced::SCoord3<float>>					lightPointsWorld			= {};
-	::ced::container<::ced::SColorBGRA>						lightColorsWorld			= {};
-	::ced::container<::ced::SCoord3<float>>					lightPointsModel			= {};
-	::ced::container<::ced::SColorBGRA>						lightColorsModel			= {};
-	lightPointsWorld.reserve(2048);
-	lightColorsWorld.reserve(2048);
-	::getLightArrays(solarSystem, lightPointsWorld, lightColorsWorld);
-	lightPointsModel.reserve(lightPointsWorld.size());
-	lightColorsModel.reserve(lightColorsWorld.size());
-
-	for(uint32_t iShip = 0; iShip < solarSystem.Ships.size(); ++iShip) {
-		const ::SShip											& ship					= solarSystem.Ships[iShip];
-		if(ship.Health <= 0)
+static	int											drawShip
+	( const ::SSolarSystem								& solarSystem
+	, const ::SShip										& ship
+	, const ::ced::SMatrix4<float>						& matrixView
+	, ::ced::view_grid<::ced::SColorBGRA>				& targetPixels
+	, ::ced::view_grid<uint32_t>						depthBuffer
+	, ::SSolarSystemDrawCache							& drawCache
+	) {
+	for(uint32_t iPart = 0; iPart < ship.Parts.size(); ++iPart) {
+		const ::SShipPart										& shipPart				= ship.Parts[iPart];
+		if(shipPart.Health <= 0)
 			continue;
-		for(uint32_t iPart = 0; iPart < ship.Parts.size(); ++iPart) {
-			const ::SShipPart										& shipPart				= ship.Parts[iPart];
-			if(shipPart.Health <= 0)
+		const ::SEntity											& entity					= solarSystem.Entities[shipPart.Entity];
+		for(uint32_t iEntity = 0; iEntity < entity.Children.size(); ++iEntity) {
+			const ::SEntity											& entityChild				= solarSystem.Entities[entity.Children[iEntity]];
+			if(-1 == entityChild.Parent)
 				continue;
-			const ::SEntity											& entity					= solarSystem.Entities[shipPart.Entity];
-			for(uint32_t iEntity = 0; iEntity < entity.Children.size(); ++iEntity) {
-				const ::SEntity											& entityChild				= solarSystem.Entities[entity.Children[iEntity]];
-				if(-1 == entityChild.Parent)
-					continue;
-				if(-1 == entityChild.Geometry)
-					continue;
-				::ced::SMatrix4<float>									matrixTransform				= solarSystem.Scene.ModelMatricesGlobal[entityChild.Transform];
-				::ced::SMatrix4<float>									matrixTransformView			= matrixTransform * matrixView;
-				::getLightArrays(matrixTransform.GetTranslation(), lightPointsWorld, lightColorsWorld, lightPointsModel, lightColorsModel);
-				const ::ced::SGeometryQuads								& mesh						= solarSystem.Scene.Geometry[entityChild.Geometry];
-				const ::ced::view_grid<const ::ced::SColorBGRA>			image						= solarSystem.Scene.Image	[entityChild.Image];
-				for(uint32_t iTriangle = 0; iTriangle < mesh.Triangles.size(); ++iTriangle) {
-					pixelCoords			.clear();
-					pixelVertexWeights	.clear();
-					::ced::drawQuadTriangle(targetPixels, mesh, iTriangle, matrixTransform, matrixTransformView, solarSystem.Scene.LightVector, pixelCoords, pixelVertexWeights, image, lightPointsModel, lightColorsModel, depthBuffer);
-				}
+			if(-1 == entityChild.Geometry)
+				continue;
+			::ced::SMatrix4<float>									matrixTransform				= solarSystem.Scene.ModelMatricesGlobal[entityChild.Transform];
+			::ced::SMatrix4<float>									matrixTransformView			= matrixTransform * matrixView;
+			::getLightArrays(matrixTransform.GetTranslation(), drawCache.LightPointsWorld, drawCache.LightColorsWorld, drawCache.LightPointsModel, drawCache.LightColorsModel);
+			const ::ced::SGeometryQuads								& mesh						= solarSystem.Scene.Geometry[entityChild.Geometry];
+			const ::ced::view_grid<const ::ced::SColorBGRA>			image						= solarSystem.Scene.Image	[entityChild.Image];
+			for(uint32_t iTriangle = 0; iTriangle < mesh.Triangles.size(); ++iTriangle) {
+				drawCache.PixelCoords			.clear();
+				drawCache.PixelVertexWeights	.clear();
+				::ced::drawQuadTriangle(targetPixels, mesh, iTriangle, matrixTransform, matrixTransformView, solarSystem.Scene.LightVector, drawCache.PixelCoords, drawCache.PixelVertexWeights, image, drawCache.LightPointsModel, drawCache.LightColorsModel, depthBuffer);
 			}
 		}
 	}
+	return 0;
+}
 
+static	int											drawExplosion
+	( const ::SSolarSystem								& solarSystem
+	, const ::SExplosion								& explosion
+	, const ::ced::SMatrix4<float>						& matrixView
+	, ::ced::view_grid<::ced::SColorBGRA>				& targetPixels
+	, ::ced::view_grid<uint32_t>						depthBuffer
+	, ::SSolarSystemDrawCache							& drawCache
+	) {
+	::ced::view_grid<const ::ced::SColorBGRA>				image					= solarSystem.Scene.Image	[explosion.IndexMesh];
+	const ::ced::SGeometryQuads								& mesh					= solarSystem.Scene.Geometry[explosion.IndexMesh];
+	for(uint32_t iExplosionPart = 0; iExplosionPart < explosion.Particles.Position.size(); ++iExplosionPart) {
+		const ::ced::SSlice<uint16_t>							& sliceMesh				= explosion.Slices[iExplosionPart];
+		::ced::SMatrix4<float>									matrixPart				= {};
+		matrixPart.Identity();
+		matrixPart.RotationX(solarSystem.AnimationTime * 2);
+		matrixPart.SetTranslation(explosion.Particles.Position[iExplosionPart], false);
+		::ced::SMatrix4<float>									matrixTransformView		= matrixPart * matrixView;
+		::getLightArrays(matrixPart.GetTranslation(), drawCache.LightPointsWorld, drawCache.LightColorsWorld, drawCache.LightPointsModel, drawCache.LightColorsModel);
+		for(uint32_t iTriangle = 0, countTriangles = sliceMesh.Count; iTriangle < countTriangles; ++iTriangle) {
+			drawCache.PixelCoords			.clear();
+			drawCache.PixelVertexWeights	.clear();
+			const uint32_t											iActualTriangle		= sliceMesh.Offset + iTriangle;
+			::ced::STriangle3	<float>								triangleWorld		= mesh.Triangles	[iActualTriangle];
+			::ced::SCoord3		<float>								normal				= mesh.Normals		[iActualTriangle / 2];
+			::ced::STriangle2	<float>								triangleTexCoords	= mesh.TextureCoords[iActualTriangle];
+			::ced::STriangle3	<float>								triangleScreen		= triangleWorld;
+			::ced::transform(triangleWorld, matrixPart);
+			::ced::transform(triangleScreen, matrixTransformView);
+			if(triangleScreen.A.z < 0 || triangleScreen.A.z >= 1) continue;
+			if(triangleScreen.B.z < 0 || triangleScreen.B.z >= 1) continue;
+			if(triangleScreen.C.z < 0 || triangleScreen.C.z >= 1) continue;
+
+			normal												= matrixPart.TransformDirection(normal).Normalize();
+
+  			::ced::drawQuadTriangle(targetPixels, triangleWorld, triangleScreen, normal, triangleTexCoords, solarSystem.Scene.LightVector, drawCache.PixelCoords, drawCache.PixelVertexWeights, image, drawCache.LightPointsModel, drawCache.LightColorsModel, depthBuffer);
+			drawCache.PixelCoords			.clear();
+			drawCache.PixelVertexWeights	.clear();
+			triangleWorld										= {triangleWorld.A, triangleWorld.C, triangleWorld.B};
+			triangleScreen										= {triangleScreen.A, triangleScreen.C, triangleScreen.B};
+			triangleTexCoords									= {triangleTexCoords.A, triangleTexCoords.C, triangleTexCoords.B};
+			normal.x											*= -1;
+			normal.y											*= -1;
+  			::ced::drawQuadTriangle(targetPixels, triangleWorld, triangleScreen, normal, triangleTexCoords, solarSystem.Scene.LightVector, drawCache.PixelCoords, drawCache.PixelVertexWeights, image, drawCache.LightPointsModel, drawCache.LightColorsModel, depthBuffer);
+		}
+	}
+	return 0;
+}
+
+int													solarSystemDraw				(const ::SSolarSystem & solarSystem, ::SSolarSystemDrawCache & drawCache, ::std::mutex & mutexUpdate, ::ced::view_grid<::ced::SColorBGRA> & targetPixels, ::ced::view_grid<uint32_t> depthBuffer)	{
+	//------------------------------------------- Transform and Draw
+	if(0 == targetPixels.size())
+		return 1;
+	memset(depthBuffer.begin(), -1, sizeof(uint32_t) * depthBuffer.size());
+	{
+		::std::lock_guard<::std::mutex>							lockUpdate					(mutexUpdate);
+		memcpy(targetPixels.begin(), solarSystem.BackgroundImage.Pixels.begin(), sizeof(::ced::SColorBGRA) * targetPixels.size());
+		::drawStars(solarSystem.Stars, targetPixels);
+	}
+	::ced::SMatrix4<float>									matrixView			= {};
+	matrixView.LookAt(solarSystem.Scene.Camera.Position, solarSystem.Scene.Camera.Target, solarSystem.Scene.Camera.Up);
+	matrixView											*= solarSystem.Scene.MatrixProjection;
+	drawCache.LightPointsWorld.clear();
+	drawCache.LightColorsWorld.clear();
+	{
+		::std::lock_guard<::std::mutex>							lockUpdate					(mutexUpdate);
+		::getLightArrays(solarSystem, drawCache.LightPointsWorld, drawCache.LightColorsWorld);
+	}
+	drawCache.LightPointsModel.reserve(drawCache.LightPointsWorld.size());
+	drawCache.LightColorsModel.reserve(drawCache.LightColorsWorld.size());
+
+	for(uint32_t iShip = 0; iShip < solarSystem.Ships.size(); ++iShip) {
+		::std::lock_guard<::std::mutex>							lockUpdate					(mutexUpdate);
+		const ::SShip											& ship					= solarSystem.Ships[iShip];
+		if(ship.Health <= 0)
+			continue;
+		::drawShip(solarSystem, ship, matrixView, targetPixels, depthBuffer, drawCache);
+	}
 #pragma pack(push, 1)
 	struct SRenderNode	{
 		uint32_t					Mesh				;
@@ -280,63 +340,33 @@ int													solarSystemDraw				(const ::SSolarSystem & solarSystem, ::ced::v
 
 	::ced::container<uint16_t>								indicesPointLight;
 	for(uint32_t iExplosion = 0; iExplosion < solarSystem.Explosions.size(); ++iExplosion) {
+		::std::lock_guard<::std::mutex>							lockUpdate					(mutexUpdate);
 		const ::SExplosion										& explosion				= solarSystem.Explosions[iExplosion];
-
-		::ced::view_grid<const ::ced::SColorBGRA>				image					= solarSystem.Scene.Image	[explosion.IndexMesh];
-		const ::ced::SGeometryQuads								& mesh					= solarSystem.Scene.Geometry[explosion.IndexMesh];
-		for(uint32_t iExplosionPart = 0; iExplosionPart < explosion.Particles.Position.size(); ++iExplosionPart) {
-			const ::ced::SSlice<uint16_t>							& sliceMesh				= explosion.Slices[iExplosionPart];
-			::ced::SMatrix4<float>									matrixPart				= {};
-			matrixPart.Identity();
-			matrixPart.RotationX(solarSystem.AnimationTime * 2);
-			matrixPart.SetTranslation(explosion.Particles.Position[iExplosionPart], false);
-			::ced::SMatrix4<float>									matrixTransformView		= matrixPart * matrixView;
-			::getLightArrays(matrixPart.GetTranslation(), lightPointsWorld, lightColorsWorld, lightPointsModel, lightColorsModel);
-			for(uint32_t iTriangle = 0, countTriangles = sliceMesh.Count; iTriangle < countTriangles; ++iTriangle) {
-				pixelCoords			.clear();
-				pixelVertexWeights	.clear();
-				const uint32_t											iActualTriangle		= sliceMesh.Offset + iTriangle;
-				::ced::STriangle3	<float>								triangleWorld		= mesh.Triangles	[iActualTriangle];
-				::ced::SCoord3		<float>								normal				= mesh.Normals		[iActualTriangle / 2];
-				::ced::STriangle2	<float>								triangleTexCoords	= mesh.TextureCoords[iActualTriangle];
-				::ced::STriangle3	<float>								triangleScreen		= triangleWorld;
-				::ced::transform(triangleWorld, matrixPart);
-				::ced::transform(triangleScreen, matrixTransformView);
-				if(triangleScreen.A.z < 0 || triangleScreen.A.z >= 1) continue;
-				if(triangleScreen.B.z < 0 || triangleScreen.B.z >= 1) continue;
-				if(triangleScreen.C.z < 0 || triangleScreen.C.z >= 1) continue;
-
-				normal												= matrixPart.TransformDirection(normal).Normalize();
-
-  				::ced::drawQuadTriangle(targetPixels, triangleWorld, triangleScreen, normal, triangleTexCoords, solarSystem.Scene.LightVector, pixelCoords, pixelVertexWeights, image, lightPointsModel, lightColorsModel, depthBuffer);
-				pixelCoords			.clear();
-				pixelVertexWeights	.clear();
-				triangleWorld										= {triangleWorld.A, triangleWorld.C, triangleWorld.B};
-				triangleScreen										= {triangleScreen.A, triangleScreen.C, triangleScreen.B};
-				triangleTexCoords									= {triangleTexCoords.A, triangleTexCoords.C, triangleTexCoords.B};
-				normal.x											*= -1;
-				normal.y											*= -1;
-  				::ced::drawQuadTriangle(targetPixels, triangleWorld, triangleScreen, normal, triangleTexCoords, solarSystem.Scene.LightVector, pixelCoords, pixelVertexWeights, image, lightPointsModel, lightColorsModel, depthBuffer);
-			}
-		}
+		if(0 == explosion.Slices.size())
+			continue;
+		::drawExplosion(solarSystem, explosion, matrixView, targetPixels, depthBuffer, drawCache);
 	}
 
 	::ced::container<::ced::SCoord3<float>>					pixelCoordsCache;
 	pixelCoordsCache.reserve(512);
 	for(uint32_t iShip = 0; iShip < solarSystem.Ships.size(); ++iShip) {
+		::std::lock_guard<::std::mutex>							lockUpdate					(mutexUpdate);
 		const ::SShip										& ship					= solarSystem.Ships[iShip];
 		for(uint32_t iPart = 0; iPart < ship.Parts.size(); ++iPart) {
 			::ced::SColorFloat									colorShot				= ::ced::WHITE;
 			double												brightRadius			= 1;
 			double												intensity				= 1;
 			bool												line					= true;
-				 if(MUNITION_TYPE_RAY	== ship.Parts[iPart].Shots.Type) { colorShot = ::ced::SColorFloat{1.0f, 0.1f, 0.0f}		; brightRadius =  2.0; intensity =  1; line = true ;}
-			else if(MUNITION_TYPE_SHELL	== ship.Parts[iPart].Shots.Type) { colorShot = ::ced::SColorFloat{1.0f, 0.125f, 0.25f}	; brightRadius =  7.0; intensity = 10; line = false;}
-			else if(MUNITION_TYPE_BULLET== ship.Parts[iPart].Shots.Type) { colorShot = ::ced::DARKGRAY							; brightRadius =  2.0; intensity =  1; line = true ;}
+				 if(MUNITION_TYPE_RAY	== ship.Parts[iPart].Shots.Type) { colorShot = ::ced::SColorFloat{1.0f, 0.1f, 0.0f}		; brightRadius =  3.0; intensity =  1; line = true ;}
+			else if(MUNITION_TYPE_SHELL	== ship.Parts[iPart].Shots.Type) { colorShot = ::ced::SColorFloat{1.0f, 0.125f, 0.25f}	; brightRadius =  9.0; intensity = 10; line = false;}
+			else if(MUNITION_TYPE_BULLET== ship.Parts[iPart].Shots.Type) { colorShot = ::ced::DARKGRAY							; brightRadius =  3.0; intensity =  1; line = true ;}
 
-			::drawShots(targetPixels, ship.Parts[iPart].Shots, matrixView, colorShot, brightRadius, intensity, line, depthBuffer, pixelCoordsCache);
+			::drawShots(targetPixels, ship.Parts[iPart].Shots, matrixView, colorShot, brightRadius, intensity, line, depthBuffer, drawCache.LightPointsModel);
 		}
 	}
-	::drawDebris(targetPixels, solarSystem.Debris, matrixView, depthBuffer);
+	{
+		::std::lock_guard<::std::mutex>							lockUpdate					(mutexUpdate);
+		::drawDebris(targetPixels, solarSystem.Debris, matrixView, depthBuffer);
+	}
 	return 0;
 }

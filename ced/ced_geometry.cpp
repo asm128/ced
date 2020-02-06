@@ -43,10 +43,10 @@ static constexpr const ::ced::STriangle2<int8_t>	texCoordCubeYUp		[12]						=
 	};
 
 static constexpr const ::ced::SCoord3<int8_t>		geometryNormals	[6]		=
-	{ { 0, 0, 1} // Right
+	{ { 0, 0,-1} // Right
 	, {-1, 0, 0} // Back
 	, { 0,-1, 0} // Bottom
-	, { 0, 0,-1} // Left
+	, { 0, 0, 1} // Left
 	, { 1, 0, 0} // Front
 	, { 0, 1, 0} // Top
 	};
@@ -73,6 +73,7 @@ int													ced::geometryBuildCube	(SGeometryQuads & geometry)	{
 }
 
 int													ced::geometryBuildGrid	(SGeometryQuads & geometry, ::ced::SCoord2<uint32_t> gridSize, ::ced::SCoord2<float> gridCenter, const ::ced::SCoord3<float> & scale)	{
+	::ced::SCoord2<float>									texCoordUnits				= {1.0f / gridSize.x, 1.0f / gridSize.y};
 	for(uint32_t z = 0; z < gridSize.y; ++z)
 	for(uint32_t x = 0; x < gridSize.x; ++x)  {
 		::ced::SCoord3<float>									coords	[4]			=
@@ -81,11 +82,12 @@ int													ced::geometryBuildGrid	(SGeometryQuads & geometry, ::ced::SCoord
 			, {1, 0, 0}
 			, {1, 0, 1}
 			};
+		::ced::SCoord2<float>									texcoordsOffset			= {x * texCoordUnits.x, z * texCoordUnits.y};
 		::ced::SCoord2<float>									texcoords	[4]			=
-			{ {0, 0}
-			, {0, 1}
-			, {1, 0}
-			, {1, 1}
+			{ {0.0f * texCoordUnits.x + texcoordsOffset.x, 0.0f * texCoordUnits.y + texcoordsOffset.y}
+			, {0.0f * texCoordUnits.x + texcoordsOffset.x, 1.0f * texCoordUnits.y + texcoordsOffset.y}
+			, {1.0f * texCoordUnits.x + texcoordsOffset.x, 0.0f * texCoordUnits.y + texcoordsOffset.y}
+			, {1.0f * texCoordUnits.x + texcoordsOffset.x, 1.0f * texCoordUnits.y + texcoordsOffset.y}
 			};
 		::ced::STriangle2<float>								triangleATex		= {texcoords[0], texcoords[1], texcoords[2]};
 		::ced::STriangle2<float>								triangleBTex		= {texcoords[1], texcoords[3], texcoords[2]};
@@ -110,7 +112,9 @@ int													ced::geometryBuildGrid	(SGeometryQuads & geometry, ::ced::SCoord
 		geometry.Triangles		.push_back(triangleB);
 		geometry.TextureCoords	.push_back(triangleATex);
 		geometry.TextureCoords	.push_back(triangleBTex);
-		geometry.Normals		.push_back((triangleA.A - triangleA.B).Normalize().Cross((triangleB.A - triangleB.B).Normalize()).Normalize().Cast<float>());
+		::ced::SCoord3<float>									normal				= (triangleA.A - triangleA.B).Normalize().Cross((triangleB.A - triangleB.B).Normalize());
+		normal.Normalize();
+		geometry.Normals		.push_back(normal);
 	}
 	return 0;
 }
@@ -465,5 +469,83 @@ int													ced::geometryBuildSphere	(SGeometryTriangles & geometry, uint32_
 			geometry.Triangles	.push_back(triangleB);
 		}
 	}
+	return 0;
+}
+
+
+int													ced::geometryBuildTileListFromImage		(::ced::view_grid<const ::ced::SColorBGRA> image, ::ced::container<::ced::STile> & out_tiles)	{
+	{
+		::ced::STile											newTile;
+		for(uint32_t z = 0; z < image.metrics().y; ++z)
+		for(uint32_t x = 0; x < image.metrics().x; ++x) {
+			::ced::SColorFloat										currentPixel							= image[z][x];
+			float													pixelHeight								= float((currentPixel.r + (double)currentPixel.g + currentPixel.b) / 3.0);
+			for(uint32_t iCorner = 0; iCorner < 4; ++iCorner)
+				newTile.Height[0]									= pixelHeight;
+			newTile.Top											= 1;
+			newTile.Flags										= 0;
+			out_tiles.push_back(newTile);
+		}
+	}
+	for(uint32_t z = 0; z < image.metrics().y; ++z)
+	for(uint32_t x = 0; x < image.metrics().x; ++x) {
+		::ced::STile											& currentTile							= out_tiles[z * image.metrics().y + x];
+		if((x + 1) < image.metrics().x && currentTile.Height == out_tiles[z * image.metrics().y + x + 1].Height)
+			currentTile.Front		= 1;
+		if((z + 1) < image.metrics().y && currentTile.Height == out_tiles[(z + 1) * image.metrics().y + x].Height)
+			currentTile.Right		= 1;
+	}
+	return 0;
+}
+
+int													ced::geometryBuildGridFromTileList		(::ced::SGeometryQuads & geometry, ::ced::view_grid<const ::ced::STile> tiles, ::ced::SCoord2<float> gridCenter, const ::ced::SCoord3<float> & scale) {
+	::ced::SCoord2<float>									texCoordUnits				= {1, 1};//{1.0f / slices, 1.0f / stacks};
+	for(uint32_t z = 0; z < tiles.metrics().y; ++z)
+	for(uint32_t x = 0; x < tiles.metrics().x; ++x) {
+		const ::ced::STile										& currentTile							= tiles[z][x];
+		{
+			::ced::SCoord2<float>									texcoords	[4]				=
+				{ {0, 0}//{(z		) * texCoordUnits.y, (x		) * texCoordUnits.x}
+				, {1, 0}//{(z		) * texCoordUnits.y, (x + 1	) * texCoordUnits.x}
+				, {0, 1}//{(z + 1	) * texCoordUnits.y, (x		) * texCoordUnits.x}
+				, {1, 1}//{(z + 1	) * texCoordUnits.y, (x + 1	) * texCoordUnits.x}
+				};
+			geometry.TextureCoords.push_back(
+				{ texcoords[0]
+				, texcoords[2]
+				, texcoords[1]
+				});
+			geometry.TextureCoords.push_back(
+				{ texcoords[1]
+				, texcoords[2]
+				, texcoords[3]
+				});
+		}
+		::ced::SCoord3<float>									coords	[4]			=
+			{ {0, 0, 0}
+			, {0, 0, 1}
+			, {1, 0, 0}
+			, {1, 0, 1}
+			};
+		{
+		}
+		{
+			::ced::STriangle3<float>								triangleA			= {coords[0], coords[2], coords[1]};
+			::ced::STriangle3<float>								triangleB			= {coords[1], coords[2], coords[3]};
+			triangleA.Scale(scale);
+			triangleB.Scale(scale);
+			triangleA.A											-= {gridCenter.x, currentTile.Height[0] * -1, gridCenter.y};
+			triangleA.B											-= {gridCenter.x, currentTile.Height[2] * -1, gridCenter.y};
+			triangleA.C											-= {gridCenter.x, currentTile.Height[1] * -1, gridCenter.y};
+			triangleB.A											-= {gridCenter.x, currentTile.Height[1] * -1, gridCenter.y};
+			triangleB.B											-= {gridCenter.x, currentTile.Height[2] * -1, gridCenter.y};
+			triangleB.C											-= {gridCenter.x, currentTile.Height[3] * -1, gridCenter.y};
+			geometry.Triangles	.push_back(triangleA);
+			geometry.Triangles	.push_back(triangleB);
+			geometry.Normals.push_back((triangleA.A - triangleA.B).Normalize().Cross((triangleB.A - triangleB.B).Normalize()).Normalize().Cast<float>());
+		}
+
+	}
+	(void)geometry, (void)tiles, (void)gridCenter, (void)scale;
 	return 0;
 }

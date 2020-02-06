@@ -200,14 +200,14 @@ static	int											getLightArrays
 int													draw				(SApplication & app)	{
 	//------------------------------------------- Transform and Draw
 	::ced::SFramework										& framework			= app.Framework;
-	::ced::view_grid<::ced::SColorBGRA>						targetPixels		= {framework.Pixels, framework.Window.Size};
+	::ced::view_grid<::ced::SColorBGRA>						targetPixels		= {framework.Pixels.begin(), framework.Window.Size};
 	if(0 == targetPixels.size())
 		return 1;
 	memcpy(targetPixels.begin(), app.SolarSystem.BackgroundImage.Pixels.begin(), sizeof(::ced::SColorBGRA) * targetPixels.size());
 
 	::SSolarSystem											& solarSystem		= app.SolarSystem;
 
-	::drawStars(app.SolarSystem.Stars, {framework.Pixels, framework.Window.Size});
+	::drawStars(app.SolarSystem.Stars, targetPixels);
 
 	solarSystem.Scene.LightVector.Normalize();
 
@@ -228,6 +228,7 @@ int													draw				(SApplication & app)	{
 	lightColorsModel.reserve(lightColorsWorld.size());
 
 	::ced::view_grid<uint32_t>								depthBuffer					= {framework.DepthBuffer.begin(), framework.Window.Size};
+	memset(depthBuffer.begin(), -1, sizeof(uint32_t) * depthBuffer.size());
 	for(uint32_t iShip = 0; iShip < solarSystem.Ships.size(); ++iShip) {
 		::SShip													& ship					= solarSystem.Ships[iShip];
 		if(ship.Health <= 0)
@@ -331,6 +332,6 @@ int													draw				(SApplication & app)	{
 			::drawShots(targetPixels, ship.Parts[iPart].Shots, matrixView, colorShot, brightRadius, intensity, line, depthBuffer, pixelCoordsCache);
 		}
 	}
-	::drawDebris(targetPixels, solarSystem.Debris		, matrixView, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
+	::drawDebris(targetPixels, solarSystem.Debris, matrixView, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
 	return 0;
 }

@@ -1,5 +1,12 @@
 #include "ced_view.h"
 #include "ced_color.h"
+#include "ced_geometry.h"
+#include "ced_image.h"
+#include "ced_matrix.h"
+#include "ced_model.h"
+#include "ced_rigidbody.h"
+
+#include <mutex>
 
 #ifndef CED_DEMO_08_GAME_H_293874239874
 #define CED_DEMO_08_GAME_H_293874239874
@@ -110,6 +117,7 @@ enum WEAPON_TYPE
 	, WEAPON_TYPE_LASER
 	, WEAPON_TYPE_ROCKET
 	, WEAPON_TYPE_SHIELD
+	, WEAPON_TYPE_SHOTGUN
 	, WEAPON_TYPE_COUNT
 	};
 
@@ -118,6 +126,7 @@ enum MUNITION_TYPE
 	, MUNITION_TYPE_SHELL
 	, MUNITION_TYPE_RAY
 	, MUNITION_TYPE_ROCKET
+	, MUNITION_TYPE_MISSILE
 	, MUNITION_TYPE_FLARE
 	, MUNITION_TYPE_COUNT
 	};
@@ -185,4 +194,98 @@ struct SExplosion {
 	}
 };
 
+#pragma pack(push, 1)
+struct SEntityFlags {
+	int32_t												Padding						:1;
+};
+#pragma pack(pop)
+
+struct SEntity {
+	int32_t												Parent						;
+	int32_t												Geometry					;
+	int32_t												Transform					;
+	int32_t												Image						;
+	int32_t												Body						;
+	SEntityFlags										Flags						;
+	::ced::container<uint32_t>							Children					;
+};
+
+enum SHIP_PART_TYPE
+	{ SHIP_PART_TYPE_CANNON		= 0
+	, SHIP_PART_TYPE_WAFER
+	, SHIP_PART_TYPE_GUN
+	, SHIP_PART_TYPE_COIL
+	, SHIP_PART_TYPE_SHIELD
+	, SHIP_PART_TYPE_SILO
+	, SHIP_PART_TYPE_COUNT
+	};
+
+struct SShipPart {
+	int32_t												Entity	;
+	int32_t												Type	;
+	int32_t												Health	;
+	::SShots											Shots	;
+};
+
+struct SShip {
+	int32_t												Entity	;
+	int32_t												Team	;
+	int32_t												Health	;
+	::ced::container<::SShipPart>						Parts	;
+};
+
+struct SShipScene	{
+	::ced::container<::ced::SGeometryQuads>				Geometry						= {};
+	::ced::container<::ced::SImage>						Image							= {};
+	::ced::container<::ced::SMatrix4<float>>			ModelMatricesLocal				= {};
+	::ced::container<::ced::SMatrix4<float>>			ModelMatricesGlobal				= {};
+	::ced::container<::ced::SModel3>					Transforms						= {};
+	::ced::SCamera										Camera							= {};
+	::ced::SCoord3	<float>								LightVector						= {0, -12, 0};
+	::ced::SMatrix4	<float>								MatrixProjection				= {};
+};
+
+struct SSolarSystemDrawCache {
+	::ced::container<::ced::SCoord2<int32_t>>			PixelCoords				;
+	::ced::container<::ced::STriangleWeights<float>>	PixelVertexWeights		;
+	::ced::container<::ced::SCoord3<float>>				LightPointsWorld		;
+	::ced::container<::ced::SColorBGRA>					LightColorsWorld		;
+	::ced::container<::ced::SCoord3<float>>				LightPointsModel		;
+	::ced::container<::ced::SColorBGRA>					LightColorsModel		;
+};
+
+struct SSolarSystem {
+	::SShipScene										Scene							= {};
+	::ced::container<::SEntity>							Entities						= {};
+	::ced::container<::SShip>							Ships							= {};
+	::ced::SIntegrator3									ShipPhysics						= {};
+
+	::SStars											Stars							= {};
+	::SDebris											Debris							= {};
+	::ced::container<::SExplosion>						Explosions						= {};
+
+	double												AnimationTime					= 0;
+	double												TimeScale						= 1;
+
+	static constexpr const double						RelativeSpeedTarget				= 30;
+	double												RelativeSpeedCurrent			= 0;
+
+	::ced::SImage										BackgroundImage					= {};
+	bool												Slowing							= true;
+	int													AccelerationControl				= 0;
+
+	uint32_t											Stage							= 0;
+
+	SSolarSystemDrawCache								DrawCache;
+	::std::mutex										LockUpdate;
+};
+
+int													stageSetup						(::SSolarSystem & solarSystem);
+int													solarSystemSetup				(::SSolarSystem & solarSystem, ::ced::SCoord2<uint32_t> windowSize);
+int													solarSystemDraw					(const ::SSolarSystem & solarSystem, ::SSolarSystemDrawCache & drawCache, ::std::mutex & lockUpdate, ::ced::view_grid<::ced::SColorBGRA> & targetPixels, ::ced::view_grid<uint32_t> depthBuffer);
+int													solarSystemUpdate				(::SSolarSystem & solarSystem, double secondsLastFrame, ::ced::SCoord2<uint32_t> screenSize);
+int													solarSystemSetupBackgroundImage	(::ced::SImage & backgroundImage, ::ced::SCoord2<uint32_t> windowSize);
+int													setupStars						(SStars & stars, ::ced::SCoord2<uint32_t> targetSize);
+
 #endif // CED_DEMO_08_GAME_H_293874239874
+

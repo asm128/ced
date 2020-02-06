@@ -1,6 +1,8 @@
 #include "ced_window.h"
 #include "ced_timer.h"
 
+#include <mutex>
+
 #ifndef CED_FRAMEWORK_H_239847239847
 #define CED_FRAMEWORK_H_239847239847
 
@@ -8,12 +10,15 @@ namespace ced
 {
 	struct SFramework {
 		::ced::SWindow										Window				= {};
-		::ced::SColorBGRA										* Pixels			= 0;
+		::ced::container<::ced::SColorBGRA>					Pixels				= {};
+		::ced::container<::ced::SColorBGRA>					DoubleBuffer[2]		= {};
 		::ced::container<uint32_t>							DepthBuffer			= {};
 		::ced::STimer										Timer				= {};
+		uint64_t											CurrentRenderBuffer	= 0;
 		uint64_t											TotalFrames			= 0;
 		double												TotalTime			= 0;
 		bool												Running				= true;
+		bool												UseDoubleBuffer		= false;
 	};
 
 	int													frameworkSetup		(::ced::SFramework & framework);

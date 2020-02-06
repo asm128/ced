@@ -43,6 +43,7 @@ int													setup				(SApplication & app)	{
 	::ced::geometryBuildSphere(app.Geometry, 12U, 7U, 1, {});
 	//::ced::geometryBuildHalfHelix(app.Geometry, 16U, 16U, 1, {});
 	//::ced::geometryBuildFigure0(app.Geometry, 10U, 10U, 1, {});
+	//::ced::geometryBuildTender(app.Geometry, 10U, 10U, 1, {});
 	app.Models.resize(6);
 	for(uint32_t iModel = 0; iModel < app.Models.size(); ++iModel) {
 		SModel3												& model			= app.Models[iModel];
@@ -68,7 +69,8 @@ int													update				(SApplication & app)	{
 	}
 	::ced::view_grid<::ced::SColorBGRA>							targetPixels		= {app.Pixels, window.Size};
 	memset(targetPixels.begin(), 0, sizeof(::ced::SColorBGRA) * targetPixels.size());
-	memset(app.DepthBuffer.begin(), -1, sizeof(::ced::SColorBGRA) * app.DepthBuffer.size());
+	::ced::view_grid<uint32_t>									depthBuffer			= {app.DepthBuffer.begin(), app.Window.Size};
+	memset(depthBuffer.begin(), -1, sizeof(uint32_t) * depthBuffer.size());
 
 	//------------------------------------------- Handle input
 	::ced::SCoord3<float>									cameraTarget		= {};
@@ -111,7 +113,7 @@ int													update				(SApplication & app)	{
 			pixelVertexWeights	.clear();
 			uint32_t												colorIndex			= (uint32_t)iModel % ::std::size(app.Colors);
 			::ced::SColorBGRA										triangleColor		= app.Colors[colorIndex];
-			::ced::drawQuadTriangle(targetPixels, app.Geometry, iTriangle, matrixTransform, matrixTransformView, lightVector, triangleColor, pixelCoords, pixelVertexWeights, {app.DepthBuffer.begin(), app.Window.Size});
+			::ced::drawQuadTriangle(targetPixels, app.Geometry, iTriangle, matrixTransform, matrixTransformView, lightVector, triangleColor, pixelCoords, pixelVertexWeights, depthBuffer);
 		}
 	}
 	return app.Running ? 0 : 1;

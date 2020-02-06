@@ -169,6 +169,8 @@
   <ItemGroup>
     <ClCompile Include="ced_demo_13.cpp" />
     <ClCompile Include="ced_demo_13_draw.cpp" />
+    <ClCompile Include="ced_demo_13_setup.cpp" />
+    <ClCompile Include="ced_demo_13_update.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ced_demo_13.h" />

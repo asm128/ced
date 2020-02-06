@@ -128,7 +128,7 @@ int													drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixels, S
 int													draw				(SApplication & app)	{
 	//------------------------------------------- Transform and Draw
 	::ced::SFramework										& framework			= app.Framework;
-	::ced::view_grid<::ced::SColorBGRA>							targetPixels		= {framework.Pixels, framework.Window.Size};
+	::ced::view_grid<::ced::SColorBGRA>						targetPixels		= {framework.Pixels.begin(), framework.Window.Size};
 	if(0 == targetPixels.size())
 		return 1;
 	::ced::SColorBGRA											colorBackground		= {0x20, 0x8, 0x4};
@@ -137,7 +137,7 @@ int													draw				(SApplication & app)	{
 	for(uint32_t x = 0; x < framework.Window.Size.x; ++x)
 		framework.Pixels[y * framework.Window.Size.x + x]	= colorBackground;
 
-	drawStars(app.Stars, {framework.Pixels, framework.Window.Size});
+	drawStars(app.Stars, targetPixels);
 
 	app.Scene.LightVector.Normalize();
 
@@ -156,6 +156,8 @@ int													draw				(SApplication & app)	{
 	::ced::SModelMatrices									matricesParent;
 	::ced::SColorBGRA											colorShotPlayer			= {0x20, 0xfF, 0x40};
 	::ced::SColorBGRA											colorShotEnemy			= {0x40, 0x20, 0xfF};
+	::ced::view_grid<uint32_t>								depthBuffer					= {framework.DepthBuffer.begin(), framework.Window.Size};
+	memset(depthBuffer.begin(), -1, sizeof(uint32_t) * depthBuffer.size());
 	for(uint32_t iModel = 0; iModel < app.Scene.Models.size(); ++iModel) {
 		if(app.Health[iModel] <= 0)
 			continue;
@@ -197,12 +199,12 @@ int													draw				(SApplication & app)	{
 		for(uint32_t iTriangle = 0; iTriangle < app.Scene.Geometry.Triangles.size(); ++iTriangle) {
 			pixelCoords			.clear();
 			pixelVertexWeights	.clear();
-			::ced::drawQuadTriangle(targetPixels, app.Scene.Geometry, iTriangle, matrixTransform, matrixTransformView, app.Scene.LightVector, pixelCoords, pixelVertexWeights, {app.Scene.Image.Pixels.begin(), app.Scene.Image.Metrics}, lightPoints, lightColors, {framework.DepthBuffer.begin(), framework.Window.Size});
+			::ced::drawQuadTriangle(targetPixels, app.Scene.Geometry, iTriangle, matrixTransform, matrixTransformView, app.Scene.LightVector, pixelCoords, pixelVertexWeights, {app.Scene.Image.Pixels.begin(), app.Scene.Image.Metrics}, lightPoints, lightColors, depthBuffer);
 		}
 	}
 
-	::drawShots(targetPixels, app.ShotsPlayer	, matrixView, colorShotPlayer	, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
-	::drawShots(targetPixels, app.ShotsEnemy	, matrixView, colorShotEnemy	, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
-	::drawDebris(targetPixels, app.Debris		, matrixView, {app.Framework.DepthBuffer.begin(), targetPixels.metrics()});
+	::drawShots(targetPixels, app.ShotsPlayer	, matrixView, colorShotPlayer	, depthBuffer);
+	::drawShots(targetPixels, app.ShotsEnemy	, matrixView, colorShotEnemy	, depthBuffer);
+	::drawDebris(targetPixels, app.Debris		, matrixView, depthBuffer);
 	return 0;
 }

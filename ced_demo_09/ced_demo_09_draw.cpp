@@ -199,7 +199,7 @@ static	int											getLightArrays
 int													draw				(SApplication & app)	{
 	//------------------------------------------- Transform and Draw
 	::ced::SFramework										& framework			= app.Framework;
-	::ced::view_grid<::ced::SColorBGRA>						targetPixels		= {framework.Pixels, framework.Window.Size};
+	::ced::view_grid<::ced::SColorBGRA>						targetPixels		= {framework.Pixels.begin(), framework.Window.Size};
 	if(0 == targetPixels.size())
 		return 1;
 	const ::ced::SColorBGRA									colorBackground		= {0x20, 0x8, 0x4};
@@ -208,7 +208,7 @@ int													draw				(SApplication & app)	{
 	for(uint32_t x = 0; x < framework.Window.Size.x; ++x)
 		framework.Pixels[y * framework.Window.Size.x + x]	= colorBackground;
 
-	drawStars(app.Stars, {framework.Pixels, framework.Window.Size});
+	drawStars(app.Stars, targetPixels);
 
 	app.Scene.LightVector.Normalize();
 
@@ -235,6 +235,7 @@ int													draw				(SApplication & app)	{
 	::getLightArrays(app, lightPointsWorld, lightColorsWorld);
 
 	::ced::view_grid<uint32_t>								depthBuffer					= {framework.DepthBuffer.begin(), framework.Window.Size};
+	memset(depthBuffer.begin(), -1, sizeof(uint32_t) * depthBuffer.size());
 	for(uint32_t iModel = 0; iModel < app.Scene.Models.size(); ++iModel) {
 		if(app.Health[iModel] <= 0)
 			continue;
