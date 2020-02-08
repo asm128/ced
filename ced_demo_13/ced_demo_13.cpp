@@ -7,7 +7,7 @@ int													setup				(SApplication & app)	{
 	::ced::SFramework										& framework			= app.Framework;
 	::ced::frameworkSetup(framework);
 	srand((uint32_t)time(0));
-	::solarSystemSetup(app.SolarSystem, framework.Window.Size);
+	::ssg::solarSystemSetup(app.SolarSystem, framework.Window.Size);
 	framework.UseDoubleBuffer							= true;
 	return 0;
 }
@@ -28,13 +28,13 @@ int													update				(SApplication & app)	{
 
 		{
 			::std::lock_guard<::std::mutex>							lockUpdate			(app.SolarSystem.LockUpdate);
-			::solarSystemSetupBackgroundImage(app.SolarSystem.BackgroundImage, framework.Window.Size);
-			::setupStars(app.SolarSystem.Stars, framework.Window.Size);
+			::ssg::solarSystemSetupBackgroundImage(app.SolarSystem.BackgroundImage, framework.Window.Size);
+			::ssg::setupStars(app.SolarSystem.Stars, framework.Window.Size);
 		}
 	}
 	double													secondsLastFrame	= framework.Timer.ElapsedMicroseconds * .001;
 	secondsLastFrame									*= .001;
-	::solarSystemUpdate(app.SolarSystem, secondsLastFrame, framework.Window.Size);
+	::ssg::solarSystemUpdate(app.SolarSystem, secondsLastFrame, framework.Window.Size);
 	Sleep(1);
 	return framework.Running ? 0 : 1;
 }
@@ -42,11 +42,11 @@ int													update				(SApplication & app)	{
 int													draw					(SApplication & app) {
 	::ced::view_grid<::ced::SColorBGRA>						targetPixels			= {app.Framework.DoubleBuffer[app.Framework.CurrentRenderBuffer % 2].begin(), app.Framework.Window.Size};
 	::ced::view_grid<uint32_t>								depthBuffer				= {app.Framework.DepthBuffer.begin(), app.Framework.Window.Size};
-	return ::solarSystemDraw(app.SolarSystem, app.SolarSystem.DrawCache, app.SolarSystem.LockUpdate, targetPixels, depthBuffer);
+	return ::ssg::solarSystemDraw(app.SolarSystem, app.SolarSystem.DrawCache, app.SolarSystem.LockUpdate, targetPixels, depthBuffer);
 }
 
 void												threadDraw				(void * pApp) {
-	SApplication											& app	= *(SApplication*)pApp;
+	SApplication											& app					= *(SApplication*)pApp;
 	while(InterlockedCompareExchange64(&app.ThreadSignal, 0, 1)) {
 		draw(app);
 		++app.Framework.CurrentRenderBuffer;

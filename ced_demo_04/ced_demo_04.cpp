@@ -40,9 +40,12 @@ int													setup				(SApplication & app)	{
 	app.DepthBuffer.resize(pixelCount);
 	//::ced::geometryBuildCube(app.Geometry);
 	//::ced::geometryBuildGrid(app.Geometry, {2U, 2U}, {1U, 1U});
-	::ced::geometryBuildSphere(app.Geometry, 12U, 7U, 1, {});
-	//::ced::geometryBuildHalfHelix(app.Geometry, 16U, 16U, 1, {});
+	//::ced::geometryBuildSphere(app.Geometry, 12U, 7U, 1, {});
 	//::ced::geometryBuildFigure0(app.Geometry, 10U, 10U, 1, {});
+	//::ced::geometryBuildHalfHelix(app.Geometry, 8U, 5U, 1.0f, { 0, 1,  1}, {1, 1, 1});
+	//::ced::geometryBuildHalfHelix(app.Geometry, 8U, 5U, 1.0f, { 0, 1, -1}, {1, -1, -1});
+	::ced::geometryBuildHelix(app.Geometry, 8U, 8U, 0.75f, {}, {1, 1, 1});
+
 	//::ced::geometryBuildTender(app.Geometry, 10U, 10U, 1, {});
 	app.Models.resize(6);
 	for(uint32_t iModel = 0; iModel < app.Models.size(); ++iModel) {

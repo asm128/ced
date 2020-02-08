@@ -51,23 +51,27 @@ static constexpr const ::ced::SCoord3<int8_t>		geometryNormals	[6]		=
 	, { 0, 1, 0} // Top
 	};
 
-int													ced::geometryBuildCube	(SGeometryQuads & geometry)	{
-	geometry.Triangles		.resize((uint32_t)::std::size(geometryCube));
-	geometry.Normals		.resize((uint32_t)::std::size(geometryNormals));
-	geometry.TextureCoords	.resize((uint32_t)::std::size(texCoordCubeYUp));
+int													ced::geometryBuildCube	(SGeometryQuads & geometry, const ::ced::SCoord3<float> & scale)	{
+	const uint32_t											triangleOffset			= geometry.Triangles.size();
+	geometry.Triangles		.resize(triangleOffset + (uint32_t)::std::size(geometryCube));
+	geometry.Normals		.resize(triangleOffset + (uint32_t)::std::size(geometryNormals));
+	geometry.TextureCoords	.resize(triangleOffset + (uint32_t)::std::size(texCoordCubeYUp));
 
-	for(uint32_t iTriangle = 0; iTriangle < geometry.Triangles.size(); ++iTriangle) {
-		::ced::STriangle3<float>								& newTriangle		= geometry.Triangles[iTriangle];
+	for(uint32_t iTriangle = 0, countTriangles = (uint32_t)::std::size(geometryCube); iTriangle < countTriangles; ++iTriangle) {
+		::ced::STriangle3<float>								& newTriangle		= geometry.Triangles[triangleOffset + iTriangle];
 		newTriangle											= geometryCube[iTriangle].Cast<float>();
 		newTriangle.A										-= {.5, .5, .5};
 		newTriangle.B										-= {.5, .5, .5};
 		newTriangle.C										-= {.5, .5, .5};
+		newTriangle.Scale(scale);
 
-		::ced::STriangle2<float>								& newTriangleTex	= geometry.TextureCoords[iTriangle];
+		::ced::STriangle2<float>								& newTriangleTex	= geometry.TextureCoords[triangleOffset + iTriangle];
 		newTriangleTex										= ::texCoordCubeYUp[iTriangle].Cast<float>();
 
-		::ced::SCoord3<float>									& newNormal			= geometry.Normals[iTriangle / 2];
-		newNormal											= geometryNormals[iTriangle / 2].Cast<float>();
+		::ced::SCoord3<float>									& newNormal			= geometry.Normals[(triangleOffset + iTriangle) / 2];
+		::ced::SCoord3<float>									normal				= (newTriangle.A - newTriangle.B).Normalize().Cross((newTriangle.A - newTriangle.C).Normalize());
+		normal.Normalize();
+		newNormal											= normal; //geometryNormals[iTriangle / 2].Cast<float>();
 	}
 	return 0;
 }
@@ -102,12 +106,8 @@ int													ced::geometryBuildGrid	(SGeometryQuads & geometry, ::ced::SCoord
 		triangleA.Scale(scale);
 		triangleB.Scale(scale);
 
-		triangleA.A											-= {(float)gridCenter.x, 0, (float)gridCenter.y};
-		triangleA.B											-= {(float)gridCenter.x, 0, (float)gridCenter.y};
-		triangleA.C											-= {(float)gridCenter.x, 0, (float)gridCenter.y};
-		triangleB.A											-= {(float)gridCenter.x, 0, (float)gridCenter.y};
-		triangleB.B											-= {(float)gridCenter.x, 0, (float)gridCenter.y};
-		triangleB.C											-= {(float)gridCenter.x, 0, (float)gridCenter.y};
+		triangleA.Translate(::ced::SCoord3<float>{gridCenter.x, 0, gridCenter.y} * -1);
+		triangleB.Translate(::ced::SCoord3<float>{gridCenter.x, 0, gridCenter.y} * -1);
 		geometry.Triangles		.push_back(triangleA);
 		geometry.Triangles		.push_back(triangleB);
 		geometry.TextureCoords	.push_back(triangleATex);
@@ -120,7 +120,7 @@ int													ced::geometryBuildGrid	(SGeometryQuads & geometry, ::ced::SCoord
 }
 
 //
-int													ced::geometryBuildFigure0	(SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, ::ced::SCoord3<float> gridCenter)	{
+int													ced::geometryBuildFigure0	(::ced::SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, const ::ced::SCoord3<float> & gridCenter)	{
 	(void)radius;
 	for(uint32_t z = 0; z < stacks; ++z)
 	for(uint32_t x = 0; x < slices; ++x)  {
@@ -140,12 +140,8 @@ int													ced::geometryBuildFigure0	(SGeometryQuads & geometry, uint32_t s
 		::ced::STriangle3<float>								triangleB				= {coords[1].Cast<float>() * radius, coords[3].Cast<float>() * radius, coords[2].Cast<float>() * radius};
 		::ced::STriangle2<float>								triangleATex			= {texcoords[0], texcoords[1], texcoords[2]};
 		::ced::STriangle2<float>								triangleBTex			= {texcoords[1], texcoords[3], texcoords[2]};
-		triangleA.A											-= gridCenter;
-		triangleA.B											-= gridCenter;
-		triangleA.C											-= gridCenter;
-		triangleB.A											-= gridCenter;
-		triangleB.B											-= gridCenter;
-		triangleB.C											-= gridCenter;
+		triangleA.Translate(gridCenter * -1);
+		triangleB.Translate(gridCenter * -1);
 		geometry.Triangles		.push_back(triangleA);
 		geometry.Triangles		.push_back(triangleB);
 		geometry.Normals		.push_back((triangleA.A - triangleA.B).Normalize().Cross((triangleB.A - triangleB.B).Normalize()).Normalize().Cast<float>());
@@ -156,7 +152,7 @@ int													ced::geometryBuildFigure0	(SGeometryQuads & geometry, uint32_t s
 	return 0;
 }
 
-int													ced::geometryBuildFigure1	(SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, ::ced::SCoord3<float> gridCenter)	{
+int													ced::geometryBuildFigure1	(::ced::SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, const ::ced::SCoord3<float> & gridCenter)	{
 	(void)radius;
 	for(uint32_t z = 0; z < stacks; ++z)
 	for(uint32_t x = 0; x < slices; ++x)  {
@@ -176,12 +172,8 @@ int													ced::geometryBuildFigure1	(SGeometryQuads & geometry, uint32_t s
 		::ced::STriangle3<float>								triangleB				= {coords[1].Cast<float>() * radius, coords[3].Cast<float>() * radius, coords[2].Cast<float>() * radius};
 		::ced::STriangle2<float>								triangleATex			= {texcoords[0], texcoords[1], texcoords[2]};
 		::ced::STriangle2<float>								triangleBTex			= {texcoords[1], texcoords[3], texcoords[2]};
-		triangleA.A											-= gridCenter;
-		triangleA.B											-= gridCenter;
-		triangleA.C											-= gridCenter;
-		triangleB.A											-= gridCenter;
-		triangleB.B											-= gridCenter;
-		triangleB.C											-= gridCenter;
+		triangleA.Translate(gridCenter * -1);
+		triangleB.Translate(gridCenter * -1);
 		geometry.Triangles		.push_back(triangleA);
 		geometry.Triangles		.push_back(triangleB);
 		geometry.Normals		.push_back((triangleA.A - triangleA.B).Normalize().Cross((triangleB.A - triangleB.B).Normalize()).Normalize().Cast<float>());
@@ -192,15 +184,15 @@ int													ced::geometryBuildFigure1	(SGeometryQuads & geometry, uint32_t s
 	return 0;
 }
 
-int													ced::geometryBuildHalfHelix	(SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, ::ced::SCoord3<float> gridCenter)	{
-	(void)radius;
+int													ced::geometryBuildHalfHelix	(SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, const ::ced::SCoord3<float> & gridCenter, const ::ced::SCoord3<float> & scale)	{
+	::ced::SCoord2<float>									texCoordUnits				= {1.0f / slices, 1.0f / stacks};
 	for(uint32_t z = 0; z < stacks; ++z)
 	for(uint32_t x = 0; x < slices; ++x)  {
 		::ced::SCoord2<float>									texcoords	[4]			=
-			{ {0, 0}
-			, {0, 1}
-			, {1, 0}
-			, {1, 1}
+			{ {(x		) * texCoordUnits.x, (z		) * texCoordUnits.y}
+			, {(x		) * texCoordUnits.x, (z + 1	) * texCoordUnits.y}
+			, {(x + 1	) * texCoordUnits.x, (z		) * texCoordUnits.y}
+			, {(x + 1	) * texCoordUnits.x, (z + 1	) * texCoordUnits.y}
 			};
 		::ced::SCoord3<double>									coords	[4]				=
 			{ {sin(::ced::MATH_PI * z		/ stacks) * sin(::ced::MATH_2PI * x			/ slices), sin(::ced::MATH_PI * z		/ stacks	) * cos(::ced::MATH_PI * x			/slices), cos(::ced::MATH_2PI * x		/ slices)}
@@ -212,16 +204,67 @@ int													ced::geometryBuildHalfHelix	(SGeometryQuads & geometry, uint32_t
 		::ced::STriangle3<float>								triangleB				= {coords[1].Cast<float>() * radius, coords[3].Cast<float>() * radius, coords[2].Cast<float>() * radius};
 		::ced::STriangle2<float>								triangleATex			= {texcoords[0], texcoords[1], texcoords[2]};
 		::ced::STriangle2<float>								triangleBTex			= {texcoords[1], texcoords[3], texcoords[2]};
-		triangleA.A											-= gridCenter;
-		triangleA.B											-= gridCenter;
-		triangleA.C											-= gridCenter;
-		triangleB.A											-= gridCenter;
-		triangleB.B											-= gridCenter;
-		triangleB.C											-= gridCenter;
+		triangleA.Scale(scale);
+		triangleB.Scale(scale);
+		triangleA.Translate(gridCenter * -1);
+		triangleB.Translate(gridCenter * -1);
 		geometry.Triangles		.push_back(triangleA);
 		geometry.Triangles		.push_back(triangleB);
 		geometry.Normals		.push_back((triangleA.A - triangleA.B).Normalize().Cross((triangleB.A - triangleB.B).Normalize()).Normalize().Cast<float>());
-		//geometry.Normals		.push_back((coords[0] - coords[1]).Normalize().Cross((coords[1] - coords[3]).Normalize()).Normalize().Cast<float>());
+		geometry.TextureCoords	.push_back(triangleATex);
+		geometry.TextureCoords	.push_back(triangleBTex);
+	}
+	return 0;
+}
+
+int													ced::geometryBuildHelix		(SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, const ::ced::SCoord3<float> & gridCenter, const ::ced::SCoord3<float> & scale)	{
+	::ced::SCoord2<float>									texCoordUnits				= {1.0f / slices, 1.0f / stacks};
+	for(uint32_t z = 0; z < stacks; ++z)
+	for(uint32_t x = 0; x < slices; ++x)  {
+		::ced::SCoord2<float>									texcoords	[4]			=
+			{ {(x		) * texCoordUnits.x, (z		) * texCoordUnits.y}
+			, {(x		) * texCoordUnits.x, (z + 1	) * texCoordUnits.y}
+			, {(x + 1	) * texCoordUnits.x, (z		) * texCoordUnits.y}
+			, {(x + 1	) * texCoordUnits.x, (z + 1	) * texCoordUnits.y}
+			};
+		::ced::SCoord3<double>									coords	[4]				=
+			{ {sin(::ced::MATH_PI * z		/ stacks) * sin(::ced::MATH_2PI * x			/ slices), sin(::ced::MATH_PI * z		/ stacks	) * cos(::ced::MATH_PI * x			/slices), cos(::ced::MATH_2PI * x		/ slices)}
+			, {sin(::ced::MATH_PI * z		/ stacks) * sin(::ced::MATH_2PI * (x + 1)	/ slices), sin(::ced::MATH_PI * z		/ stacks	) * cos(::ced::MATH_PI * (x + 1)	/slices), cos(::ced::MATH_2PI * (x + 1)	/ slices)}
+			, {sin(::ced::MATH_PI * (z + 1)	/ stacks) * sin(::ced::MATH_2PI * x			/ slices), sin(::ced::MATH_PI * (z + 1)	/ stacks	) * cos(::ced::MATH_PI * x			/slices), cos(::ced::MATH_2PI * x		/ slices)}
+			, {sin(::ced::MATH_PI * (z + 1)	/ stacks) * sin(::ced::MATH_2PI * (x + 1)	/ slices), sin(::ced::MATH_PI * (z + 1)	/ stacks	) * cos(::ced::MATH_PI * (x + 1)	/slices), cos(::ced::MATH_2PI * (x + 1)	/ slices)}
+			};
+		::ced::STriangle3<float>								triangleA				= {coords[0].Cast<float>() * radius, coords[1].Cast<float>() * radius, coords[2].Cast<float>() * radius};
+		::ced::STriangle3<float>								triangleB				= {coords[1].Cast<float>() * radius, coords[3].Cast<float>() * radius, coords[2].Cast<float>() * radius};
+		::ced::STriangle2<float>								triangleATex			= {texcoords[0], texcoords[1], texcoords[2]};
+		::ced::STriangle2<float>								triangleBTex			= {texcoords[1], texcoords[3], texcoords[2]};
+		::ced::STriangle3<float>								triangleC				= triangleA;
+		::ced::STriangle3<float>								triangleD				= triangleB;
+		triangleA.Translate({0, 0, -radius});
+		triangleB.Translate({0, 0, -radius});
+		triangleC.Translate({0, 0, -radius});
+		triangleD.Translate({0, 0, -radius});
+		triangleC.Scale({-1, 1, -1});
+		triangleD.Scale({-1, 1, -1});
+
+		triangleA.Scale(scale);
+		triangleB.Scale(scale);
+		triangleC.Scale(scale);
+		triangleD.Scale(scale);
+
+		triangleA.Translate(gridCenter * -1);
+		triangleB.Translate(gridCenter * -1);
+		triangleC.Translate(gridCenter * -1);
+		triangleD.Translate(gridCenter * -1);
+		::ced::SCoord3<float>									normal					= (triangleA.A - triangleA.B).Normalize().Cross((triangleB.A - triangleB.B).Normalize()).Normalize().Cast<float>();
+		geometry.Triangles		.push_back(triangleA);
+		geometry.Triangles		.push_back(triangleB);
+		geometry.Triangles		.push_back(triangleC);
+		geometry.Triangles		.push_back(triangleD);
+		geometry.Normals		.push_back(normal);
+		normal.Scale({-1, -1, 0});
+		geometry.Normals		.push_back(normal);
+		geometry.TextureCoords	.push_back(triangleATex);
+		geometry.TextureCoords	.push_back(triangleBTex);
 		geometry.TextureCoords	.push_back(triangleATex);
 		geometry.TextureCoords	.push_back(triangleBTex);
 	}
@@ -229,7 +272,7 @@ int													ced::geometryBuildHalfHelix	(SGeometryQuads & geometry, uint32_t
 }
 
 //
-int													ced::geometryBuildSphere	(SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, ::ced::SCoord3<float> gridCenter)	{
+int													ced::geometryBuildSphere	(SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, const ::ced::SCoord3<float> & gridCenter)	{
 	::ced::SCoord2<float>									texCoordUnits				= {1.0f / slices, 1.0f / stacks};
 	for(uint32_t z = 0; z < stacks; ++z)
 	for(uint32_t x = 0; x < slices; ++x)  {
@@ -260,12 +303,8 @@ int													ced::geometryBuildSphere	(SGeometryQuads & geometry, uint32_t st
 		{
 			::ced::STriangle3<float>								triangleA			= {coords[0].Cast<float>() * radius, coords[2].Cast<float>() * radius, coords[1].Cast<float>() * radius};
 			::ced::STriangle3<float>								triangleB			= {coords[1].Cast<float>() * radius, coords[2].Cast<float>() * radius, coords[3].Cast<float>() * radius};
-			triangleA.A											-= gridCenter;
-			triangleA.B											-= gridCenter;
-			triangleA.C											-= gridCenter;
-			triangleB.A											-= gridCenter;
-			triangleB.B											-= gridCenter;
-			triangleB.C											-= gridCenter;
+			triangleA.Translate(gridCenter * -1);
+			triangleB.Translate(gridCenter * -1);
 			geometry.Triangles	.push_back(triangleA);
 			geometry.Triangles	.push_back(triangleB);
 		}
@@ -284,7 +323,7 @@ int													ced::geometryBuildSphere	(SGeometryQuads & geometry, uint32_t st
 
 
 //
-int													ced::geometryBuildCylinder	(SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, ::ced::SCoord3<float> gridCenter)	{
+int													ced::geometryBuildCylinder	(SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, const ::ced::SCoord3<float> & gridCenter, const ::ced::SCoord3<float> & scale)	{
 	::ced::SCoord2<float>									texCoordUnits				= {1.0f / slices, 1.0f / stacks};
 	for(uint32_t y = 0; y < stacks; ++y)
 	for(uint32_t z = 0; z < slices; ++z)
@@ -292,8 +331,8 @@ int													ced::geometryBuildCylinder	(SGeometryQuads & geometry, uint32_t 
 		{
 			::ced::SCoord2<float>									texcoords	[4]				=
 				{ {(z		) * texCoordUnits.x, (y		) * texCoordUnits.y}
-				, {(z		) * texCoordUnits.x, (y + 1	) * texCoordUnits.y}
 				, {(z + 1	) * texCoordUnits.x, (y		) * texCoordUnits.y}
+				, {(z		) * texCoordUnits.x, (y	+ 1	) * texCoordUnits.y}
 				, {(z + 1	) * texCoordUnits.x, (y + 1	) * texCoordUnits.y}
 				};
 			geometry.TextureCoords.push_back(
@@ -326,30 +365,21 @@ int													ced::geometryBuildCylinder	(SGeometryQuads & geometry, uint32_t 
 		{
 			::ced::STriangle3<float>								triangleA			= {coords[0].Cast<float>(), coords[2].Cast<float>(), coords[1].Cast<float>()};
 			::ced::STriangle3<float>								triangleB			= {coords[1].Cast<float>(), coords[2].Cast<float>(), coords[3].Cast<float>()};
-			triangleA.A											-= gridCenter;
-			triangleA.B											-= gridCenter;
-			triangleA.C											-= gridCenter;
-			triangleB.A											-= gridCenter;
-			triangleB.B											-= gridCenter;
-			triangleB.C											-= gridCenter;
+			triangleA.Scale(scale);
+			triangleB.Scale(scale);
+			triangleA.Translate(gridCenter * -1);
+			triangleB.Translate(gridCenter * -1);
+
 			geometry.Triangles	.push_back(triangleA);
 			geometry.Triangles	.push_back(triangleB);
-		}
-		{
-			::ced::SCoord3<float>									normal				= coords[0].Cast<float>();
-			normal												+= coords[1].Cast<float>();
-			normal												+= coords[2].Cast<float>();
-			normal												+= coords[3].Cast<float>();
-			normal												/= 4;
-			normal.Normalize();
-			geometry.Normals.push_back(normal);
+			geometry.Normals	.push_back((triangleB.A - triangleB.B).Normalize().Cross((triangleA.A - triangleA.B).Normalize()).Normalize().Cast<float>());
 		}
 	}
 	return 0;
 }
 
 
-int													ced::geometryBuildTender	(SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, ::ced::SCoord3<float> gridCenter)	{
+int													ced::geometryBuildTender	(SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, const ::ced::SCoord3<float> & gridCenter, const ::ced::SCoord3<float> & scale)	{
 	::ced::SCoord2<float>									texCoordUnits				= {1.0f / slices, 1.0f / stacks};
 	for(uint32_t z = 0; z < stacks; ++z)
 	for(uint32_t x = 0; x < slices; ++x)  {
@@ -394,29 +424,19 @@ int													ced::geometryBuildTender	(SGeometryQuads & geometry, uint32_t st
 		{
 			::ced::STriangle3<float>								triangleA			= {coords[0].Cast<float>(), coords[2].Cast<float>(), coords[1].Cast<float>()};
 			::ced::STriangle3<float>								triangleB			= {coords[1].Cast<float>(), coords[2].Cast<float>(), coords[3].Cast<float>()};
-			triangleA.A											-= gridCenter;
-			triangleA.B											-= gridCenter;
-			triangleA.C											-= gridCenter;
-			triangleB.A											-= gridCenter;
-			triangleB.B											-= gridCenter;
-			triangleB.C											-= gridCenter;
+			triangleA.Scale(scale);
+			triangleB.Scale(scale);
+			triangleA.Translate(gridCenter * -1);
+			triangleB.Translate(gridCenter * -1);
 			geometry.Triangles	.push_back(triangleA);
 			geometry.Triangles	.push_back(triangleB);
-		}
-		{
-			::ced::SCoord3<float>									normal				= coords[0].Cast<float>();
-			normal												+= coords[1].Cast<float>();
-			normal												+= coords[2].Cast<float>();
-			normal												+= coords[3].Cast<float>();
-			normal												/= 4;
-			normal.Normalize();
-			geometry.Normals.push_back(normal);
+			geometry.Normals	.push_back((triangleA.A - triangleA.B).Normalize().Cross((triangleB.A - triangleB.B).Normalize()).Normalize().Cast<float>());
 		}
 	}
 	return 0;
 }
 
-int													ced::geometryBuildSphere	(SGeometryTriangles & geometry, uint32_t stacks, uint32_t slices, float radius, ::ced::SCoord3<float> gridCenter)	{
+int													ced::geometryBuildSphere	(SGeometryTriangles & geometry, uint32_t stacks, uint32_t slices, float radius, const ::ced::SCoord3<float> & gridCenter)	{
 	::ced::SCoord2<float>									texCoordUnits				= {1.0f / slices, 1.0f / stacks};
 	for(uint32_t z = 0; z < stacks; ++z)
 	for(uint32_t x = 0; x < slices; ++x)  {
@@ -459,12 +479,8 @@ int													ced::geometryBuildSphere	(SGeometryTriangles & geometry, uint32_
 		{
 			::ced::STriangle3<float>								triangleA			= {(coords[0] * radius).Cast<float>(), (coords[2] * radius).Cast<float>(), (coords[1] * radius).Cast<float>()};
 			::ced::STriangle3<float>								triangleB			= {(coords[1] * radius).Cast<float>(), (coords[2] * radius).Cast<float>(), (coords[3] * radius).Cast<float>()};
-			triangleA.A											-= gridCenter;
-			triangleA.B											-= gridCenter;
-			triangleA.C											-= gridCenter;
-			triangleB.A											-= gridCenter;
-			triangleB.B											-= gridCenter;
-			triangleB.C											-= gridCenter;
+			triangleA.Translate(gridCenter * -1);
+			triangleB.Translate(gridCenter * -1);
 			geometry.Triangles	.push_back(triangleA);
 			geometry.Triangles	.push_back(triangleB);
 		}

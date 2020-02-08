@@ -110,12 +110,12 @@ int													setup							(SApplication & app)	{
 
 			axialTilt.MakeFromEulerTaitBryan((float)(::ced::MATH_2PI / 360.0 * PLANET_AXIALTILT[iPlanet]), 0, 0);					// Calculate the axial inclination of the planet IN RADIANS
 			planetTransform.Orientation							= axialTilt;										// Set the calculated axial tilt to the planet
-
-			::ced::SCoord3<float>									rotatedRotation					= { 0.0f, -(float)(::ced::MATH_2PI / PLANET_DAY[PLANET_EARTH] * PLANET_DAY[iPlanet]), 0.0f };	// Calculate the rotation velocity of the planet IN EARTH DAYS
+			const double											timeScale						= 1.0 / (PLANET_DAY[PLANET_EARTH]) / 3600;
+			::ced::SCoord3<float>									rotatedRotation					= { 0.0f, -(float)(::ced::MATH_2PI / PLANET_DAY[PLANET_EARTH] * PLANET_DAY[iPlanet] * timeScale), 0.0f };	// Calculate the rotation velocity of the planet IN EARTH DAYS
 			rotatedRotation										= axialTilt.RotateVector( rotatedRotation );		// Rotate our calculated torque in relation to the planetary axis
 			planetForces.Rotation								= rotatedRotation;		// Set the rotation velocity of the planet IN EARTH DAYS
 
-			orbitForces.Rotation								= {0.0f, (float)(::ced::MATH_2PI / PLANET_ORBITALPERIOD[iPlanet]), 0.0f};			// Set the orbital rotation velocity IN EARTH DAYS
+			orbitForces.Rotation								= {0.0f, (float)(::ced::MATH_2PI / PLANET_ORBITALPERIOD[iPlanet] * timeScale), 0.0f};			// Set the orbital rotation velocity IN EARTH DAYS
 			orbitalInclination.MakeFromEulerTaitBryan( (float)(::ced::MATH_2PI / 360.0 * PLANET_ORBITALINCLINATION[iPlanet]), 0.0f, 0.0f );	// Calculate the orbital tilt IN RADIANS
 			orbitTransform.Orientation							= orbitalInclination;								// Set the calculated inclination to the orbit
 		}

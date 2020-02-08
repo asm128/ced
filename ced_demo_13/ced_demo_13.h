@@ -12,7 +12,7 @@
 struct SApplication {
 	::ced::SFramework									Framework					= {};
 
-	SSolarSystem										SolarSystem					= {};
+	::ssg::SSolarSystem									SolarSystem					= {};
 
 	volatile long long									ThreadSignal				= 0;
 };

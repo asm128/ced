@@ -327,6 +327,12 @@ namespace ced
 			C.Scale(scale);
 			return *this;
 		}
+		STriangle3<_tValue>&				Translate				(const SCoord3<_tValue> & translation)	noexcept		{
+			A									+= translation;
+			B									+= translation;
+			C									+= translation;
+			return *this;
+		}
 		template<typename _tOther>
 		STriangle3<_tOther>					Cast					()								const	noexcept		{
 			return

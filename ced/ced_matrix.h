@@ -452,7 +452,7 @@ namespace ced
 	template<typename _tBase>
 	struct SMatrix3 {
 		typedef				SMatrix3<_tBase>	_tMat3;
-		typedef				SCoord3<_tBase>		_TCoord3D;
+		typedef				SCoord3<_tBase>		_tCoord3;
 
 							_tBase				_11, _12, _13
 								,				_21, _22, _23
@@ -521,7 +521,7 @@ namespace ced
 		}
 
 
-		constexpr			_TCoord3D			Transform					(const _TCoord3D& vector)														const	noexcept	{
+		constexpr			_tCoord3			Transform					(const _tCoord3& vector)														const	noexcept	{
 			return
 				{	vector.x * _11 + vector.y * _21 + vector.z * _31
 				,	vector.x * _12 + vector.y * _22 + vector.z * _32
@@ -529,7 +529,7 @@ namespace ced
 				};
 		}
 
-		constexpr			_TCoord3D			TransformInverse			(const _TCoord3D& _v)															const	noexcept	{
+		constexpr			_tCoord3			TransformInverse			(const _tCoord3& _v)															const	noexcept	{
 			return
 				{	_v.x * _11 + _v.y * _12 + _v.z * _13
 				,	_v.x * _21 + _v.y * _22 + _v.z * _23
@@ -562,7 +562,7 @@ namespace ced
 			_31 =							_32 = (_tBase)0;				_33 = (_tBase)1;
 		}
 		inline				void				Scale						(_tBase x, _tBase y, _tBase z, bool bEraseContent)										noexcept	{ Scale({x, y, z}, bEraseContent); }
-							void				Scale						(const _TCoord3D& ypr, bool bEraseContent)												noexcept	{
+							void				Scale						(const _tCoord3& ypr, bool bEraseContent)												noexcept	{
 			if( bEraseContent ) {
 				_11 = (_tBase)ypr.x;		_12 =					_13 =
 				_21 = (_tBase)0;			_22 = (_tBase)ypr.y;	_23 =
@@ -573,7 +573,7 @@ namespace ced
 			}
 		}
 		inline				void				Rotation					(_tBase x, _tBase y, _tBase z)															noexcept	{ return Rotation({x, y, z}); }
-							void				Rotation					(const _TCoord3D &vc)																	noexcept	{
+							void				Rotation					(const _tCoord3 &vc)																	noexcept	{
 			::ced::SPairSinCos							yaw							= ::ced::getSinCos(vc.z);
 			::ced::SPairSinCos							pitch						= ::ced::getSinCos(vc.y);
 			::ced::SPairSinCos							roll						= ::ced::getSinCos(vc.x);
@@ -590,9 +590,9 @@ namespace ced
 			_32										= (_tBase)(roll.Cos * pitch.Sin * yaw.Sin +-roll.Sin * yaw.Cos	);
 			_33										= (_tBase)(roll.Cos * pitch.Cos									);
 		} // Rota
-							void				RotationArbitraryAxis		(const _TCoord3D& _vcAxis, _tBase a)																{
+							void				RotationArbitraryAxis		(const _tCoord3& _vcAxis, _tBase a)																{
 			::ced::SPairSinCos							pairSinCos					= ::ced::getSinCos(a);
-			_TCoord3D									vcAxis						= _vcAxis;
+			_tCoord3									vcAxis						= _vcAxis;
 			double										fSum						= 1.0 - pairSinCos.Cos;
 
 			if( vcAxis.LengthSquared() != 1.0 )
@@ -610,7 +610,25 @@ namespace ced
 			_32										= (_tBase)(	(vcAxis.z * vcAxis.y) * fSum + (vcAxis.x * pairSinCos.Sin)	);
 			_33										= (_tBase)(	(vcAxis.z * vcAxis.z) * fSum + pairSinCos.Cos				);
 		}
+							void				RotationFromDirection	(const _tCoord3& direction, const _tCoord3& up = _tCoord3{0,1,0})	{
+			_tCoord3									xaxis					= up.Cross(direction);
+			xaxis.Normalize();
 
+			_tCoord3									yaxis					= direction.Cross(xaxis);
+			yaxis.Normalize();
+
+			_11										= xaxis.x;
+			_12										= yaxis.x;
+			_13										= direction.x;
+
+			_21										= xaxis.y;
+			_22										= yaxis.y;
+			_23										= direction.y;
+
+			_31										= xaxis.z;
+			_32										= yaxis.z;
+			_33										= direction.z;
+		}
 							void				SetOrientation				(const ::ced::SQuaternion<_tBase>& qo)														noexcept	{
 			double										wx, wy, wz, xx, yy, yz, xy, xz, zz, x2, y2, z2;
 
@@ -642,6 +660,15 @@ namespace ced
 			_23										= (_tBase)(yz + wx			);
 			_33										= (_tBase)(1.0 - (xx + yy)	);
 		}
+		::ced::SQuaternion<_tBase>				GetOrientation()	const {
+			::ced::SQuaternion<_tBase>					result;
+			result.w								= (_tBase)(::std::sqrt(1.0 + _11 + _22 + _33) / 2.0);
+			double										w4			= (4.0 * result.w);
+			result.x								= (_tBase)((_32 - _23) / w4);
+			result.y								= (_tBase)((_13 - _31) / w4);
+			result.z								= (_tBase)((_21 - _12) / w4);
+			return result;
+		}
 
 		 // Sets the value of the matrix from inertia tensor values.
 		 //
@@ -655,8 +682,8 @@ namespace ced
 		}
 
 		// Sets the value of the matrix as an inertia tensor of a rectangular block aligned with the body's coordinate system with the given axis half-sizes and mass.
-							void				SetBlockAngularMass			(const _TCoord3D &halfSizes, double mass)												noexcept	{
-			_TCoord3D									squares						= halfSizes;
+							void				SetBlockAngularMass			(const _tCoord3 &halfSizes, double mass)												noexcept	{
+			_tCoord3									squares						= halfSizes;
 			squares.x								*= halfSizes.x; squares.y *= halfSizes.y; squares.z *= halfSizes.z;
 			SetCoeffsAngularMass
 				( 0.3f * mass * (squares.y + squares.z)

@@ -25,7 +25,6 @@ static	int											shipCreate			(::SSolarSystem & solarSystem, int32_t teamId,
 
 	SShip													ship				= {};
 	{	// Create main ship entity
-
 		::SEntity												entity				= {-1};
 
 		::ced::SModel3											pivot				= {};
@@ -106,16 +105,16 @@ static	int											shipCreate			(::SSolarSystem & solarSystem, int32_t teamId,
 int													modelsSetup	(::SShipScene & scene)			{
 	scene.Geometry.resize(5);
 	//::ced::geometryBuildCube	(scene.Geometry[0]);
-	::ced::geometryBuildCylinder	(scene.Geometry[0], 2U, 8U, .25f, {0, 0});
+	::ced::geometryBuildCylinder	(scene.Geometry[0], 2U, 8U, .25f, {0, 0}, {1, 1, 1});
 	::ced::geometryBuildSphere		(scene.Geometry[0], 8U, 5U, .7f, {0, 0});
 	::ced::geometryBuildFigure0		(scene.Geometry[0], 2U, 8U, 1, {});
 
-	::ced::geometryBuildCube	(scene.Geometry[1]);
+	::ced::geometryBuildCube	(scene.Geometry[1], {1, 1, 1});
 	::ced::geometryBuildGrid	(scene.Geometry[1], {2U, 2U}, {1, 1}, {1, 1, 1});
 	::ced::geometryBuildGrid	(scene.Geometry[1], {2U, 2U}, {-1, 1}, {-1, 1, 1});
 	::ced::geometryBuildSphere	(scene.Geometry[2], 8U, 5U, .5f, {0, 0});
 	::ced::geometryBuildFigure0	(scene.Geometry[2], 2U, 8U, 1, {});
-	::ced::geometryBuildCube	(scene.Geometry[3]);
+	::ced::geometryBuildCube	(scene.Geometry[3], {1, 1, 1});
 	::ced::geometryBuildSphere	(scene.Geometry[3], 4U, 2U, 1, {0, 0});
 	::ced::geometryBuildSphere	(scene.Geometry[4], 6U, 2U, 1, {0, 0});
 

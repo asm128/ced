@@ -5,7 +5,7 @@
 
 static constexpr	const uint32_t					MAX_LIGHT_RANGE		= 10;
 
-static	int											drawStars			(const ::SStars & stars, ::ced::view_grid<::ced::SColorBGRA> targetPixels)	{
+static	int											drawStars			(const ::ssg::SStars & stars, ::ced::view_grid<::ced::SColorBGRA> targetPixels)	{
 	::ced::SColorBGRA										colors[]			=
 		{ {0xfF, 0xfF, 0xfF, }
 		, {0xC0, 0xC0, 0xfF, }
@@ -37,7 +37,7 @@ static	int											drawStars			(const ::SStars & stars, ::ced::view_grid<::ced
 
 static	int											drawDebris
 	( ::ced::view_grid<::ced::SColorBGRA>		targetPixels
-	, const SDebris								& debris
+	, const ::ssg::SDebris						& debris
 	, const ::ced::SMatrix4<float>				& matrixVPV
 	, ::ced::view_grid<uint32_t>				depthBuffer
 	)	{
@@ -86,7 +86,7 @@ static	int											drawDebris
 	return 0;
 }
 
-static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixels, const SShots & shots
+static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixels, const ::ssg::SShots & shots
 	, const ::ced::SMatrix4<float>				& matrixVPV
 	, ::ced::SColorFloat						colorShot
 	, const	double								brightRadius
@@ -101,11 +101,13 @@ static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixe
 		pixelCoordsCache.clear();
 		const ::ced::SCoord3<float>								& starPosPrev		= shots.PositionDraw[iShot];
 		const ::ced::SCoord3<float>								& starPos			= shots.Particles.Position[iShot];
-		//::ced::SLine3<float>									raySegmentWorld	= {starPosPrev, starPos};
+		//::ced::SLine3<float>									raySegment			= {starPosPrev, starPos};
 
 		::ced::SLine3<float>									raySegment			= {starPos, starPosPrev}; //raySegmentWorld;
 		raySegment.A										= matrixVPV.Transform(raySegment.A);
 		raySegment.B										= matrixVPV.Transform(raySegment.B);
+		if(raySegment.A.z < 0 || raySegment.A.z > 1) continue;
+		if(raySegment.B.z < 0 || raySegment.B.z > 1) continue;
 		if(line)
 			::ced::drawLine(targetPixels, raySegment, pixelCoordsCache, depthBuffer);
 		else
@@ -153,22 +155,22 @@ static	int											drawShots			(::ced::view_grid<::ced::SColorBGRA> targetPixe
 }
 
 static	int											getLightArrays
-	( const ::SSolarSystem						& solarSystem
+	( const ::ssg::SSolarSystem					& solarSystem
 	, ::ced::container<::ced::SCoord3<float>>	& lightPoints
 	, ::ced::container<::ced::SColorBGRA>		& lightColors
 	)						{
 	::ced::SColorBGRA										colorLightPlayer		= ::ced::SColorBGRA{0xFF, 0xFF, 0xFF};
 	::ced::SColorBGRA										colorLightEnemy			= ::ced::SColorBGRA{0xFF, 0xFF, 0xFF};
 	for(uint32_t iShip = 0; iShip < solarSystem.Ships.size(); ++iShip) {
-		const ::SShip											& ship					= solarSystem.Ships[iShip];
+		const ::ssg::SShip										& ship					= solarSystem.Ships[iShip];
 		lightPoints.push_back(solarSystem.Scene.Transforms[ship.Entity].Position);
 		lightColors.push_back((0 == solarSystem.Ships[iShip].Team) ? colorLightPlayer : colorLightEnemy);
 		for(uint32_t iPart = 0; iPart < ship.Parts.size(); ++iPart) {
-			const ::SShipPart										& shipPart				= ship.Parts[iPart];
+			const ::ssg::SShipPart									& shipPart				= ship.Parts[iPart];
 			const ::ced::SColorFloat								colorShot
-				= (MUNITION_TYPE_RAY	== ship.Parts[iPart].Type) ? ::ced::RED
-				: (MUNITION_TYPE_SHELL	== ship.Parts[iPart].Type) ? ::ced::SColorFloat{::ced::SColorBGRA{0x40, 0x20, 0xfF}}
-				: (MUNITION_TYPE_BULLET == ship.Parts[iPart].Type) ? ::ced::GRAY
+				= (::ssg::MUNITION_TYPE_RAY		== ship.Parts[iPart].Type) ? ::ced::SColorFloat{1.0f, 0.1f, 0.0f}
+				: (::ssg::MUNITION_TYPE_SHELL	== ship.Parts[iPart].Type) ? ship.Team ? ::ced::SColorFloat{1.0f, 0.125f, 0.25f} : ::ced::TURQUOISE
+				: (::ssg::MUNITION_TYPE_BULLET	== ship.Parts[iPart].Type) ? ::ced::GRAY
 				: ::ced::SColorFloat{::ced::SColorBGRA{0xFF, 0xFF, 0xFF}}
 				;
 			for(uint32_t iShot = 0; iShot < shipPart.Shots.Particles.Position.size(); ++iShot) {
@@ -219,20 +221,20 @@ static	int											getLightArrays
 //}
 
 static	int											drawShip
-	( const ::SSolarSystem								& solarSystem
-	, const ::SShip										& ship
+	( const ::ssg::SSolarSystem							& solarSystem
+	, const ::ssg::SShip								& ship
 	, const ::ced::SMatrix4<float>						& matrixView
 	, ::ced::view_grid<::ced::SColorBGRA>				& targetPixels
 	, ::ced::view_grid<uint32_t>						depthBuffer
-	, ::SSolarSystemDrawCache							& drawCache
+	, ::ssg::SSolarSystemDrawCache						& drawCache
 	) {
 	for(uint32_t iPart = 0; iPart < ship.Parts.size(); ++iPart) {
-		const ::SShipPart										& shipPart				= ship.Parts[iPart];
+		const ::ssg::SShipPart									& shipPart				= ship.Parts[iPart];
 		if(shipPart.Health <= 0)
 			continue;
-		const ::SEntity											& entity					= solarSystem.Entities[shipPart.Entity];
+		const ::ssg::SEntity									& entity					= solarSystem.Entities[shipPart.Entity];
 		for(uint32_t iEntity = 0; iEntity < entity.Children.size(); ++iEntity) {
-			const ::SEntity											& entityChild				= solarSystem.Entities[entity.Children[iEntity]];
+			const ::ssg::SEntity									& entityChild				= solarSystem.Entities[entity.Children[iEntity]];
 			if(-1 == entityChild.Parent)
 				continue;
 			if(-1 == entityChild.Geometry)
@@ -253,12 +255,12 @@ static	int											drawShip
 }
 
 static	int											drawExplosion
-	( const ::SSolarSystem								& solarSystem
-	, const ::SExplosion								& explosion
+	( const ::ssg::SSolarSystem							& solarSystem
+	, const ::ssg::SExplosion							& explosion
 	, const ::ced::SMatrix4<float>						& matrixView
 	, ::ced::view_grid<::ced::SColorBGRA>				& targetPixels
 	, ::ced::view_grid<uint32_t>						depthBuffer
-	, ::SSolarSystemDrawCache							& drawCache
+	, ::ssg::SSolarSystemDrawCache						& drawCache
 	) {
 	::ced::view_grid<const ::ced::SColorBGRA>				image					= solarSystem.Scene.Image	[explosion.IndexMesh];
 	const ::ced::SGeometryQuads								& mesh					= solarSystem.Scene.Geometry[explosion.IndexMesh];
@@ -300,7 +302,7 @@ static	int											drawExplosion
 	return 0;
 }
 
-int													solarSystemDraw				(const ::SSolarSystem & solarSystem, ::SSolarSystemDrawCache & drawCache, ::std::mutex & mutexUpdate, ::ced::view_grid<::ced::SColorBGRA> & targetPixels, ::ced::view_grid<uint32_t> depthBuffer)	{
+int													ssg::solarSystemDraw		(const ::ssg::SSolarSystem & solarSystem, ::ssg::SSolarSystemDrawCache & drawCache, ::std::mutex & mutexUpdate, ::ced::view_grid<::ced::SColorBGRA> & targetPixels, ::ced::view_grid<uint32_t> depthBuffer)	{
 	//------------------------------------------- Transform and Draw
 	if(0 == targetPixels.size())
 		return 1;
@@ -311,7 +313,8 @@ int													solarSystemDraw				(const ::SSolarSystem & solarSystem, ::SSolar
 		::drawStars(solarSystem.Stars, targetPixels);
 	}
 	::ced::SMatrix4<float>									matrixView			= {};
-	matrixView.LookAt(solarSystem.Scene.Camera.Position, solarSystem.Scene.Camera.Target, solarSystem.Scene.Camera.Up);
+	const ::ced::SCamera									& camera			= solarSystem.Scene.Camera[solarSystem.Scene.CameraMode];
+	matrixView.LookAt(camera.Position, camera.Target, camera.Up);
 	matrixView											*= solarSystem.Scene.MatrixProjection;
 	drawCache.LightPointsWorld.clear();
 	drawCache.LightColorsWorld.clear();
@@ -324,7 +327,7 @@ int													solarSystemDraw				(const ::SSolarSystem & solarSystem, ::SSolar
 
 	for(uint32_t iShip = 0; iShip < solarSystem.Ships.size(); ++iShip) {
 		::std::lock_guard<::std::mutex>							lockUpdate					(mutexUpdate);
-		const ::SShip											& ship					= solarSystem.Ships[iShip];
+		const ::ssg::SShip										& ship					= solarSystem.Ships[iShip];
 		if(ship.Health <= 0)
 			continue;
 		::drawShip(solarSystem, ship, matrixView, targetPixels, depthBuffer, drawCache);
@@ -341,7 +344,7 @@ int													solarSystemDraw				(const ::SSolarSystem & solarSystem, ::SSolar
 	::ced::container<uint16_t>								indicesPointLight;
 	for(uint32_t iExplosion = 0; iExplosion < solarSystem.Explosions.size(); ++iExplosion) {
 		::std::lock_guard<::std::mutex>							lockUpdate					(mutexUpdate);
-		const ::SExplosion										& explosion				= solarSystem.Explosions[iExplosion];
+		const ::ssg::SExplosion									& explosion				= solarSystem.Explosions[iExplosion];
 		if(0 == explosion.Slices.size())
 			continue;
 		::drawExplosion(solarSystem, explosion, matrixView, targetPixels, depthBuffer, drawCache);
@@ -351,16 +354,20 @@ int													solarSystemDraw				(const ::SSolarSystem & solarSystem, ::SSolar
 	pixelCoordsCache.reserve(512);
 	for(uint32_t iShip = 0; iShip < solarSystem.Ships.size(); ++iShip) {
 		::std::lock_guard<::std::mutex>							lockUpdate					(mutexUpdate);
-		const ::SShip										& ship					= solarSystem.Ships[iShip];
+		const ::ssg::SShip										& ship					= solarSystem.Ships[iShip];
 		for(uint32_t iPart = 0; iPart < ship.Parts.size(); ++iPart) {
 			::ced::SColorFloat									colorShot				= ::ced::WHITE;
 			double												brightRadius			= 1;
 			double												intensity				= 1;
 			bool												line					= true;
-				 if(MUNITION_TYPE_RAY	== ship.Parts[iPart].Shots.Type) { colorShot = ::ced::SColorFloat{1.0f, 0.1f, 0.0f}		; brightRadius =  3.0; intensity =  1; line = true ;}
-			else if(MUNITION_TYPE_SHELL	== ship.Parts[iPart].Shots.Type) { colorShot = ::ced::SColorFloat{1.0f, 0.125f, 0.25f}	; brightRadius =  9.0; intensity = 10; line = false;}
-			else if(MUNITION_TYPE_BULLET== ship.Parts[iPart].Shots.Type) { colorShot = ::ced::DARKGRAY							; brightRadius =  3.0; intensity =  1; line = true ;}
-
+				 if(::ssg::MUNITION_TYPE_RAY	== ship.Parts[iPart].Shots.Type) { colorShot = ::ced::SColorFloat{1.0f, 0.1f, 0.0f}		; brightRadius =  2.0; intensity =  1; line = true ;}
+			else if(::ssg::MUNITION_TYPE_BULLET	== ship.Parts[iPart].Shots.Type) { colorShot = ::ced::DARKGRAY							; brightRadius =  2.0; intensity =  1; line = true ;}
+			else if(::ssg::MUNITION_TYPE_SHELL	== ship.Parts[iPart].Shots.Type) {
+				colorShot										= ship.Team ? ::ced::SColorFloat{1.0f, 0.125f, 0.25f} : ::ced::TURQUOISE;
+				brightRadius									= 7;
+				intensity										= 9;
+				line											= false;
+			}
 			::drawShots(targetPixels, ship.Parts[iPart].Shots, matrixView, colorShot, brightRadius, intensity, line, depthBuffer, drawCache.LightPointsModel);
 		}
 	}

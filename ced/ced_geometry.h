@@ -8,15 +8,15 @@ namespace ced
 {
 #pragma pack(push, 1)
 	struct SGeometryGroupModes {
-		uint16_t					Transparent			: 1;
-		uint16_t					SkipSpecular		: 1;
-		uint16_t					SkipAmbient			: 1;
-		uint16_t					SkipDiffuse			: 1;
+		uint16_t											Transparent			: 1;
+		uint16_t											SkipSpecular		: 1;
+		uint16_t											SkipAmbient			: 1;
+		uint16_t											SkipDiffuse			: 1;
 	};
 	struct SGeometryGroup {
-		int16_t						Image				;
-		::ced::SGeometryGroupModes	Modes				;
-		::ced::SSlice<uint16_t>		Slice				;
+		int16_t												Image				;
+		::ced::SGeometryGroupModes							Modes				;
+		::ced::SSlice<uint16_t>								Slice				;
 		//::ced::container<uint16_t>	IndicesPointLightCache	;
 	};
 #pragma pack(pop)
@@ -33,37 +33,35 @@ namespace ced
 		::ced::container<::ced::STriangle2<float>>			TextureCoords;
 	};
 
-	struct SGeometryBuffers {
-		::ced::container<::ced::STriangle3<float>>			Triangles;
-		::ced::container<::ced::STriangle3<float>>			Normals;
-		::ced::container<::ced::STriangle2<float>>			TextureCoords;
-	};
-
 	struct SModelQuads {
-		::ced::view<::ced::STriangle3	<float>>			Triangles;
-		::ced::view<::ced::SCoord3		<float>>			Normals;
-		::ced::view<::ced::STriangle2	<float>>			TextureCoords;
-		::ced::view<::ced::SGeometryGroup>					GeometryGroups;
+		::ced::container<::ced::STriangle3	<float>>		Triangles;
+		::ced::container<::ced::SCoord3		<float>>		Normals;
+		::ced::container<::ced::STriangle2	<float>>		TextureCoords;
+		::ced::container<::ced::SGeometryGroup>				GeometryGroups;
 	};
 
 	struct SModelTriangles {
-		::ced::view<::ced::STriangle3<float>>				Triangles;
-		::ced::view<::ced::STriangle3<float>>				Normals;
-		::ced::view<::ced::STriangle2<float>>				TextureCoords;
-		::ced::view<::ced::SGeometryGroup>					GeometryGroups;
+		::ced::container<::ced::STriangle3<float>>			Triangles;
+		::ced::container<::ced::STriangle3<float>>			Normals;
+		::ced::container<::ced::STriangle2<float>>			TextureCoords;
+		::ced::container<::ced::SGeometryGroup>				GeometryGroups;
 	};
 
-	int													geometryBuildCube				(::ced::SGeometryQuads & geometry);
+	struct SModelManager {
+
+	};
+
+	int													geometryBuildCube				(::ced::SGeometryQuads & geometry, const ::ced::SCoord3<float> & scale);
 	int													geometryBuildGrid				(::ced::SGeometryQuads & geometry, ::ced::SCoord2<uint32_t> gridSize, ::ced::SCoord2<float> gridCenter, const ::ced::SCoord3<float> & scale);
-	int													geometryBuildFigure0			(::ced::SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, ::ced::SCoord3<float> gridCenter);
-	int													geometryBuildFigure1			(::ced::SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, ::ced::SCoord3<float> gridCenter);
-	int													geometryBuildHalfHelix			(::ced::SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, ::ced::SCoord3<float> gridCenter);
-	int													geometryBuildSphere				(::ced::SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, ::ced::SCoord3<float> gridCenter);
-	int													geometryBuildCylinder			(::ced::SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, ::ced::SCoord3<float> gridCenter);
-	int													geometryBuildTender				(::ced::SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, ::ced::SCoord3<float> gridCenter);
+	int													geometryBuildSphere				(::ced::SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, const ::ced::SCoord3<float> & gridCenter);
+	int													geometryBuildCylinder			(::ced::SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, const ::ced::SCoord3<float> & gridCenter, const ::ced::SCoord3<float> & scale);
+	int													geometryBuildHalfHelix			(::ced::SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, const ::ced::SCoord3<float> & gridCenter, const ::ced::SCoord3<float> & scale);
+	int													geometryBuildHelix				(::ced::SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, const ::ced::SCoord3<float> & gridCenter, const ::ced::SCoord3<float> & scale);
+	int													geometryBuildTender				(::ced::SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, const ::ced::SCoord3<float> & gridCenter, const ::ced::SCoord3<float> & scale);
+	int													geometryBuildFigure0			(::ced::SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, const ::ced::SCoord3<float> & gridCenter);
+	int													geometryBuildFigure1			(::ced::SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, const ::ced::SCoord3<float> & gridCenter);
 
-	int													geometryBuildSphere				(::ced::SGeometryTriangles & geometry, uint32_t stacks, uint32_t slices, float radius, ::ced::SCoord3<float> gridCenter);
-
+	int													geometryBuildSphere				(::ced::SGeometryTriangles & geometry, uint32_t stacks, uint32_t slices, float radius, const ::ced::SCoord3<float> & gridCenter);
 #pragma pack(push, 1)
 	struct STile {
 		float												Height[4]	;
