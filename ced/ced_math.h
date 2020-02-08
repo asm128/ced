@@ -183,6 +183,31 @@ namespace ced
 			const TQuat								r						= t * v * (~t);
 			return {r.x, r.y, r.z};
 		}
+		/// Evaluates a rotation needed to be applied to an object positioned at sourcePoint to face destPoint
+		::ced::SQuaternion<_tBase>&			LookAt					(const ::ced::SCoord3<float> & sourcePoint, const ::ced::SCoord3<float> & destPoint, const ::ced::SCoord3<float> & up = {0, 1, 0}, const ::ced::SCoord3<float> & front = {1, 0, 0})	{
+			::ced::SCoord3<float>					forwardVector			= (destPoint - sourcePoint).Normalize();
+			double									dot						= front.Dot(forwardVector);
+			if (::std::abs(dot - (-1.0)) < 0.000001)
+				return *this = ::ced::SQuaternion<_tBase>{up.x, up.y, up.z, -(_tBase)::ced::MATH_PI}.Normalize();
+			if (::std::abs(dot - (1.0)) < 0.000001)
+				return *this = {0, 0, 0, 1};
+
+			double									rotAngle				= ::std::acos(dot);
+			::ced::SCoord3<float>					rotAxis					= front.Cross(forwardVector);
+			rotAxis.Normalize();
+			return CreateFromAxisAngle(rotAxis, rotAngle);
+		}
+
+		// just in case you need that function also
+		::ced::SQuaternion<_tBase>&			CreateFromAxisAngle		(const ::ced::SCoord3<float> & axis, double angle)	{
+			double									halfAngle				= angle * .5;
+			double									s						= ::std::sin(halfAngle);
+			x									= (_tBase)(axis.x * s);
+			y									= (_tBase)(axis.y * s);
+			z									= (_tBase)(axis.z * s);
+			w									= (_tBase)::std::cos(halfAngle);
+			return *this;
+		}
 							TQuat&			SLERP					(const TQuat& p, const TQuat& q, double fTime)									{
 			//Calculate the dot product
 			double									fDot					= Dot(q);

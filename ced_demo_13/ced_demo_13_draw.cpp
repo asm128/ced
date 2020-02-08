@@ -163,7 +163,7 @@ static	int											getLightArrays
 	::ced::SColorBGRA										colorLightEnemy			= ::ced::SColorBGRA{0xFF, 0xFF, 0xFF};
 	for(uint32_t iShip = 0; iShip < solarSystem.Ships.size(); ++iShip) {
 		const ::ssg::SShip										& ship					= solarSystem.Ships[iShip];
-		lightPoints.push_back(solarSystem.Scene.Transforms[ship.Entity].Position);
+		lightPoints.push_back(solarSystem.ShipPhysics.Transforms[solarSystem.Entities[ship.Entity].Body].Position);
 		lightColors.push_back((0 == solarSystem.Ships[iShip].Team) ? colorLightPlayer : colorLightEnemy);
 		for(uint32_t iPart = 0; iPart < ship.Parts.size(); ++iPart) {
 			const ::ssg::SShipPart									& shipPart				= ship.Parts[iPart];

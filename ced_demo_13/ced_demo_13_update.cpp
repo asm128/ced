@@ -65,7 +65,7 @@ static	int											handleCollisionPoint	(::ssg::SSolarSystem & solarSystem, in
 		::explosionAdd(solarSystem.Explosions, indexMesh, countTriangles, collisionPoint, 60);
 		solarSystem.Debris.SpawnSpherical(30, collisionPoint, 60, 2);
 		if(0 >= damagedShip.Health) {
-			const ::ced::SCoord3<float>							& parentPosition	= solarSystem.Scene.Transforms[solarSystem.Entities[damagedShip.Entity].Transform].Position;
+			const ::ced::SCoord3<float>							& parentPosition	= solarSystem.ShipPhysics.Transforms[solarSystem.Entities[damagedShip.Entity].Body].Position;
 			::explosionAdd(solarSystem.Explosions, indexMesh, countTriangles, parentPosition, 13);
 			solarSystem.Debris.SpawnSpherical(150, parentPosition, 13, 2.8f);
 			solarSystem.Slowing								= true;
@@ -78,12 +78,15 @@ static	int											handleCollisionPoint	(::ssg::SSolarSystem & solarSystem, in
 
 static	int											updateEntityTransforms		(uint32_t iEntity, ::ced::container<::ssg::SEntity> & entities, ::ssg::SShipScene & scene, ::ced::SIntegrator3 & bodies)	{
 	const ::ssg::SEntity									& entity					= entities[iEntity];
-	if(-1 == entity.Body)
-		scene.ModelMatricesGlobal[iEntity]					= (-1 == entity.Parent) ? scene.ModelMatricesLocal[iEntity] : scene.ModelMatricesLocal[iEntity] * scene.ModelMatricesGlobal[entity.Parent];
+	if(-1 == entity.Body) {
+		if(-1 == entity.Parent)
+			scene.ModelMatricesGlobal[iEntity].Identity();
+		else
+			scene.ModelMatricesGlobal[iEntity]					= scene.ModelMatricesGlobal[entity.Parent];
+	}
 	else {
 		::ced::SMatrix4<float>									& matrixGlobal					= scene.ModelMatricesGlobal[iEntity];
 		bodies.GetTransform(entity.Body, matrixGlobal);
-		matrixGlobal										= scene.ModelMatricesLocal[iEntity] * matrixGlobal;
 		if(-1 != entity.Parent)
 			matrixGlobal										*= scene.ModelMatricesGlobal[entity.Parent];
 	}
@@ -145,30 +148,43 @@ static	int											updateShots				(::ssg::SSolarSystem & solarSystem, double s
 }
 
 static	int											updateShipPart			(::ssg::SSolarSystem & solarSystem, int32_t team, ::ssg::SShipPart & shipPart, double secondsLastFrame)	{
-	::ssg::SEntity											& entityPart			= solarSystem.Entities[shipPart.Entity];
-	::ced::SModel3											& partTransform			= solarSystem.Scene.Transforms[entityPart.Transform + 1];
-
+	//::ssg::SEntity											& entityPart			= solarSystem.Entities[shipPart.Entity];
 	//partTransform.Rotation.y							+= (float)(secondsLastFrame * 1);
-	::ced::SCoord3<float>									positionGlobal			= solarSystem.Scene.ModelMatricesGlobal[shipPart.Entity + 1].Transform(partTransform.Position);
 	for(uint32_t iParticle = 0; iParticle < shipPart.Shots.Particles.Position.size(); ++iParticle)
 		shipPart.Shots.Particles.Position[iParticle].x		-= (float)(solarSystem.RelativeSpeedCurrent * secondsLastFrame * .2);
 
 	shipPart.Shots.Delay								+= secondsLastFrame;// * .1 * (1 + iPart);
 
-	::ced::SCoord3<float>									targetPosition;
+	::ced::SCoord3<float>									targetPositionOriginal		= {};
 	for(uint32_t iShip = 0; iShip < solarSystem.Ships.size(); ++iShip) {
 		::ssg::SShip											& ship					= solarSystem.Ships[iShip];
 		if(ship.Team == team || ship.Health <= 0)
 			continue;
-		targetPosition										= solarSystem.Scene.Transforms[solarSystem.Entities[ship.Entity].Transform].Position;
+		targetPositionOriginal								= solarSystem.ShipPhysics.Transforms[solarSystem.Entities[ship.Entity].Body].Position;
 	}
+	::ced::SCoord3<float>									targetPosition				= targetPositionOriginal;
+
+	const ::ced::SMatrix4<float>							& shipModuleMatrix			= solarSystem.Scene.ModelMatricesGlobal[solarSystem.Entities[shipPart.Entity + 1].Transform];
+	//const ::ced::SMatrix4<float>							& shipMatrix				= solarSystem.Scene.ModelMatricesGlobal[solarSystem.Entities[solarSystem.Entities[shipPart.Entity].Parent].Transform];
+	::ced::SCoord3<float>									positionGlobal				= shipModuleMatrix.GetTranslation();
 	::ced::SCoord3<float>									targetDistance				= targetPosition - positionGlobal;
 	if(shipPart.Shots.Weapon == ::ssg::WEAPON_TYPE_CANNON) {
 		if(1 < targetDistance.LengthSquared()) {
 			::ced::SCoord3<float>									direction					= targetDistance;
 			direction.Normalize();
-			direction.RotateY(rand() * (1.0 / RAND_MAX) * ced::MATH_PI * .0185 * ((rand() % 2) ? -1 : 1));
-			shipPart.Shots.Spawn(positionGlobal, direction, 25, 1);
+			shipPart.Shots.SpawnDirected(.02, positionGlobal, direction, 25, 1);
+			if(solarSystem.AnimationTime > 1) {
+				solarSystem.ShipPhysics.Forces[solarSystem.Entities[shipPart.Entity + 1].Body].Rotation	= {};
+				::ced::SMatrix4<float>									inverseTransform			= shipModuleMatrix.GetInverse();
+				::ced::STransform3										& shipModuleTransform		= solarSystem.ShipPhysics.Transforms[solarSystem.Entities[shipPart.Entity + 1].Body];
+				::ced::SCoord3<float>									up							= {1, 0, 0};
+				::ced::SCoord3<float>									front						= {0, 1, 0};
+				shipModuleTransform.Orientation.RotateVector(front);
+				targetPosition										= inverseTransform.Transform(targetPosition);
+				::ced::SQuaternion<float>								q;
+				q.LookAt({}, targetPosition, up, front);//						= mDirection.GetOrientation();//.Normalize();
+				shipModuleTransform.Orientation						= q;
+			}
 		}
 	}
 	else if(shipPart.Shots.Weapon == ::ssg::WEAPON_TYPE_GUN) {
@@ -210,7 +226,7 @@ int													ssg::solarSystemUpdate				(::ssg::SSolarSystem & solarSystem, do
 
 	if(GetAsyncKeyState('Q')) camera.Position.y	-= (float)secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
 	if(GetAsyncKeyState('E')) camera.Position.y	+= (float)secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
-	::ced::SModel3											& modelPlayer			= solarSystem.Scene.Transforms[solarSystem.Entities[0].Transform];
+	::ced::STransform3										& modelPlayer			= solarSystem.ShipPhysics.Transforms[solarSystem.Entities[0].Body];
 	{
 		//::ced::STransform3											& playerBody						= solarSystem.ShipPhysics.Transforms[solarSystem.Entities[solarSystem.Ships[0].Entity].Body];
 		//if(GetAsyncKeyState('W') || GetAsyncKeyState(VK_UP		)) playerBody.Position.x			+= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
@@ -241,8 +257,8 @@ int													ssg::solarSystemUpdate				(::ssg::SSolarSystem & solarSystem, do
 		solarSystem.Scene.CameraMode = (CAMERA_MODE)((solarSystem.Scene.CameraMode + 1) % CAMERA_MODE_COUNT);
 	}
 	if(solarSystem.Scene.CameraMode == CAMERA_MODE_FOLLOW) {
-		solarSystem.Scene.Camera[CAMERA_MODE_FOLLOW].Position			= modelPlayer.Position + ::ced::SCoord3<float>{-50.f, 35, 0};
-		solarSystem.Scene.Camera[CAMERA_MODE_FOLLOW].Target				= modelPlayer.Position + ::ced::SCoord3<float>{50.f, 0, 0};
+		solarSystem.Scene.Camera[CAMERA_MODE_FOLLOW].Position			= modelPlayer.Position + ::ced::SCoord3<float>{-80.f, 25, 0};
+		solarSystem.Scene.Camera[CAMERA_MODE_FOLLOW].Target				= modelPlayer.Position + ::ced::SCoord3<float>{1000.f, 0, 0};
 		solarSystem.Scene.Camera[CAMERA_MODE_FOLLOW].Up					= {0, 1, 0};
 	}
 
@@ -258,29 +274,23 @@ int													ssg::solarSystemUpdate				(::ssg::SSolarSystem & solarSystem, do
 	if(camera.Position.x > 0) camera.Position.x = -0.0001f;
 
 	if(GetAsyncKeyState(VK_NUMPAD5))
-		modelPlayer.Rotation									= {0, 0, (float)-::ced::MATH_PI_2};
+		modelPlayer.Orientation.MakeFromEulerTaitBryan({0, 0, (float)-::ced::MATH_PI_2});
 	else {
-		if(GetAsyncKeyState(VK_NUMPAD8)) modelPlayer.Rotation.z		-= (float)(secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-		if(GetAsyncKeyState(VK_NUMPAD2)) modelPlayer.Rotation.z		+= (float)(secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-		if(GetAsyncKeyState(VK_NUMPAD6)) modelPlayer.Rotation.x		-= (float)(secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-		if(GetAsyncKeyState(VK_NUMPAD4)) modelPlayer.Rotation.x		+= (float)(secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+		if(GetAsyncKeyState(VK_NUMPAD8)) modelPlayer.Orientation.z		-= (float)(secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+		if(GetAsyncKeyState(VK_NUMPAD2)) modelPlayer.Orientation.z		+= (float)(secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+		if(GetAsyncKeyState(VK_NUMPAD6)) modelPlayer.Orientation.x		-= (float)(secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+		if(GetAsyncKeyState(VK_NUMPAD4)) modelPlayer.Orientation.x		+= (float)(secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
 	}
-
-	//solarSystem.Scene.Camera.Position	= modelPlayer.Position;
-	//solarSystem.Scene.Camera.Position.x	-= 1.5;
-	////solarSystem.Scene.Camera.Position.x	-= 50;
-	////solarSystem.Scene.Camera.Position.y	+= 10;
-	//solarSystem.Scene.Camera.Target		= solarSystem.Scene.Camera.Position;
-	//solarSystem.Scene.Camera.Target.x	+= 1;
+	modelPlayer.Orientation.Normalize();
 
 	bool													playing					= false;
-	static constexpr const double							frameStep				= 0.005;
+	static constexpr const double							frameStep				= 0.01;
 	for(uint32_t iShip = 0; iShip < solarSystem.Ships.size(); ++iShip) {
 		::ssg::SShip											& enemyShip				= solarSystem.Ships[iShip];
 		if(0 >= enemyShip.Health)
 			continue;
 
-		::ced::SModel3											& shipTransform			= solarSystem.Scene.Transforms[solarSystem.Entities[enemyShip.Entity].Transform];
+		::ced::STransform3										& shipTransform			= solarSystem.ShipPhysics.Transforms[solarSystem.Entities[enemyShip.Entity].Body];
 		if(iShip) {
 			shipTransform.Position.z							= (float)(sin(iShip + solarSystem.AnimationTime) * (iShip * 5.0) * ((iShip % 2) ? -1 : 1));
 			shipTransform.Position.x							= (float)((iShip * 5.0) - solarSystem.Stage + 10 - (solarSystem.RelativeSpeedCurrent * solarSystem.RelativeSpeedCurrent * .0005 * ((solarSystem.RelativeSpeedCurrent >= 0) ? 1 : -1)  ));
@@ -403,15 +413,6 @@ int													ssg::solarSystemUpdate				(::ssg::SSolarSystem & solarSystem, do
 		solarSystem.RelativeSpeedCurrent	-= secondsLastFrame * relativeAcceleration;
 	}
 
-	::ssg::SShipScene										& scene						= solarSystem.Scene;
-	::ced::SModelMatrices									matrices					= {};
-	for(uint32_t iTransform = 0; iTransform < solarSystem.Scene.Transforms.size(); ++iTransform) {
-		::ced::SModel3											& model				= scene.Transforms[iTransform];
-		matrices.Scale		.Scale			(model.Scale, true);
-		matrices.Rotation	.Rotation		(model.Rotation);
-		matrices.Position	.SetTranslation	(model.Position, true);
-		scene.ModelMatricesLocal[iTransform]				= matrices.Scale * matrices.Rotation * matrices.Position;
-	}
 	for(uint32_t iEntity = 0; iEntity < solarSystem.Entities.size(); ++iEntity) {
 		const ::ssg::SEntity									& entity					= solarSystem.Entities[iEntity];
 		if(-1 == entity.Parent)	// process root entities

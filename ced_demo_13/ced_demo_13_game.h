@@ -144,6 +144,7 @@ namespace ssg
 		::ced::container<::ced::SCoord3<float>>		PositionPrev		= {};
 		::ced::container<::ced::SCoord3<float>>		PositionDraw		= {};
 		::ssg::SParticles3							Particles;
+		::ced::SIntegrator3							Bodies;
 
 		int											SpawnForced			(const ::ced::SCoord3<float> & position, const ::ced::SCoord3<float> & direction, float speed, float brightness)	{
 			Particles.Spawn(position, direction, speed);
@@ -275,9 +276,9 @@ namespace ssg
 	struct SShipScene	{
 		::ced::container<::ced::SGeometryQuads>				Geometry						= {};
 		::ced::container<::ced::SImage>						Image							= {};
-		::ced::container<::ced::SMatrix4<float>>			ModelMatricesLocal				= {};
+		//::ced::container<::ced::SMatrix4<float>>			ModelMatricesLocal				= {};
 		::ced::container<::ced::SMatrix4<float>>			ModelMatricesGlobal				= {};
-		::ced::container<::ced::SModel3>					Transforms						= {};
+		//::ced::container<::ced::SModel3>					Transforms						= {};
 		::ced::SCamera										Camera[CAMERA_MODE_COUNT]		= {};
 		::ced::SCoord3	<float>								LightVector						= {0, -12, 0};
 		::ced::SMatrix4	<float>								MatrixProjection				= {};

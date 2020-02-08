@@ -88,7 +88,7 @@ namespace ced
 			Forces			.resize(indexFirstBody + bodyCount, {});
 			Masses			.resize(indexFirstBody + bodyCount, {});
 			Transforms		.resize(indexFirstBody + bodyCount, {});
-			TransformsLocal	.resize(indexFirstBody + bodyCount, {});
+			TransformsLocal	.resize(indexFirstBody + bodyCount, MatrixIdentity4);
 			return indexFirstBody;
 		}
 

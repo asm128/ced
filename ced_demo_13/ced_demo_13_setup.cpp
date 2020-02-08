@@ -23,35 +23,23 @@ static	int											shipCreate			(::ssg::SSolarSystem & solarSystem, int32_t te
 	::ssg::SShip											ship				= {};
 	{	// Create main ship entity
 		::ssg::SEntity											entity				= {-1};
-
-		::ced::SModel3											pivot				= {};
-		pivot.Scale											= {1, 1, 1};
-
 		entity												= {-1};
 		entity.Geometry										= -1;	//1 + (iGeometry % 5);
-		entity.Transform									= scene.Transforms.push_back(pivot);
+		entity.Transform									= scene.ModelMatricesGlobal.push_back(solarSystem.ShipPhysics.MatrixIdentity4);
 		entity.Image										= -1;	//iImage % 5;
-		entity.Body											= -1;
-
+		entity.Body											= solarSystem.ShipPhysics.Spawn();
 		ship.Entity											= solarSystem.Entities.push_back(entity);
 		ship.Team											= teamId;
-
 		const int32_t											indexBody			= solarSystem.ShipPhysics.Spawn();
-		scene.ModelMatricesLocal	.push_back({});
-		scene.ModelMatricesGlobal	.push_back({});
 	}
 	const int32_t											indexShip			= solarSystem.Ships.push_back(ship);
 	ship.Parts.reserve(countParts);
 	for(uint32_t iPart = 0; iPart < countParts; ++iPart) {	// Create child parts
-		::ced::SModel3											pivot				= {};
-		pivot.Scale											= {1, 1, 1};
-		//pivot.Position										= {2.5, 0.5};
-		//pivot.Position.RotateY(::ced::MATH_2PI / countParts * iPart);
 		::ssg::SEntity											entityOrbit				= {ship.Entity};
 		::ssg::SEntity											entityPart				= {-1};
 		entityOrbit.Parent									= ship.Entity;
 		entityOrbit.Geometry								= -1;
-		entityOrbit.Transform								= scene.Transforms.push_back(pivot);
+		entityOrbit.Transform								= scene.ModelMatricesGlobal.push_back(solarSystem.ShipPhysics.MatrixIdentity4);
 		entityOrbit.Image									= -1;
 		entityOrbit.Body									= ::ced::createOrbiter(solarSystem.ShipPhysics
 			, 1		//PLANET_MASSES				[iPlanet]
@@ -65,7 +53,7 @@ static	int											shipCreate			(::ssg::SSolarSystem & solarSystem, int32_t te
 			);
 		entityPart.Parent									= solarSystem.Entities.push_back(entityOrbit);
 		entityPart.Geometry									= 1 + ((iGeometry + (iPart % 2)) % 5);
-		entityPart.Transform								= scene.Transforms.push_back(pivot);
+		entityPart.Transform								= scene.ModelMatricesGlobal.push_back(solarSystem.ShipPhysics.MatrixIdentity4);
 		entityPart.Image									= (4 + iImage - (iPart % 2)) % 32;
 		entityPart.Body										= entityOrbit.Body + 1;
 		int32_t													indexEntityPart				= solarSystem.Entities.push_back(entityPart);
@@ -81,11 +69,6 @@ static	int											shipCreate			(::ssg::SSolarSystem & solarSystem, int32_t te
 
 		::ssg::SShip											& parentShip			= solarSystem.Ships[indexShip];
 		parentShip.Parts.push_back(shipPart);
-
-		scene.ModelMatricesLocal	.push_back({});
-		scene.ModelMatricesGlobal	.push_back({});
-		scene.ModelMatricesLocal	.push_back({});
-		scene.ModelMatricesGlobal	.push_back({});
 	}
 	return indexShip;
 }
@@ -212,15 +195,15 @@ int													ssg::stageSetup						(::ssg::SSolarSystem & solarSystem)	{	// Se
 	if(0 == solarSystem.Ships.size()) { // Create player ship
 		const int32_t											indexShip						= ::shipCreate(solarSystem, 0, 0, 0);
 		::ssg::SShip											& playerShip					= solarSystem.Ships[indexShip];
-		::ced::SModel3											& shipPivot						= solarSystem.Scene.Transforms[solarSystem.Entities[playerShip.Entity].Transform];
-		shipPivot.Rotation									= {0, 0, (float)(-::ced::MATH_PI_2)};
+		::ced::STransform3										& shipPivot						= solarSystem.ShipPhysics.Transforms[solarSystem.Entities[playerShip.Entity].Body];
+		shipPivot.Orientation.MakeFromEulerTaitBryan({0, 0, (float)(-::ced::MATH_PI_2)});
 		shipPivot.Position									= {-30};
 	}
 	while(((int)solarSystem.Ships.size() - 2) < (int)solarSystem.Stage) {	// Create enemy ships depending on stage.
 		int32_t													indexShip						= ::shipCreate(solarSystem, 1, solarSystem.Stage + solarSystem.Ships.size(), solarSystem.Stage + solarSystem.Ships.size());
 		::ssg::SShip											& enemyShip						= solarSystem.Ships[indexShip];
-		::ced::SModel3											& shipTransform					= solarSystem.Scene.Transforms[solarSystem.Entities[enemyShip.Entity].Transform];
-		shipTransform.Rotation.z							= (float)(::ced::MATH_PI_2);
+		::ced::STransform3										& shipTransform					= solarSystem.ShipPhysics.Transforms[solarSystem.Entities[enemyShip.Entity].Body];
+		shipTransform.Orientation.MakeFromEulerTaitBryan({0, 0, (float)(::ced::MATH_PI_2)});
 		shipTransform.Position								= {5.0f + 5 * solarSystem.Ships.size()};
 		for(uint32_t iPart = 0; iPart < enemyShip.Parts.size(); ++iPart)
 			solarSystem.ShipPhysics.Forces[solarSystem.Entities[enemyShip.Parts[iPart].Entity].Body].Rotation.y	*= float(1 + indexShip * .35);
