@@ -292,21 +292,22 @@ int													ced::drawQuadTriangle
 		const ::ced::STriangleWeights<float>						& vertexWeights			= pixelVertexWeights[iPixelCoord];
 		::ced::SCoord2<float>										texCoord				= ::ced::triangleWeight(vertexWeights, triangleTexCoords);
 		::ced::SCoord3<float>										position				= ::ced::triangleWeight(vertexWeights, triangleWorld);
-		::ced::SColorFloat											texelColor				= textureImage[(uint32_t)(texCoord.y * imageUnit.y) % textureImage.Metrics.y][(uint32_t)(texCoord.x * imageUnit.x) % textureImage.Metrics.x];
+		::ced::SColorFloat											texelColor				= textureImage.size() ? textureImage[(uint32_t)(texCoord.y * imageUnit.y) % textureImage.Metrics.y][(uint32_t)(texCoord.x * imageUnit.x) % textureImage.Metrics.x] : ::ced::SColorBGRA{::ced::GRAY};
 		::ced::SColorFloat											fragmentColor			= {};
-		static constexpr	const double							rangeLight				= 10.0 * 10;
+		static constexpr	const double							rangeLight				= 10.0;
+		static constexpr	const double							rangeLightSquared		= rangeLight * rangeLight;
 		static constexpr	const double							rangeUnit				= 1.0 / rangeLight;
 		for(uint32_t iLight = 0; iLight < lightPoints.size(); ++iLight) {
 			::ced::SCoord3<float>										lightToPoint			= lightPoints[iLight] - position;
 			::ced::SCoord3<float>										vectorToLight			= lightToPoint;
 			double														lightFactor				= vectorToLight.Dot(normal);
 			const double												distanceToLight			= lightToPoint.LengthSquared();
-			if(distanceToLight > rangeLight || lightFactor <= 0)
+			if(distanceToLight > (rangeLightSquared * 1000) || lightFactor <= 0)
 				continue;
 			double														invAttenuation			= ::std::max(0.0, 1.0 - (distanceToLight * rangeUnit));
 			fragmentColor											+= ::ced::SColorFloat{texelColor * (lightColors[iLight] * invAttenuation)};
 		}
-		::ced::setPixel(targetPixels, pixelCoord, texelColor *.35 + fragmentColor);
+		::ced::setPixel(targetPixels, pixelCoord, texelColor * .2 + (texelColor * (lightFactorDirectional * .5)) + fragmentColor);
 		(void)lightVector;
 	}
 	return 0;

@@ -196,9 +196,9 @@ static	int											updateShipPart			(::ssg::SSolarSystem & solarSystem, int32_
 	else if(shipPart.Shots.Weapon == ::ssg::WEAPON_TYPE_SHOTGUN) {
 		::ced::SCoord3<float>									direction				= {team ? -1.0f : 1.0f, 0, 0};
 		if(shipPart.Shots.Type == ::ssg::MUNITION_TYPE_RAY)
-			shipPart.Shots.SpawnDirected(5, .01, positionGlobal, direction, 750, .75f);
+			shipPart.Shots.SpawnDirected(5, .05, positionGlobal, direction, 750, .75f);
 		else
-			shipPart.Shots.SpawnDirected(5, .02, positionGlobal, direction, 200, 5.0f);
+			shipPart.Shots.SpawnDirected(5, .05, positionGlobal, direction, 200, 5.0f);
 	}
 	return 0;
 }
@@ -364,7 +364,7 @@ int													ssg::solarSystemUpdate				(::ssg::SSolarSystem & solarSystem, do
 		}
 
 		const int32_t											randDebris			= rand();
-		solarSystem.Debris.Spawn({200.0f, ((randDebris % 2) ? -1.0f : 1.0f) * (randDebris % 100), ((randDebris % 2) ? -1.0f : 1.0f) * (randDebris % 400)}, {-1, 0, 0}, 400, 2);
+		solarSystem.Debris.Spawn({200.0f, ((randDebris % 2) ? -1.0f : 1.0f) * (randDebris % 400), ((randDebris % 3) ? -1.0f : 1.0f) * (randDebris % 400)}, {-1, 0, 0}, 400, 2);
 		solarSystem.Debris.Update((float)secondsLastFrame);
 		solarSystem.Stars.Update(screenSize.y, (float)secondsLastFrame);
 		for(uint32_t iExplosion = 0; iExplosion < solarSystem.Explosions.size(); ++iExplosion) {
@@ -386,10 +386,10 @@ int													ssg::solarSystemUpdate				(::ssg::SSolarSystem & solarSystem, do
 		}
 	}
 
-	for(uint32_t iExplosion = 0; iExplosion < solarSystem.Explosions.size(); ++iExplosion)
-		for(uint32_t iParticle = 0; iParticle < solarSystem.Explosions[iExplosion].Particles.Position.size(); ++iParticle) {
+	for(uint32_t iExplosion = 0; iExplosion < solarSystem.Explosions.size(); ++iExplosion) {
+		for(uint32_t iParticle = 0; iParticle < solarSystem.Explosions[iExplosion].Particles.Position.size(); ++iParticle)
 			solarSystem.Explosions[iExplosion].Particles.Position[iParticle].x	-= (float)(solarSystem.RelativeSpeedCurrent * secondsLastFrame);
-		}
+	}
 	for(uint32_t iParticle = 0; iParticle < solarSystem.Debris.Particles.Position.size(); ++iParticle)
 		solarSystem.Debris.Particles.Position[iParticle].x	-= (float)(solarSystem.RelativeSpeedCurrent * secondsLastFrame);
 
