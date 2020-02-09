@@ -307,7 +307,7 @@ namespace ssg
 		double												AnimationTime					= 0;
 		double												TimeScale						= 1;
 
-		static constexpr const double						RelativeSpeedTarget				= 0;
+		static constexpr const double						RelativeSpeedTarget				= 20;
 		double												RelativeSpeedCurrent			= -50;
 
 		::ced::SImage										BackgroundImage					= {};

@@ -18,17 +18,11 @@
     <ClCompile Include="ced_demo_10.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ced_rigidbody.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="rigidbody.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ced_rigidbody.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="rigidbody.h">
       <Filter>Header Files</Filter>
     </ClInclude>

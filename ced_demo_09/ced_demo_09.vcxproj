@@ -62,11 +62,11 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\..\ced\ced</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\ced\ced;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(OutDir);</AdditionalLibraryDirectories>
       <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
       <AdditionalDependencies>ced.lib;user32.lib;gdi32.lib;winmm.lib;</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>

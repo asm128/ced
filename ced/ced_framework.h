@@ -14,7 +14,7 @@ namespace ced
 		::ced::container<::ced::SColorBGRA>					DoubleBuffer[2]		= {};
 		::ced::container<uint32_t>							DepthBuffer			= {};
 		::ced::STimer										Timer				= {};
-		uint64_t											CurrentRenderBuffer	= 0;
+		volatile long long									CurrentRenderBuffer	= -1;
 		uint64_t											TotalFrames			= 0;
 		double												TotalTime			= 0;
 		bool												Running				= true;

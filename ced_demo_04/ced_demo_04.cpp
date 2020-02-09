@@ -21,7 +21,7 @@ struct SApplication {
 	double												TotalTime			= 0;
 	::ced::SColorBGRA									Colors		[4]		= { {0xff}, {0, 0xFF, 0}, {0, 0, 0xFF}, {0xFF, 0xC0, 0x40} };
 
-	::ced::container<::SModel3>						Models;
+	::ced::container<::SModel3>							Models;
 	::ced::container<uint32_t>							DepthBuffer;
 	::ced::SGeometryQuads								Geometry;
 };

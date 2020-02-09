@@ -2,12 +2,14 @@
 #include "ced_collision.h"
 
 static	int											explosionAdd		(::ced::container<::ssg::SExplosion> & explosions, int32_t indexMesh, uint32_t triangleCount, const ::ced::SCoord3<float> &collisionPoint, double debrisSpeed) {
-	::ssg::SExplosion											newExplosion				= {};
+	::ssg::SExplosion										newExplosion		= {};
 	newExplosion.IndexMesh								= indexMesh;
-	newExplosion.Slices.resize(triangleCount / 6);
-	for(uint32_t iSlice = 0, countSlices = newExplosion.Slices.size(); iSlice < countSlices; ++iSlice) {
-		newExplosion.Slices[iSlice]							= {(uint16_t)iSlice, (uint16_t)(rand() % 4 + 3)};
-		::ced::SCoord3<float>									direction					= {0, 1, 0};
+	for(uint32_t iTriangle = 0; iTriangle < triangleCount; ) {
+		const	uint32_t										sliceTriangleCount	= ::std::min((uint32_t)(rand() % 32), (uint32_t)(triangleCount - iTriangle));
+		newExplosion.Slices.push_back({(uint16_t)iTriangle, (uint16_t)sliceTriangleCount});
+		iTriangle											+= sliceTriangleCount;
+
+		::ced::SCoord3<float>									direction			= {0, 1, 0};
 		direction.RotateX(rand() * (::ced::MATH_2PI / RAND_MAX));
 		direction.RotateY(rand() * (::ced::MATH_2PI / RAND_MAX));
 		direction.RotateZ(rand() * (::ced::MATH_2PI / RAND_MAX));
@@ -148,12 +150,10 @@ static	int											updateShots				(::ssg::SSolarSystem & solarSystem, double s
 }
 
 static	int											updateShipPart			(::ssg::SSolarSystem & solarSystem, int32_t team, ::ssg::SShipPart & shipPart, double secondsLastFrame)	{
-	//::ssg::SEntity											& entityPart			= solarSystem.Entities[shipPart.Entity];
-	//partTransform.Rotation.y							+= (float)(secondsLastFrame * 1);
 	for(uint32_t iParticle = 0; iParticle < shipPart.Shots.Particles.Position.size(); ++iParticle)
 		shipPart.Shots.Particles.Position[iParticle].x		-= (float)(solarSystem.RelativeSpeedCurrent * secondsLastFrame * .2);
 
-	shipPart.Shots.Delay								+= secondsLastFrame;// * .1 * (1 + iPart);
+	shipPart.Shots.Delay								+= secondsLastFrame;
 
 	::ced::SCoord3<float>									targetPositionOriginal		= {};
 	for(uint32_t iShip = 0; iShip < solarSystem.Ships.size(); ++iShip) {
@@ -165,7 +165,6 @@ static	int											updateShipPart			(::ssg::SSolarSystem & solarSystem, int32_
 	::ced::SCoord3<float>									targetPosition				= targetPositionOriginal;
 
 	const ::ced::SMatrix4<float>							& shipModuleMatrix			= solarSystem.Scene.ModelMatricesGlobal[solarSystem.Entities[shipPart.Entity + 1].Transform];
-	//const ::ced::SMatrix4<float>							& shipMatrix				= solarSystem.Scene.ModelMatricesGlobal[solarSystem.Entities[solarSystem.Entities[shipPart.Entity].Parent].Transform];
 	::ced::SCoord3<float>									positionGlobal				= shipModuleMatrix.GetTranslation();
 	::ced::SCoord3<float>									targetDistance				= targetPosition - positionGlobal;
 	if(shipPart.Shots.Weapon == ::ssg::WEAPON_TYPE_CANNON) {
@@ -179,10 +178,10 @@ static	int											updateShipPart			(::ssg::SSolarSystem & solarSystem, int32_
 				::ced::STransform3										& shipModuleTransform		= solarSystem.ShipPhysics.Transforms[solarSystem.Entities[shipPart.Entity + 1].Body];
 				::ced::SCoord3<float>									up							= {1, 0, 0};
 				::ced::SCoord3<float>									front						= {0, 1, 0};
-				shipModuleTransform.Orientation.RotateVector(front);
+				//const ::ced::SMatrix4<float>							& shipMatrix				= solarSystem.Scene.ModelMatricesGlobal[solarSystem.Entities[solarSystem.Entities[shipPart.Entity].Parent].Transform];
 				targetPosition										= inverseTransform.Transform(targetPosition);
 				::ced::SQuaternion<float>								q;
-				q.LookAt({}, targetPosition, up, front);//						= mDirection.GetOrientation();//.Normalize();
+				q.LookAt(shipModuleTransform.Position, targetPosition, up, front);
 				shipModuleTransform.Orientation						= q;
 			}
 		}
@@ -226,20 +225,15 @@ int													ssg::solarSystemUpdate				(::ssg::SSolarSystem & solarSystem, do
 
 	if(GetAsyncKeyState('Q')) camera.Position.y	-= (float)secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
 	if(GetAsyncKeyState('E')) camera.Position.y	+= (float)secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
-	::ced::STransform3										& modelPlayer			= solarSystem.ShipPhysics.Transforms[solarSystem.Entities[0].Body];
+	::ced::STransform3										& playerBody			= solarSystem.ShipPhysics.Transforms[solarSystem.Entities[0].Body];
 	{
-		//::ced::STransform3											& playerBody						= solarSystem.ShipPhysics.Transforms[solarSystem.Entities[solarSystem.Ships[0].Entity].Body];
-		//if(GetAsyncKeyState('W') || GetAsyncKeyState(VK_UP		)) playerBody.Position.x			+= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
-		//if(GetAsyncKeyState('S') || GetAsyncKeyState(VK_DOWN	)) playerBody.Position.x			-= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
-		//if(GetAsyncKeyState('A') || GetAsyncKeyState(VK_LEFT	)) playerBody.Position.z			+= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
-		//if(GetAsyncKeyState('D') || GetAsyncKeyState(VK_RIGHT	)) playerBody.Position.z			-= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8));
-			 if(GetAsyncKeyState('W') || GetAsyncKeyState(VK_UP		)) { modelPlayer.Position.x			+= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8)); solarSystem.AccelerationControl	= +1; }
-		else if(GetAsyncKeyState('S') || GetAsyncKeyState(VK_DOWN	)) { modelPlayer.Position.x			-= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8)); solarSystem.AccelerationControl	= -1; }
+			 if(GetAsyncKeyState('W') || GetAsyncKeyState(VK_UP		)) { playerBody.Position.x			+= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8)); solarSystem.AccelerationControl	= +1; }
+		else if(GetAsyncKeyState('S') || GetAsyncKeyState(VK_DOWN	)) { playerBody.Position.x			-= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8)); solarSystem.AccelerationControl	= -1; }
 		else
 			solarSystem.AccelerationControl	= 0;
 
-		if(GetAsyncKeyState('A') || GetAsyncKeyState(VK_LEFT	)) { modelPlayer.Position.z			+= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8)); }
-		if(GetAsyncKeyState('D') || GetAsyncKeyState(VK_RIGHT	)) { modelPlayer.Position.z			-= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8)); }
+		if(GetAsyncKeyState('A') || GetAsyncKeyState(VK_LEFT	)) { playerBody.Position.z			+= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8)); }
+		if(GetAsyncKeyState('D') || GetAsyncKeyState(VK_RIGHT	)) { playerBody.Position.z			-= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8)); }
 	}
 
 	solarSystem.CameraSwitchDelay				+= actualSecondsLastFrame;
@@ -257,8 +251,8 @@ int													ssg::solarSystemUpdate				(::ssg::SSolarSystem & solarSystem, do
 		solarSystem.Scene.CameraMode = (CAMERA_MODE)((solarSystem.Scene.CameraMode + 1) % CAMERA_MODE_COUNT);
 	}
 	if(solarSystem.Scene.CameraMode == CAMERA_MODE_FOLLOW) {
-		solarSystem.Scene.Camera[CAMERA_MODE_FOLLOW].Position			= modelPlayer.Position + ::ced::SCoord3<float>{-80.f, 25, 0};
-		solarSystem.Scene.Camera[CAMERA_MODE_FOLLOW].Target				= modelPlayer.Position + ::ced::SCoord3<float>{1000.f, 0, 0};
+		solarSystem.Scene.Camera[CAMERA_MODE_FOLLOW].Position			= playerBody.Position + ::ced::SCoord3<float>{-80.f, 25, 0};
+		solarSystem.Scene.Camera[CAMERA_MODE_FOLLOW].Target				= playerBody.Position + ::ced::SCoord3<float>{1000.f, 0, 0};
 		solarSystem.Scene.Camera[CAMERA_MODE_FOLLOW].Up					= {0, 1, 0};
 	}
 
@@ -274,14 +268,14 @@ int													ssg::solarSystemUpdate				(::ssg::SSolarSystem & solarSystem, do
 	if(camera.Position.x > 0) camera.Position.x = -0.0001f;
 
 	if(GetAsyncKeyState(VK_NUMPAD5))
-		modelPlayer.Orientation.MakeFromEulerTaitBryan({0, 0, (float)-::ced::MATH_PI_2});
+		playerBody.Orientation.MakeFromEulerTaitBryan({0, 0, (float)-::ced::MATH_PI_2});
 	else {
-		if(GetAsyncKeyState(VK_NUMPAD8)) modelPlayer.Orientation.z		-= (float)(secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-		if(GetAsyncKeyState(VK_NUMPAD2)) modelPlayer.Orientation.z		+= (float)(secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-		if(GetAsyncKeyState(VK_NUMPAD6)) modelPlayer.Orientation.x		-= (float)(secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
-		if(GetAsyncKeyState(VK_NUMPAD4)) modelPlayer.Orientation.x		+= (float)(secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+		if(GetAsyncKeyState(VK_NUMPAD8)) playerBody.Orientation.z		-= (float)(secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+		if(GetAsyncKeyState(VK_NUMPAD2)) playerBody.Orientation.z		+= (float)(secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+		if(GetAsyncKeyState(VK_NUMPAD6)) playerBody.Orientation.x		-= (float)(secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
+		if(GetAsyncKeyState(VK_NUMPAD4)) playerBody.Orientation.x		+= (float)(secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2));
 	}
-	modelPlayer.Orientation.Normalize();
+	playerBody.Orientation.Normalize();
 
 	bool													playing					= false;
 	static constexpr const double							frameStep				= 0.01;

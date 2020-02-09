@@ -17,7 +17,7 @@ int													update				(SApplication & app)	{
 	{
 		::std::lock_guard<::std::mutex>							lockUpdate			(app.SolarSystem.LockUpdate);
 		if(1 == ::ced::frameworkUpdate(app.Framework))
-			framework.Running = false;
+			framework.Running									= false;
 	}
 	if(framework.Window.Resized) {
 		::ced::SMatrix4<float>									& matrixProjection	= app.SolarSystem.Scene.MatrixProjection;
@@ -40,17 +40,15 @@ int													update				(SApplication & app)	{
 }
 
 int													draw					(SApplication & app) {
-	::ced::view_grid<::ced::SColorBGRA>						targetPixels			= {app.Framework.DoubleBuffer[app.Framework.CurrentRenderBuffer % 2].begin(), app.Framework.Window.Size};
+	::ced::view_grid<::ced::SColorBGRA>						targetPixels			= {app.Framework.DoubleBuffer[InterlockedIncrement64(&app.Framework.CurrentRenderBuffer) % 2].begin(), app.Framework.Window.Size};
 	::ced::view_grid<uint32_t>								depthBuffer				= {app.Framework.DepthBuffer.begin(), app.Framework.Window.Size};
 	return ::ssg::solarSystemDraw(app.SolarSystem, app.SolarSystem.DrawCache, app.SolarSystem.LockUpdate, targetPixels, depthBuffer);
 }
 
 void												threadDraw				(void * pApp) {
 	SApplication											& app					= *(SApplication*)pApp;
-	while(InterlockedCompareExchange64(&app.ThreadSignal, 0, 1)) {
+	while(InterlockedCompareExchange64(&app.ThreadSignal, 0, 1))
 		draw(app);
-		++app.Framework.CurrentRenderBuffer;
-	}
 	Sleep(1);
 }
 
