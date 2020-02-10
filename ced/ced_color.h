@@ -191,10 +191,10 @@ namespace ced
 	static constexpr	const ::ced::SColorFloat	MAGENTA			= {1.0f, 0.0f, 1.0f, 1.0f					};
 	static constexpr	const ::ced::SColorFloat	CYAN			= {0.0f, 1.0f, 1.0f, 1.0f					};
 	static constexpr	const ::ced::SColorFloat	ORANGE			= {1.0f, 0.647f, 0.0f, 1.0f					};
-	static constexpr	const ::ced::SColorFloat	TURQUOISE		= {0.1f, 0.314f, 1.0f, 1.0f					};
-	static constexpr	const ::ced::SColorFloat	PURPLE			= {0.314f, 0.1f, 1.0f, 1.0f					};
-	static constexpr	const ::ced::SColorFloat	PANOCHE			= {0.1f, 1.0, 0.647f, 1.0f					};
-	static constexpr	const ::ced::SColorFloat	BROWN			= ::ced::SColorBGRA{0xFF, 0x00, 0x4B, 0x96};
+	static constexpr	const ::ced::SColorFloat	PANOCHE			= {0.25f, 0.5f, 1.0f, 1.0f					};
+	static constexpr	const ::ced::SColorFloat	PURPLE			= {0.5f, 0.1f, 1.0f, 1.0f					};
+	static constexpr	const ::ced::SColorFloat	TURQUOISE		= {0.2f, 1.0, 0.65f, 1.0f					};
+	static constexpr	const ::ced::SColorFloat	BROWN			= {0.4f, 0.223f, 0.0f, 1.0f				};
 	static constexpr	const ::ced::SColorFloat	GRAY			= {0.5f, 0.5f, 0.5f, 1.0f					};
 	static constexpr	const ::ced::SColorFloat	DARKGRAY		= {0.25f, 0.25f, 0.25f, 1.0f				};
 	static constexpr	const ::ced::SColorFloat	DARKRED			= {0.5f, 0.0f, 0.0f, 1.0f					};
@@ -206,7 +206,7 @@ namespace ced
 	static constexpr	const ::ced::SColorFloat	DARKORANGE		= {1.0f, 0.5490196078431373f, 0.0f, 1.0f	};
 	static constexpr	const ::ced::SColorFloat	LIGHTGRAY		= {0.75f, 0.75f, 0.75f, 1.0f				};
 	static constexpr	const ::ced::SColorFloat	LIGHTRED		= {1.0f, 0.25f, 0.25f, 1.0f					};
-	static constexpr	const ::ced::SColorFloat	LIGHTGREEN		= {0.25f, 1.0f, 0.25f, 1.0f					};
+	static constexpr	const ::ced::SColorFloat	LIGHTGREEN		= {0.5f,  1.0f, 0.5f, 1.0f					};
 	static constexpr	const ::ced::SColorFloat	LIGHTBLUE		= {0.25f, 0.25f, 1.0f, 1.0f					};
 	static constexpr	const ::ced::SColorFloat	LIGHTYELLOW		= {1.0f, 1.0f, 0.25f, 1.0f					};
 	static constexpr	const ::ced::SColorFloat	LIGHTMAGENTA	= {1.0f, 0.25f, 1.0f, 1.0f					};

@@ -71,7 +71,7 @@ namespace ced
 		int16_t												Flags		;
 	};
 #pragma pack(pop)
-	int													geometryBuildTileListFromImage	(::ced::view_grid<const ::ced::SColorBGRA> image, ::ced::container<STile> & out_tiles);
+	int													geometryBuildTileListFromImage	(::ced::view_grid<const ::ced::SColorBGRA> image, ::ced::container<STile> & out_tiles, uint32_t imagePitch = 0);
 	int													geometryBuildGridFromTileList	(::ced::SGeometryQuads & geometry, ::ced::view_grid<const ::ced::STile> image, ::ced::SCoord2<float> gridCenter, const ::ced::SCoord3<float> & scale);
 
 } // namespace

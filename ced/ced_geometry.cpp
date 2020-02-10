@@ -489,12 +489,12 @@ int													ced::geometryBuildSphere	(SGeometryTriangles & geometry, uint32_
 }
 
 
-int													ced::geometryBuildTileListFromImage		(::ced::view_grid<const ::ced::SColorBGRA> image, ::ced::container<::ced::STile> & out_tiles)	{
+int													ced::geometryBuildTileListFromImage		(::ced::view_grid<const ::ced::SColorBGRA> image, ::ced::container<::ced::STile> & out_tiles, uint32_t imagePitch)	{
 	{
 		::ced::STile											newTile;
-		for(uint32_t z = 0; z < image.metrics().y; ++z)
-		for(uint32_t x = 0; x < image.metrics().x; ++x) {
-			::ced::SColorFloat										currentPixel							= image[z][x];
+		for(uint32_t z = 0, maxZ = image.metrics().y; z < maxZ ; ++z)
+		for(uint32_t x = 0, maxX = image.metrics().x; x < maxX ; ++x) {
+			::ced::SColorFloat										currentPixel							= (0 == imagePitch) ? image[z][x] : image.begin()[z * imagePitch + x];
 			float													pixelHeight								= float((currentPixel.r + (double)currentPixel.g + currentPixel.b) / 3.0);
 			for(uint32_t iCorner = 0; iCorner < 4; ++iCorner)
 				newTile.Height[iCorner]								= pixelHeight;
@@ -507,8 +507,8 @@ int													ced::geometryBuildTileListFromImage		(::ced::view_grid<const ::c
 	}
 	for(uint32_t z = 0; z < image.metrics().y; ++z)
 	for(uint32_t x = 0; x < image.metrics().x - 1; ++x) {
-		::ced::STile											& currentTile							= out_tiles[z		* image.metrics().y + x];
-		::ced::STile											& frontTile								= out_tiles[z		* image.metrics().y + x + 1];
+		::ced::STile											& currentTile							= out_tiles[z * image.metrics().y + x];
+		::ced::STile											& frontTile								= out_tiles[z * image.metrics().y + x + 1];
 		if(currentTile.Height[1] != frontTile.Height[0] || currentTile.Height[3] != frontTile.Height[2])
 			currentTile.Front									= 1;
 	}
