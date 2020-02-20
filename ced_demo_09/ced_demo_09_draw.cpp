@@ -274,16 +274,26 @@ int													draw				(SApplication & app)	{
 				pixelVertexWeights	.clear();
 				const uint32_t											iActualTriangle		= sliceMesh.Offset + iTriangle;
 				::ced::STriangle3	<float>								triangle			= mesh.Triangles	[iActualTriangle];
+				::ced::STriangle3	<float>								triangleWorld		= mesh.Triangles	[iActualTriangle];
 				::ced::SCoord3		<float>								normal				= mesh.Normals		[iActualTriangle / 2];
 				::ced::STriangle2	<float>								triangleTexCoords	= mesh.TextureCoords[iActualTriangle];
-  				::ced::drawQuadTriangle(targetPixels, triangle, normal, triangleTexCoords, matrixPart, matrixTransformView, app.Scene.LightVector, pixelCoords, pixelVertexWeights, image, lightPointsModel, lightColorsModel, depthBuffer);
+				::ced::STriangle3	<float>								triangleScreen		= triangleWorld;
+				::ced::transform(triangleScreen, matrixTransformView);
+				if(triangleScreen.ClipZ())
+					continue;
+
+				::ced::transform(triangleWorld, matrixPart);
+				normal												= matrixPart.TransformDirection(normal).Normalize();
+ 				::ced::drawQuadTriangle(targetPixels.metrics(), triangle, matrixTransformView, pixelCoords, pixelVertexWeights, depthBuffer);
+ 				::ced::drawPixels(targetPixels, triangleWorld, normal, triangleTexCoords, app.Scene.LightVector, pixelCoords, pixelVertexWeights, image, lightPointsModel, lightColorsModel);
 				pixelCoords			.clear();
 				pixelVertexWeights	.clear();
 				triangle											= {triangle.A, triangle.C, triangle.B};
+				triangleWorld										= {triangleWorld.A, triangleWorld.C, triangleWorld.B};
 				triangleTexCoords									= {triangleTexCoords.A, triangleTexCoords.C, triangleTexCoords.B};
-				normal.x											*= -1;
-				normal.y											*= -1;
-				::ced::drawQuadTriangle(targetPixels, triangle, normal, triangleTexCoords, matrixPart, matrixTransformView, app.Scene.LightVector, pixelCoords, pixelVertexWeights, image, lightPointsModel, lightColorsModel, depthBuffer);
+				normal												*= -1;
+ 				::ced::drawQuadTriangle(targetPixels.metrics(), triangle, matrixTransformView, pixelCoords, pixelVertexWeights, depthBuffer);
+ 				::ced::drawPixels(targetPixels, triangleWorld, normal, triangleTexCoords, app.Scene.LightVector, pixelCoords, pixelVertexWeights, image, lightPointsModel, lightColorsModel);
 			}
 		}
 	}

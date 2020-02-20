@@ -6,8 +6,8 @@ int													ced::bmpFileLoad
 	, ::ced::SImage						& imageLoaded
 	, bool								invertY
 	) {
-	HBITMAP										phBitmap									= (HBITMAP)LoadImageA(NULL, filename, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION | LR_DEFAULTSIZE | LR_LOADFROMFILE);		// Use LoadImage() to get the image loaded into a DIBSection
-	if(phBitmap == NULL)
+	HBITMAP										phBitmap									= (HBITMAP)LoadImageA(0, filename, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION | LR_DEFAULTSIZE | LR_LOADFROMFILE);		// Use LoadImage() to get the image loaded into a DIBSection
+	if(0 == phBitmap)
 		return -1; //, "Failed to load bitmap file: %s.", szFileName.begin());
 
 	BITMAP										bm											= {};
@@ -15,7 +15,7 @@ int													ced::bmpFileLoad
 	if(0 > imageLoaded.Pixels.resize(bm.bmWidth * bm.bmHeight))
 		return -1; //, "Out of memory? Requested size: {x: %i, y: %i}", (int32_t)bm.bmWidth, (int32_t)bm.bmHeight);
 	imageLoaded.Metrics						= {(uint32_t)bm.bmWidth, (uint32_t)bm.bmHeight};
-	HDC											hMemDC										= CreateCompatibleDC(NULL);
+	HDC											hMemDC										= CreateCompatibleDC(0);
 	HBITMAP										hOldBitmap;
 	hOldBitmap								= (HBITMAP)SelectObject(hMemDC, phBitmap);
 	//::ced::SColorBGRA							* bmpPixels		= 0;

@@ -10,7 +10,7 @@ LRESULT	WINAPI							wndProc					(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 }
 
 int										blitBuffer				(HDC hdc, const ::ced::SColorBGRA * pixels, ::ced::SCoord2<uint32_t> targetSize)	{
-	BITMAPINFO									bitmapInfo				= {};
+	BITMAPINFO									bitmapInfo;
 	bitmapInfo.bmiHeader.biSize				= sizeof(BITMAPINFO);
 	bitmapInfo.bmiHeader.biWidth			= targetSize.x;
 	bitmapInfo.bmiHeader.biHeight			= targetSize.y;
@@ -26,12 +26,13 @@ int										blitBuffer				(HDC hdc, const ::ced::SColorBGRA * pixels, ::ced::SC
 		void										* pvBits;
 		HBITMAP										dibSection				= CreateDIBSection(hdcCompatible, &bitmapInfo, DIB_RGB_COLORS, (void**)&pvBits, 0, 0);
 		if(dibSection) {
-			RGBQUAD										* reverseYpixels		= (RGBQUAD*)malloc(sizeof(RGBQUAD) * targetSize.x * targetSize.y);
-			if(reverseYpixels) {
+			::ced::container<RGBQUAD>					reverseYPixels			= {};
+			reverseYPixels.reserve(targetSize.x * targetSize.y);
+ 			RGBQUAD										* pReversePixels		= reverseYPixels.begin();//(RGBQUAD*)malloc(sizeof(RGBQUAD) * targetSize.x * targetSize.y);
+			if(pReversePixels) {
 				for(uint32_t y = 0; y < targetSize.y; ++y)
-					memcpy(&reverseYpixels[(targetSize.y - 1 - y) * targetSize.x], &pixels[y * targetSize.x], sizeof(RGBQUAD) * targetSize.x);
-				SetDIBits(hdcCompatible, dibSection, 0, targetSize.y, reverseYpixels, &bitmapInfo, DIB_RGB_COLORS);
-				free(reverseYpixels);
+					memcpy(&pReversePixels[(targetSize.y - 1 - y) * targetSize.x], &pixels[y * targetSize.x], sizeof(RGBQUAD) * targetSize.x);
+				SetDIBits(hdcCompatible, dibSection, 0, targetSize.y, pReversePixels, &bitmapInfo, DIB_RGB_COLORS);
 			}
 			//SetDIBits(hdcCompatible, dibSection, 0, targetSize.y, pixels, &bitmapInfo, DIB_RGB_COLORS);
 			HBITMAP										oldBitmap				= (HBITMAP)SelectObject(hdcCompatible, dibSection);

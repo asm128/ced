@@ -275,27 +275,28 @@ int													draw				(SApplication & app)	{
 				pixelCoords			.clear();
 				pixelVertexWeights	.clear();
 				const uint32_t											iActualTriangle		= sliceMesh.Offset + iTriangle;
+				::ced::STriangle3	<float>								triangle			= mesh.Triangles	[iActualTriangle];
 				::ced::STriangle3	<float>								triangleWorld		= mesh.Triangles	[iActualTriangle];
 				::ced::SCoord3		<float>								normal				= mesh.Normals		[iActualTriangle / 2];
 				::ced::STriangle2	<float>								triangleTexCoords	= mesh.TextureCoords[iActualTriangle];
 				::ced::STriangle3	<float>								triangleScreen		= triangleWorld;
-				::ced::transform(triangleWorld, matrixPart);
 				::ced::transform(triangleScreen, matrixTransformView);
-				if(triangleScreen.A.z < 0 || triangleScreen.A.z >= 1) continue;
-				if(triangleScreen.B.z < 0 || triangleScreen.B.z >= 1) continue;
-				if(triangleScreen.C.z < 0 || triangleScreen.C.z >= 1) continue;
+				if(triangleScreen.ClipZ())
+					continue;
 
+				::ced::transform(triangleWorld, matrixPart);
 				normal												= matrixPart.TransformDirection(normal).Normalize();
 
-  				::ced::drawQuadTriangle(targetPixels, triangleWorld, triangleScreen, normal, triangleTexCoords, solarSystem.Scene.LightVector, pixelCoords, pixelVertexWeights, image, lightPointsModel, lightColorsModel, depthBuffer);
+				::ced::drawQuadTriangle(targetPixels.metrics(), triangle, matrixTransformView, pixelCoords, pixelVertexWeights, depthBuffer);
+ 				::ced::drawPixels(targetPixels, triangleWorld, normal, triangleTexCoords, solarSystem.Scene.LightVector, pixelCoords, pixelVertexWeights, image, lightPointsModel, lightColorsModel);
 				pixelCoords			.clear();
 				pixelVertexWeights	.clear();
+				triangle											= {triangle.A, triangle.C, triangle.B};
 				triangleWorld										= {triangleWorld.A, triangleWorld.C, triangleWorld.B};
-				triangleScreen										= {triangleScreen.A, triangleScreen.C, triangleScreen.B};
 				triangleTexCoords									= {triangleTexCoords.A, triangleTexCoords.C, triangleTexCoords.B};
-				normal.x											*= -1;
-				normal.y											*= -1;
-  				::ced::drawQuadTriangle(targetPixels, triangleWorld, triangleScreen, normal, triangleTexCoords, solarSystem.Scene.LightVector, pixelCoords, pixelVertexWeights, image, lightPointsModel, lightColorsModel, depthBuffer);
+				normal												*= -1;
+				::ced::drawQuadTriangle(targetPixels.metrics(), triangle, matrixTransformView, pixelCoords, pixelVertexWeights, depthBuffer);
+ 				::ced::drawPixels(targetPixels, triangleWorld, normal, triangleTexCoords, solarSystem.Scene.LightVector, pixelCoords, pixelVertexWeights, image, lightPointsModel, lightColorsModel);
 			}
 		}
 	}

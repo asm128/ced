@@ -366,6 +366,12 @@ namespace ced
 				, C.Cast<_tOther>()
 				};
 		}
+		bool								ClipZ					()								const	noexcept		{
+			if(A.z < 0 || A.z >= 1) return true;
+			if(B.z < 0 || B.z >= 1) return true;
+			if(C.z < 0 || C.z >= 1) return true;
+			return false;
+		}
 	};
 
 	template<typename _tValue>
