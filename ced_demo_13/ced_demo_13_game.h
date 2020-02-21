@@ -315,6 +315,7 @@ namespace ssg
 		int													AccelerationControl				= 0;
 
 		uint32_t											Stage							= 0;
+		uint32_t											Score							= 0;
 		double												CameraSwitchDelay				= 0;
 
 		SSolarSystemDrawCache								DrawCache;

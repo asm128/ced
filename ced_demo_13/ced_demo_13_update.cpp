@@ -58,20 +58,23 @@ static	int											collisionDetect		(::ssg::SShots & shots, const ::ced::SCoor
 
 static	int											handleCollisionPoint	(::ssg::SSolarSystem & solarSystem, int32_t weaponDamage, ::ssg::SShipPart& damagedPart, ::ssg::SShip & damagedShip, const ::ced::SCoord3<float> & sphereCenter, const ::ced::SCoord3<float> & collisionPoint, void* soundAlias)	{
 	PlaySound((LPCTSTR)soundAlias, GetModuleHandle(0), SND_ALIAS_ID | SND_ASYNC);
-	const ::ced::SCoord3<float>							bounceVector		= (collisionPoint - sphereCenter).Normalize();
+	const ::ced::SCoord3<float>								bounceVector				= (collisionPoint - sphereCenter).Normalize();
 	solarSystem.Debris.SpawnDirected(5, 0.3, bounceVector, collisionPoint, 50, 1);
+	solarSystem.Score									+= 1;
 	if(::applyDamage(weaponDamage, damagedPart.Health, damagedShip.Health)) {	// returns true if health reaches zero
-		const ::ssg::SEntity								& entityGeometry	= solarSystem.Entities[damagedPart.Entity + 1];
-		const int32_t										indexMesh			= entityGeometry.Geometry;
-		const uint32_t										countTriangles		= solarSystem.Scene.Geometry[indexMesh].Triangles.size();
+		solarSystem.Score									+= 10;
+		const ::ssg::SEntity									& entityGeometry			= solarSystem.Entities[damagedPart.Entity + 1];
+		const int32_t											indexMesh					= entityGeometry.Geometry;
+		const uint32_t											countTriangles				= solarSystem.Scene.Geometry[indexMesh].Triangles.size();
 		::explosionAdd(solarSystem.Explosions, indexMesh, countTriangles, collisionPoint, 60);
 		solarSystem.Debris.SpawnSpherical(30, collisionPoint, 60, 2);
 		if(0 >= damagedShip.Health) {
-			const ::ced::SCoord3<float>							& parentPosition	= solarSystem.ShipPhysics.Transforms[solarSystem.Entities[damagedShip.Entity].Body].Position;
+			solarSystem.Score									+= 50;
+			const ::ced::SCoord3<float>								& parentPosition			= solarSystem.ShipPhysics.Transforms[solarSystem.Entities[damagedShip.Entity].Body].Position;
 			::explosionAdd(solarSystem.Explosions, indexMesh, countTriangles, parentPosition, 13);
 			solarSystem.Debris.SpawnSpherical(150, parentPosition, 13, 2.8f);
-			solarSystem.Slowing								= true;
-			solarSystem.TimeScale							= 1.0;
+			solarSystem.Slowing									= true;
+			solarSystem.TimeScale								= 1.0;
 		}
 		return 1;
 	}
