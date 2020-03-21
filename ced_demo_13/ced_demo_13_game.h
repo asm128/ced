@@ -320,6 +320,8 @@ namespace ssg
 
 		SSolarSystemDrawCache								DrawCache;
 		::std::mutex										LockUpdate;
+
+		bool												Paused							= false;
 	};
 
 	int													stageSetup						(::ssg::SSolarSystem & solarSystem);

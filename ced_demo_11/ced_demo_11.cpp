@@ -240,7 +240,7 @@ int													setup							(SApplication & app)								{
 			}
 		}
 	}
-	bodies.Integrate((365 * 4 + 1) * 10);	// Update physics
+	bodies.Integrate((365LL * 4 + 1) * 10);	// Update physics
 
 	app.SolarSystem.Scene.Camera.Target					= {};
 	app.SolarSystem.Scene.Camera.Position				= {-0.000001f, 500, -1000};
@@ -375,10 +375,10 @@ int													update						(SApplication & app)	{
 }
 
 int	WINAPI											WinMain
-	(	HINSTANCE	// hInstance
-	,	HINSTANCE	// hPrevInstance
-	,	LPSTR		// lpCmdLine
-	,	INT			// nShowCmd
+	(	_In_		HINSTANCE	// hInstance
+	,	_In_opt_	HINSTANCE	// hPrevInstance
+	,	_In_		LPSTR		// lpCmdLine
+	,	_In_		INT			// nShowCmd
 	) {
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_CHECK_ALWAYS_DF);
 	SApplication										app;

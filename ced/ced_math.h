@@ -73,7 +73,7 @@ namespace ced
 										SCoord3<_tOther>		Cast					()									const			{ return {(_tOther)x, (_tOther)y, (_tOther)z}; }
 
 		inline							TCoord3&				Normalize				()																						{ const _tValue sqLen = LengthSquared(); return sqLen ? *this /= ::sqrt(sqLen) : *this;										}
-		constexpr						double					Dot						(const TCoord3& other)												const	noexcept	{ return x * other.x + y * other.y + z * other.z;																			}
+		constexpr						double					Dot						(const TCoord3& other)												const	noexcept	{ return double(x * other.x + y * other.y + z * other.z);																	}
 		constexpr						_tValue					LengthSquared			()																	const	noexcept	{ return x * x + y * y + z * z;																								}
 		constexpr						double					Length					()																	const				{ const _tValue sqLen = LengthSquared(); return sqLen ? ::sqrt(sqLen) : 0;													}
 		constexpr						double					AngleWith				(const TCoord3& other)												const				{ const double lengthsProduct = Length() * other.Length(); return lengthsProduct ? ::acos(Dot(other) / lengthsProduct) : 0;	}

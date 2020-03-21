@@ -210,6 +210,13 @@ int													ssg::solarSystemUpdate				(::ssg::SSolarSystem & solarSystem, do
 	//------------------------------------------- Handle input
 	double													speed							= 10;
 	double													secondsLastFrame				= ::std::min(actualSecondsLastFrame, 0.15);
+	if(GetAsyncKeyState('P')) {
+		Sleep(200);
+		solarSystem.Paused									= !solarSystem.Paused;
+	}
+	if(solarSystem.Paused)
+		return 0;
+
 	if(solarSystem.Slowing) {
 		solarSystem.TimeScale								-= secondsLastFrame * .35;
 		if(solarSystem.TimeScale < .1)
