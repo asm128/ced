@@ -51,7 +51,7 @@ static constexpr const ::ced::SCoord3<int8_t>		geometryNormals	[6]		=
 	, { 0, 1, 0} // Top
 	};
 
-int													ced::geometryBuildCube	(SGeometryQuads & geometry, const ::ced::SCoord3<float> & scale)	{
+int													ced::geometryBuildCube		(::ced::SGeometryQuads & geometry, const ::ced::SCoord3<float> & scale)	{
 	const uint32_t											triangleOffset			= geometry.Triangles.size();
 	geometry.Triangles		.resize(triangleOffset + (uint32_t)::std::size(geometryCube));
 	geometry.Normals		.resize(triangleOffset + (uint32_t)::std::size(geometryNormals));
@@ -75,8 +75,7 @@ int													ced::geometryBuildCube	(SGeometryQuads & geometry, const ::ced::
 	}
 	return 0;
 }
-
-int													ced::geometryBuildGrid	(SGeometryQuads & geometry, ::ced::SCoord2<uint32_t> gridSize, ::ced::SCoord2<float> gridCenter, const ::ced::SCoord3<float> & scale)	{
+int													ced::geometryBuildGrid		(::ced::SGeometryQuads & geometry, const ::ced::SCoord2<uint32_t> & gridSize, const ::ced::SCoord2<float> & gridCenter, const ::ced::SCoord3<float> & scale)	{
 	::ced::SCoord2<float>									texCoordUnits				= {1.0f / gridSize.x, 1.0f / gridSize.y};
 	for(uint32_t z = 0; z < gridSize.y; ++z)
 	for(uint32_t x = 0; x < gridSize.x; ++x)  {
@@ -118,8 +117,6 @@ int													ced::geometryBuildGrid	(SGeometryQuads & geometry, ::ced::SCoord
 	}
 	return 0;
 }
-
-//
 int													ced::geometryBuildFigure0	(::ced::SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, const ::ced::SCoord3<float> & gridCenter)	{
 	(void)radius;
 	for(uint32_t z = 0; z < stacks; ++z)
@@ -151,7 +148,6 @@ int													ced::geometryBuildFigure0	(::ced::SGeometryQuads & geometry, uin
 	}
 	return 0;
 }
-
 int													ced::geometryBuildFigure1	(::ced::SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, const ::ced::SCoord3<float> & gridCenter)	{
 	(void)radius;
 	for(uint32_t z = 0; z < stacks; ++z)
@@ -183,8 +179,7 @@ int													ced::geometryBuildFigure1	(::ced::SGeometryQuads & geometry, uin
 	}
 	return 0;
 }
-
-int													ced::geometryBuildHalfHelix	(SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, const ::ced::SCoord3<float> & gridCenter, const ::ced::SCoord3<float> & scale)	{
+int													ced::geometryBuildHalfHelix	(::ced::SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, const ::ced::SCoord3<float> & gridCenter, const ::ced::SCoord3<float> & scale)	{
 	::ced::SCoord2<float>									texCoordUnits				= {1.0f / slices, 1.0f / stacks};
 	for(uint32_t z = 0; z < stacks; ++z)
 	for(uint32_t x = 0; x < slices; ++x)  {
@@ -216,8 +211,7 @@ int													ced::geometryBuildHalfHelix	(SGeometryQuads & geometry, uint32_t
 	}
 	return 0;
 }
-
-int													ced::geometryBuildHelix		(SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, const ::ced::SCoord3<float> & gridCenter, const ::ced::SCoord3<float> & scale)	{
+int													ced::geometryBuildHelix		(::ced::SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, const ::ced::SCoord3<float> & gridCenter, const ::ced::SCoord3<float> & scale)	{
 	::ced::SCoord2<float>									texCoordUnits				= {1.0f / slices, 1.0f / stacks};
 	for(uint32_t z = 0; z < stacks; ++z)
 	for(uint32_t x = 0; x < slices; ++x)  {
@@ -270,9 +264,7 @@ int													ced::geometryBuildHelix		(SGeometryQuads & geometry, uint32_t st
 	}
 	return 0;
 }
-
-//
-int													ced::geometryBuildSphere	(SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, const ::ced::SCoord3<float> & gridCenter)	{
+int													ced::geometryBuildSphere	(::ced::SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, const ::ced::SCoord3<float> & gridCenter)	{
 	::ced::SCoord2<float>									texCoordUnits				= {1.0f / slices, 1.0f / stacks};
 	for(uint32_t z = 0; z < stacks; ++z)
 	for(uint32_t x = 0; x < slices; ++x)  {
@@ -320,10 +312,7 @@ int													ced::geometryBuildSphere	(SGeometryQuads & geometry, uint32_t st
 	}
 	return 0;
 }
-
-
-//
-int													ced::geometryBuildCylinder	(SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, const ::ced::SCoord3<float> & gridCenter, const ::ced::SCoord3<float> & scale)	{
+int													ced::geometryBuildCylinder	(::ced::SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, const ::ced::SCoord3<float> & gridCenter, const ::ced::SCoord3<float> & scale)	{
 	::ced::SCoord2<float>									texCoordUnits				= {1.0f / slices, 1.0f / stacks};
 	for(uint32_t y = 0; y < stacks; ++y)
 	for(uint32_t z = 0; z < slices; ++z)
@@ -377,9 +366,7 @@ int													ced::geometryBuildCylinder	(SGeometryQuads & geometry, uint32_t 
 	}
 	return 0;
 }
-
-
-int													ced::geometryBuildTender	(SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, const ::ced::SCoord3<float> & gridCenter, const ::ced::SCoord3<float> & scale)	{
+int													ced::geometryBuildTender	(::ced::SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, const ::ced::SCoord3<float> & gridCenter, const ::ced::SCoord3<float> & scale)	{
 	::ced::SCoord2<float>									texCoordUnits				= {1.0f / slices, 1.0f / stacks};
 	for(uint32_t z = 0; z < stacks; ++z)
 	for(uint32_t x = 0; x < slices; ++x)  {
@@ -436,7 +423,7 @@ int													ced::geometryBuildTender	(SGeometryQuads & geometry, uint32_t st
 	return 0;
 }
 
-int													ced::geometryBuildSphere	(SGeometryTriangles & geometry, uint32_t stacks, uint32_t slices, float radius, const ::ced::SCoord3<float> & gridCenter)	{
+int													ced::geometryBuildSphere	(::ced::SGeometryTriangles & geometry, uint32_t stacks, uint32_t slices, float radius, const ::ced::SCoord3<float> & gridCenter)	{
 	::ced::SCoord2<float>									texCoordUnits				= {1.0f / slices, 1.0f / stacks};
 	for(uint32_t z = 0; z < stacks; ++z)
 	for(uint32_t x = 0; x < slices; ++x)  {
@@ -488,8 +475,7 @@ int													ced::geometryBuildSphere	(SGeometryTriangles & geometry, uint32_
 	return 0;
 }
 
-
-int													ced::geometryBuildTileListFromImage		(::ced::view_grid<const ::ced::SColorBGRA> image, ::ced::container<::ced::STile> & out_tiles, uint32_t imagePitch)	{
+int													ced::geometryBuildTileListFromImage	(::ced::view_grid<const ::ced::SColorBGRA> image, ::ced::container<::ced::STile> & out_tiles, uint32_t imagePitch)	{
 	{
 		::ced::STile											newTile;
 		for(uint32_t z = 0, maxZ = image.metrics().y; z < maxZ ; ++z)
@@ -521,8 +507,7 @@ int													ced::geometryBuildTileListFromImage		(::ced::view_grid<const ::c
 	}
 	return 0;
 }
-
-int													ced::geometryBuildGridFromTileList		(::ced::SGeometryQuads & geometry, ::ced::view_grid<const ::ced::STile> tiles, ::ced::SCoord2<float> gridCenter, const ::ced::SCoord3<float> & scale) {
+int													ced::geometryBuildGridFromTileList	(::ced::SGeometryQuads & geometry, ::ced::view_grid<const ::ced::STile> tiles, ::ced::SCoord2<float> gridCenter, const ::ced::SCoord3<float> & scale) {
 	::ced::SCoord2<float>									texCoordUnits						= {1.0f / tiles.metrics().x, 1.0f / tiles.metrics().y};
 	for(uint32_t z = 0; z < tiles.metrics().y; ++z)
 	for(uint32_t x = 0; x < tiles.metrics().x; ++x) {

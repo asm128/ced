@@ -237,13 +237,13 @@ int													ssg::solarSystemUpdate				(::ssg::SSolarSystem & solarSystem, do
 	if(GetAsyncKeyState('E')) camera.Position.y	+= (float)secondsLastFrame * (GetAsyncKeyState(VK_SHIFT) ? 8 : 2);
 	::ced::STransform3										& playerBody			= solarSystem.ShipPhysics.Transforms[solarSystem.Entities[0].Body];
 	{
-			 if(GetAsyncKeyState('W') || GetAsyncKeyState(VK_UP		)) { playerBody.Position.x			+= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8)); solarSystem.AccelerationControl	= +1; }
-		else if(GetAsyncKeyState('S') || GetAsyncKeyState(VK_DOWN	)) { playerBody.Position.x			-= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8)); solarSystem.AccelerationControl	= -1; }
+			 if(GetAsyncKeyState('W') || GetAsyncKeyState(VK_UP		)) { playerBody.Position.x	+= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8)); solarSystem.AccelerationControl	= +1; }
+		else if(GetAsyncKeyState('S') || GetAsyncKeyState(VK_DOWN	)) { playerBody.Position.x	-= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8)); solarSystem.AccelerationControl	= -1; }
 		else
 			solarSystem.AccelerationControl	= 0;
 
-		if(GetAsyncKeyState('A') || GetAsyncKeyState(VK_LEFT	)) { playerBody.Position.z			+= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8)); }
-		if(GetAsyncKeyState('D') || GetAsyncKeyState(VK_RIGHT	)) { playerBody.Position.z			-= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8)); }
+		if(GetAsyncKeyState('A') || GetAsyncKeyState(VK_LEFT	)) { playerBody.Position.z	+= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8)); }
+		if(GetAsyncKeyState('D') || GetAsyncKeyState(VK_RIGHT	)) { playerBody.Position.z	-= (float)(secondsLastFrame * speed * (GetAsyncKeyState(VK_SHIFT) ? 2 : 8)); }
 	}
 
 	solarSystem.CameraSwitchDelay				+= actualSecondsLastFrame;

@@ -113,6 +113,7 @@ namespace ced
 			}
 			return 0;
 		}
+
 		int32_t									resize				(uint32_t newCount, const _tValue & newValue)	{
 			if(newCount < Count) {
 				for(int32_t iElement = (int32_t)Count - 1; iElement >= (int32_t)newCount; --iElement)
@@ -128,6 +129,7 @@ namespace ced
 					new (&newData[iElement]) _tValue(Data[iElement]);
 				for(uint32_t iElement = Count; iElement < newCount; ++iElement)
 					new (&newData[iElement]) _tValue(newValue);
+
 				_tValue										* oldData			= Data;
 				Size									= newSize;
 				Data									= newData;

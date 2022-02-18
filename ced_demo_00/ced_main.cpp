@@ -28,8 +28,8 @@ int									setup				(SApplication & app)	{
 	::ced::windowSetup(app.Window);
 	app.Pixels							= (::ced::SColorBGRA*)malloc(sizeof(::ced::SColorBGRA) * window.Size.x * window.Size.y);
 
-	for(uint32_t y = 0; y < (uint32_t)2; ++y)
-	for(uint32_t x = 0; x < (uint32_t)2; ++x) {
+	for(uint32_t y = 0; y < 2U; ++y)
+	for(uint32_t x = 0; x < 2U; ++x) {
 		::ced::SRectangle	<int32_t>			& rectangle			= app.Rectangles[y * 2 + x];
 		::ced::SCircle		<int32_t>			& circle			= app.Circles	[y * 2 + x];
 		rectangle.Position					= {(int32_t)(window.Size.x / 2 * x	), (int32_t)(window.Size.y / 2 * y	)};

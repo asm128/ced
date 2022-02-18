@@ -102,6 +102,7 @@ int													update				(SApplication & app)	{
 			pixelCoords			.clear();
 			pixelVertexWeights	.clear();
 			::ced::drawTriangle(targetPixels, app.Geometry, iTriangle, matrixTransform, matrixTransformView, lightVector, pixelCoords, pixelVertexWeights, app.Image, depthBuffer);
+			//::ced::drawLine(targetPixels, )
 		}
 	}
 	return framework.Running ? 0 : 1;

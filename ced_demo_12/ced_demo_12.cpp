@@ -41,7 +41,8 @@ static	int											shipCreate			(::SSolarSystem & solarSystem, int32_t teamId,
 		ship.Team											= teamId;
 		ship.Health											= entityHealth;
 
-		const int32_t											indexBody			= solarSystem.ShipPhysics.Spawn();
+		//const int32_t											indexBody			= 
+			solarSystem.ShipPhysics.Spawn();
 		scene.ModelMatricesLocal	.push_back({});
 		scene.ModelMatricesGlobal	.push_back({});
 	}

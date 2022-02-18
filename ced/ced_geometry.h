@@ -52,7 +52,7 @@ namespace ced
 	};
 
 	int													geometryBuildCube				(::ced::SGeometryQuads & geometry, const ::ced::SCoord3<float> & scale);
-	int													geometryBuildGrid				(::ced::SGeometryQuads & geometry, ::ced::SCoord2<uint32_t> gridSize, ::ced::SCoord2<float> gridCenter, const ::ced::SCoord3<float> & scale);
+	int													geometryBuildGrid				(::ced::SGeometryQuads & geometry, const ::ced::SCoord2<uint32_t> & gridSize, const ::ced::SCoord2<float> & gridCenter, const ::ced::SCoord3<float> & scale);
 	int													geometryBuildSphere				(::ced::SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, const ::ced::SCoord3<float> & gridCenter);
 	int													geometryBuildCylinder			(::ced::SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, const ::ced::SCoord3<float> & gridCenter, const ::ced::SCoord3<float> & scale);
 	int													geometryBuildHalfHelix			(::ced::SGeometryQuads & geometry, uint32_t stacks, uint32_t slices, float radius, const ::ced::SCoord3<float> & gridCenter, const ::ced::SCoord3<float> & scale);

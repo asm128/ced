@@ -30,7 +30,8 @@ static	int											shipCreate			(::ssg::SSolarSystem & solarSystem, int32_t te
 		entity.Body											= solarSystem.ShipPhysics.Spawn();
 		ship.Entity											= solarSystem.Entities.push_back(entity);
 		ship.Team											= teamId;
-		const int32_t											indexBody			= solarSystem.ShipPhysics.Spawn();
+		//const int32_t											indexBody			= 
+			solarSystem.ShipPhysics.Spawn();
 	}
 	const int32_t											indexShip			= solarSystem.Ships.push_back(ship);
 	ship.Parts.reserve(countParts);
@@ -92,6 +93,7 @@ static	int											shipGeometryBuildWafer	(::ced::SGeometryQuads & geometry)		
 	::ced::geometryBuildGrid(geometry, {1U, 1U}, {-0.75f, .75f}, {-1.5, 1, 1.5});
 	return 0;
 }
+
 static	int											shipGeometryBuildGun	(::ced::SGeometryQuads & geometry)						{
 	::shipGeometryBuildEngine(geometry);
 	::ced::geometryBuildSphere	(geometry, 8U, 5U, .7f, {0, 0});
