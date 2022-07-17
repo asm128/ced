@@ -53,10 +53,10 @@ int32_t									ced::windowSetup		(::ced::SWindow & window) {
 	RegisterClassEx(&window.Class);
 
 	RECT										windowRect				= {0, 0, (LONG)window.Size.x, (LONG)window.Size.y};
-	AdjustWindowRectEx(&windowRect, WS_OVERLAPPEDWINDOW, FALSE, 0);
-	window.Handle							= CreateWindowEx(0, window.Class.lpszClassName, "Window 0", WS_OVERLAPPEDWINDOW, window.Position.x, window.Position.y, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, 0, 0, window.Class.hInstance, 0);
+	AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
+	window.Handle							= CreateWindow(window.Class.lpszClassName, TEXT("Window 0"), WS_OVERLAPPEDWINDOW, window.Position.x, window.Position.y, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, 0, 0, window.Class.hInstance, 0);
 	ShowWindow(window.Handle, SW_SHOWMAXIMIZED);
-	return 0;
+	return 0;            
 }
 
 int32_t									ced::windowUpdate		(::ced::SWindow & window, const ::ced::SColorBGRA* pixels) {

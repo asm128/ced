@@ -223,9 +223,9 @@ int													ssg::stageSetup						(::ssg::SSolarSystem & solarSystem)	{	// Se
 				weapon											= (iPart % 5);
 			else {
 				weapon											= (0 == (iShip % 7) && 0 == iPart) ?
-					(	(0 == (solarSystem.Stage % 11 )) ? (iShip / 5 - ((iShip >= 5) ? 1: 0)) % 4
-					:	(0 == (solarSystem.Stage % 7  )) ? (iShip / 5 - ((iShip >= 5) ? 1: 0)) % 4
+					(	(0 == (solarSystem.Stage % 7  )) ? (iShip / 5 - ((iShip >= 5) ? 1: 0)) % 4
 					:	(0 == (solarSystem.Stage % 5  )) ? (iShip / 5 - ((iShip >= 5) ? 1: 0)) % 4
+					:	(0 == (solarSystem.Stage % 4  )) ? (iShip / 5 - ((iShip >= 5) ? 1: 0)) % 4
 					:	(0 == (solarSystem.Stage % 3  )) ? (iShip / 5 - ((iShip >= 5) ? 1: 0)) % 4
 					:	4
 					)
