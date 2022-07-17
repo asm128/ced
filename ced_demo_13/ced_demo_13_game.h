@@ -314,6 +314,7 @@ namespace ssg
 		bool												Slowing							= true;
 		int													AccelerationControl				= 0;
 
+		uint32_t											OffsetStage						= 3;
 		uint32_t											Stage							= 0;
 		uint32_t											Score							= 0;
 		double												CameraSwitchDelay				= 0;
