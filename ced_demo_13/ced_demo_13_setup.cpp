@@ -201,7 +201,7 @@ int													ssg::stageSetup						(::ssg::SSolarSystem & solarSystem)	{	// Se
 		shipPivot.Orientation.MakeFromEulerTaitBryan({0, 0, (float)(-::ced::MATH_PI_2)});
 		shipPivot.Position									= {-30};
 	}
-	while(((int)solarSystem.Ships.size() - 2) < (int)solarSystem.Stage) {	// Create enemy ships depending on stage.
+	while(((int)solarSystem.Ships.size() - 2) < (int)(solarSystem.Stage + solarSystem.OffsetStage)) {	// Create enemy ships depending on stage.
 		int32_t													indexShip						= ::shipCreate(solarSystem, 1, solarSystem.Stage + solarSystem.Ships.size(), solarSystem.Stage + solarSystem.Ships.size());
 		::ssg::SShip											& enemyShip						= solarSystem.Ships[indexShip];
 		::ced::STransform3										& shipTransform					= solarSystem.ShipPhysics.Transforms[solarSystem.Entities[enemyShip.Entity].Body];
